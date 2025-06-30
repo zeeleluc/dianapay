@@ -51,5 +51,12 @@
     "Profile Information": "اطلاعات پروفایل",
     "Your email address is unverified.": "آدرس ایمیل شما تأیید نشده است.",
     "Click here to re-send the verification email.": "برای ارسال مجدد ایمیل تأیید اینجا را کلیک کنید.",
-    "A new verification link has been sent to your email address.": "یک لینک تأیید جدید به آدرس ایمیل شما ارسال شده است."
+    "A new verification link has been sent to your email address.": "یک لینک تأیید جدید به آدرس ایمیل شما ارسال شده است.",
+    "Blockchain Rates": "نرخ blockchain",
+    "Cryptocurrency": "رمز رمز",
+    "No currency rates available.": "نرخ ارز در دسترس نیست.",
+    "Live Exchange Rates": "نرخ ارز زنده",
+    "Crypto": "رمز",
+    "Blockchain": "کنگره",
+    "Rates": "نرخ"
 }

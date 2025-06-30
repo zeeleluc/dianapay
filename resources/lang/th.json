@@ -51,5 +51,12 @@
     "Profile Information": "ข้อมูลโปรไฟล์",
     "Your email address is unverified.": "ที่อยู่อีเมลของคุณไม่ได้รับการตรวจสอบ",
     "Click here to re-send the verification email.": "คลิกที่นี่เพื่อส่งอีเมลยืนยันอีกครั้ง",
-    "A new verification link has been sent to your email address.": "ลิงค์การยืนยันใหม่ถูกส่งไปยังที่อยู่อีเมลของคุณ"
+    "A new verification link has been sent to your email address.": "ลิงค์การยืนยันใหม่ถูกส่งไปยังที่อยู่อีเมลของคุณ",
+    "Blockchain Rates": "อัตรา blockchain",
+    "Cryptocurrency": "การเข้ารหัสลับ",
+    "No currency rates available.": "ไม่มีอัตราค่าสกุลเงิน",
+    "Live Exchange Rates": "อัตราแลกเปลี่ยนสด",
+    "Crypto": "crypto",
+    "Blockchain": "blockchain",
+    "Rates": "ราคา"
 }

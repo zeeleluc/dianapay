@@ -51,5 +51,12 @@
     "Profile Information": "प्रोफाइल की जानकारी",
     "Your email address is unverified.": "आपका ईमेल पता असंगत है।",
     "Click here to re-send the verification email.": "सत्यापन ईमेल को फिर से समाप्त करने के लिए यहां क्लिक करें।",
-    "A new verification link has been sent to your email address.": "आपके ईमेल पते पर एक नया सत्यापन लिंक भेजा गया है।"
+    "A new verification link has been sent to your email address.": "आपके ईमेल पते पर एक नया सत्यापन लिंक भेजा गया है।",
+    "Blockchain Rates": "ब्लॉकचेन दरें",
+    "Cryptocurrency": "cryptocurrency",
+    "No currency rates available.": "कोई मुद्रा दर उपलब्ध नहीं है।",
+    "Live Exchange Rates": "लाइव विनिमय दरें",
+    "Crypto": "क्रिप्टो",
+    "Blockchain": "ब्लॉकचैन",
+    "Rates": "दर"
 }

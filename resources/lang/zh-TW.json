@@ -51,5 +51,12 @@
     "Profile Information": "個人資料信息",
     "Your email address is unverified.": "您的電子郵件地址未經驗證。",
     "Click here to re-send the verification email.": "單擊此處重新發送驗證電子郵件。",
-    "A new verification link has been sent to your email address.": "新的驗證鏈接已發送到您的電子郵件地址。"
+    "A new verification link has been sent to your email address.": "新的驗證鏈接已發送到您的電子郵件地址。",
+    "Blockchain Rates": "區塊鏈率",
+    "Cryptocurrency": "加密貨幣",
+    "No currency rates available.": "沒有可用的貨幣利率。",
+    "Live Exchange Rates": "實時匯率",
+    "Crypto": "加密",
+    "Blockchain": "區塊鏈",
+    "Rates": "費率"
 }

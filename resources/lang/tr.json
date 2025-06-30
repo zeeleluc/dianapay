@@ -51,5 +51,12 @@
     "Profile Information": "Profil Bilgileri",
     "Your email address is unverified.": "E -posta adresiniz doğrulanmamış.",
     "Click here to re-send the verification email.": "Doğrulama e-postasını yeniden göndermek için buraya tıklayın.",
-    "A new verification link has been sent to your email address.": "E -posta adresinize yeni bir doğrulama bağlantısı gönderildi."
+    "A new verification link has been sent to your email address.": "E -posta adresinize yeni bir doğrulama bağlantısı gönderildi.",
+    "Blockchain Rates": "Blockchain oranları",
+    "Cryptocurrency": "Kripto para birimi",
+    "No currency rates available.": "Para oranı yok.",
+    "Live Exchange Rates": "Canlı döviz kurları",
+    "Crypto": "Kripto",
+    "Blockchain": "Blok zinciri",
+    "Rates": "Oranlar"
 }

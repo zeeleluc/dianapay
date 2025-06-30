@@ -51,5 +51,12 @@
     "Profile Information": "Informações do perfil",
     "Your email address is unverified.": "Seu endereço de e -mail não é verificado.",
     "Click here to re-send the verification email.": "Clique aqui para recaiar o e-mail de verificação.",
-    "A new verification link has been sent to your email address.": "Um novo link de verificação foi enviado para o seu endereço de e -mail."
+    "A new verification link has been sent to your email address.": "Um novo link de verificação foi enviado para o seu endereço de e -mail.",
+    "Blockchain Rates": "Taxas de blockchain",
+    "Cryptocurrency": "Criptomoeda",
+    "No currency rates available.": "Sem taxas de moeda disponíveis.",
+    "Live Exchange Rates": "Taxas de câmbio ao vivo",
+    "Crypto": "Cripto",
+    "Blockchain": "Blockchain",
+    "Rates": "Taxas"
 }

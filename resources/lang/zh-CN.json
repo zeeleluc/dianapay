@@ -51,5 +51,12 @@
     "A new verification link has been sent to your email address.": "新的验证链接已发送到您的电子邮件地址。",
     "The provided password is incorrect.": "提供的密码不正确。",
     "This is a secure area of the application. Please confirm your password before continuing.": "这是应用程序的安全区域。",
-    "Confirm": "确认"
+    "Confirm": "确认",
+    "Blockchain Rates": "区块链率",
+    "Cryptocurrency": "加密货币",
+    "No currency rates available.": "没有可用的货币利率。",
+    "Live Exchange Rates": "实时汇率",
+    "Crypto": "加密",
+    "Blockchain": "区块链",
+    "Rates": "费率"
 }

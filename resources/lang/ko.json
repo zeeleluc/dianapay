@@ -51,5 +51,12 @@
     "Profile Information": "프로필 정보",
     "Your email address is unverified.": "귀하의 이메일 주소는 검증되지 않습니다.",
     "Click here to re-send the verification email.": "확인 이메일을 다시 작성하려면 여기를 클릭하십시오.",
-    "A new verification link has been sent to your email address.": "새 확인 링크가 이메일 주소로 전송되었습니다."
+    "A new verification link has been sent to your email address.": "새 확인 링크가 이메일 주소로 전송되었습니다.",
+    "Blockchain Rates": "블록 체인 속도",
+    "Cryptocurrency": "cryptocurrency",
+    "No currency rates available.": "사용 가능한 통화율이 없습니다.",
+    "Live Exchange Rates": "라이브 환율",
+    "Crypto": "암호화",
+    "Blockchain": "블록 체인",
+    "Rates": "요율"
 }

@@ -51,5 +51,12 @@
     "Profile Information": "プロファイル情報",
     "Your email address is unverified.": "あなたのメールアドレスは未確認です。",
     "Click here to re-send the verification email.": "ここをクリックして、検証メールを再送信してください。",
-    "A new verification link has been sent to your email address.": "新しい検証リンクがメールアドレスに送信されました。"
+    "A new verification link has been sent to your email address.": "新しい検証リンクがメールアドレスに送信されました。",
+    "Blockchain Rates": "ブロックチェーンレート",
+    "Cryptocurrency": "暗号通貨",
+    "Live Exchange Rates": "ライブ為替レート",
+    "No currency rates available.": "通貨料金はありません。",
+    "Crypto": "暗号",
+    "Blockchain": "ブロックチェーン",
+    "Rates": "レート"
 }

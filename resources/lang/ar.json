@@ -51,5 +51,12 @@
     "Profile Information": "معلومات الملف الشخصي",
     "Your email address is unverified.": "عنوان بريدك الإلكتروني لم يتم التحقق منه.",
     "Click here to re-send the verification email.": "انقر هنا لإعادة تقديم البريد الإلكتروني للتحقق.",
-    "A new verification link has been sent to your email address.": "تم إرسال رابط التحقق الجديد إلى عنوان بريدك الإلكتروني."
+    "A new verification link has been sent to your email address.": "تم إرسال رابط التحقق الجديد إلى عنوان بريدك الإلكتروني.",
+    "Blockchain Rates": "معدلات blockchain",
+    "Cryptocurrency": "عملة مشفرة",
+    "No currency rates available.": "لا معدلات العملة المتاحة.",
+    "Live Exchange Rates": "أسعار الصرف المباشر",
+    "Crypto": "تشفير",
+    "Blockchain": "blockchain",
+    "Rates": "معدلات"
 }

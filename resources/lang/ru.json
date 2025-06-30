@@ -51,5 +51,12 @@
     "Profile Information": "Информация о профиле",
     "Your email address is unverified.": "Ваш адрес электронной почты не проведен.",
     "Click here to re-send the verification email.": "Нажмите здесь, чтобы переосмыслить электронное письмо с проверкой.",
-    "A new verification link has been sent to your email address.": "Новая ссылка на проверку была отправлена ​​на ваш адрес электронной почты."
+    "A new verification link has been sent to your email address.": "Новая ссылка на проверку была отправлена ​​на ваш адрес электронной почты.",
+    "Blockchain Rates": "Цены на блокчейн",
+    "Cryptocurrency": "Криптовалюта",
+    "No currency rates available.": "Нет доступных ставок валюты.",
+    "Live Exchange Rates": "Живые обменные курсы",
+    "Crypto": "Крипто",
+    "Blockchain": "Блокчейн",
+    "Rates": "Ставки"
 }
