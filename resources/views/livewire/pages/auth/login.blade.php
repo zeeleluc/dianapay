@@ -31,7 +31,7 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="login">
         <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="__('Email')" class="text-gray-300" />
+            <x-input-label for="email" :value="trans('Email')" class="text-gray-300" />
             <x-text-input
                 wire:model="form.email"
                 id="email"
@@ -47,7 +47,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Password -->
         <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" class="text-gray-300" />
+            <x-input-label for="password" :value="trans('Password')" class="text-gray-300" />
             <x-text-input
                 wire:model="form.password"
                 id="password"
@@ -70,7 +70,7 @@ new #[Layout('layouts.guest')] class extends Component
                     class="rounded border-gray-600 text-indigo-600 shadow-sm focus:ring-indigo-500 bg-gray-700"
                     name="remember"
                 />
-                <span class="ms-2 text-sm text-gray-400">{{ __('Remember me') }}</span>
+                <span class="ms-2 text-sm text-gray-400">{{ translate('Remember me') }}</span>
             </label>
         </div>
 
@@ -81,12 +81,12 @@ new #[Layout('layouts.guest')] class extends Component
                     href="{{ route('password.request') }}"
                     wire:navigate
                 >
-                    {{ __('Forgot your password?') }}
+                    {{ translate('Forgot your password?') }}
                 </a>
             @endif
 
             <x-button class="ms-3 bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 text-white">
-                {{ __('Log in') }}
+                {{ translate('Log in') }}
             </x-button>
         </div>
     </form>

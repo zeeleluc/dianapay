@@ -38,7 +38,7 @@ new #[Layout('layouts.guest')] class extends Component
 
 <div>
     <div class="mb-4 text-sm text-gray-400">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+        {{ translate('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
     </div>
 
     <!-- Session Status -->
@@ -47,7 +47,7 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="sendPasswordResetLink">
         <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="__('Email')" class="text-gray-300" />
+            <x-input-label for="email" :value="trans('Email')" class="text-gray-300" />
             <x-text-input
                 wire:model="email"
                 id="email"
@@ -62,7 +62,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <div class="flex items-center justify-end mt-4">
             <x-button class="bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 text-white">
-                {{ __('Email Password Reset Link') }}
+                {{ translate('Email Password Reset Link') }}
             </x-button>
         </div>
     </form>

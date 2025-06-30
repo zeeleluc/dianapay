@@ -35,13 +35,15 @@ new class extends Component
                         class="text-white hover:text-gray-300"
                         wire:navigate
                     >
-                        {{ __('Dashboard') }}
+                        {{ translate('Dashboard') }}
                     </x-nav-link>
                 </div>
             </div>
 
             <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <div class="hidden sm:flex sm:items-center sm:ms-6 space-x-4">
+                <livewire:language-switcher class="w-full sm:w-auto whitespace-nowrap" />
+
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-white bg-gray-800 hover:bg-gray-700 focus:outline-none transition">
@@ -60,12 +62,12 @@ new class extends Component
 
                     <x-slot name="content">
                         <x-dropdown-link :href="route('profile')" wire:navigate>
-                            {{ __('Profile') }}
+                            {{ translate('Profile') }}
                         </x-dropdown-link>
 
                         <button wire:click="logout" class="w-full text-start">
                             <x-dropdown-link>
-                                {{ __('Log Out') }}
+                                {{ translate('Log Out') }}
                             </x-dropdown-link>
                         </button>
                     </x-slot>
@@ -88,13 +90,17 @@ new class extends Component
 
     <!-- Responsive Menu -->
     <div :class="{ 'block': open, 'hidden': ! open }" class="hidden sm:hidden">
+        <div class="pt-2 pb-3 space-y-1 bg-gray-800 text-white px-4">
+            <livewire:language-switcher class="w-full whitespace-nowrap" />
+        </div>
+
         <div class="pt-2 pb-3 space-y-1 bg-gray-800 text-white">
             <x-responsive-nav-link
                 :href="route('dashboard')"
                 :active="request()->routeIs('dashboard')"
                 wire:navigate
             >
-                {{ __('Dashboard') }}
+                {{ translate('Dashboard') }}
             </x-responsive-nav-link>
         </div>
 
@@ -114,15 +120,14 @@ new class extends Component
 
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile')" wire:navigate>
-                    {{ __('Profile') }}
+                    {{ translate('Profile') }}
                 </x-responsive-nav-link>
 
                 <button wire:click="logout" class="w-full text-start">
                     <x-responsive-nav-link>
-                        {{ __('Log Out') }}
+                        {{ translate('Log Out') }}
                     </x-responsive-nav-link>
                 </button>
             </div>
         </div>
     </div>
-</nav>

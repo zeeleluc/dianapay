@@ -15,7 +15,9 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="antialiased bg-gray-800">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-800">
+
+        @include('livewire.welcome.navigation')
+        <div class="min-h-[calc(100vh-6rem)] flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-800">
             <div>
                 <a class="text-white" href="/" wire:navigate>
                     <x-application-logo class="w-20 h-20 text-white" />

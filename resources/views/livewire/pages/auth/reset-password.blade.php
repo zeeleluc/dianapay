@@ -73,7 +73,7 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="resetPassword">
         <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="__('Email')" class="text-gray-300" />
+            <x-input-label for="email" :value="trans('Email')" class="text-gray-300" />
             <x-text-input
                 wire:model="email"
                 id="email"
@@ -89,7 +89,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Password -->
         <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" class="text-gray-300" />
+            <x-input-label for="password" :value="trans('Password')" class="text-gray-300" />
             <x-text-input
                 wire:model="password"
                 id="password"
@@ -104,7 +104,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Confirm Password -->
         <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" class="text-gray-300" />
+            <x-input-label for="password_confirmation" :value="trans('Confirm Password')" class="text-gray-300" />
             <x-text-input
                 wire:model="password_confirmation"
                 id="password_confirmation"
@@ -119,7 +119,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <div class="flex items-center justify-end mt-4">
             <x-button class="bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 text-white">
-                {{ __('Reset Password') }}
+                {{ translate('Reset Password') }}
             </x-button>
         </div>
     </form>

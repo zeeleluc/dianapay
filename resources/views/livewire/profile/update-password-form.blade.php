@@ -41,40 +41,40 @@ new class extends Component
 <section>
     <header>
         <h2 class="text-lg font-medium text-white">
-            {{ __('Update Password') }}
+            {{ translate('Update Password') }}
         </h2>
 
         <p class="mt-1 text-sm text-gray-300">
-            {{ __('Ensure your account is using a long, random password to stay secure.') }}
+            {{ translate('Ensure your account is using a long, random password to stay secure.') }}
         </p>
     </header>
 
     <form wire:submit="updatePassword" class="mt-6 space-y-6">
         <div>
-            <x-input-label for="update_password_current_password" :value="__('Current Password')" class="text-gray-300" />
+            <x-input-label for="update_password_current_password" :value="trans('Current Password')" class="text-gray-300" />
             <x-text-input wire:model="current_password" id="update_password_current_password" name="current_password" type="password" class="mt-1 block w-full bg-gray-700 border-gray-600 text-white" autocomplete="current-password" />
             <x-input-error :messages="$errors->get('current_password')" class="mt-2 text-red-400" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password" :value="__('New Password')" class="text-gray-300" />
+            <x-input-label for="update_password_password" :value="trans('New Password')" class="text-gray-300" />
             <x-text-input wire:model="password" id="update_password_password" name="password" type="password" class="mt-1 block w-full bg-gray-700 border-gray-600 text-white" autocomplete="new-password" />
             <x-input-error :messages="$errors->get('password')" class="mt-2 text-red-400" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password_confirmation" :value="__('Confirm Password')" class="text-gray-300" />
+            <x-input-label for="update_password_password_confirmation" :value="trans('Confirm Password')" class="text-gray-300" />
             <x-text-input wire:model="password_confirmation" id="update_password_password_confirmation" name="password_confirmation" type="password" class="mt-1 block w-full bg-gray-700 border-gray-600 text-white" autocomplete="new-password" />
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2 text-red-400" />
         </div>
 
         <div class="flex items-center gap-4">
             <x-button class="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500 text-white">
-                {{ __('Save') }}
+                {{ translate('Save') }}
             </x-button>
 
             <x-action-message class="text-emerald-400" on="password-updated">
-                {{ __('Saved.') }}
+                {{ translate('Saved.') }}
             </x-action-message>
         </div>
     </form>

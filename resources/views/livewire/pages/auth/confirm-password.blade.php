@@ -23,7 +23,7 @@ new #[Layout('layouts.guest')] class extends Component
             'password' => $this->password,
         ])) {
             throw ValidationException::withMessages([
-                'password' => __('auth.password'),
+                'password' => trans('auth.password'),
             ]);
         }
 
@@ -35,13 +35,13 @@ new #[Layout('layouts.guest')] class extends Component
 
 <div>
     <div class="mb-4 text-sm text-gray-400">
-        {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
+        {{ translate('This is a secure area of the application. Please confirm your password before continuing.') }}
     </div>
 
     <form wire:submit="confirmPassword">
         <!-- Password -->
         <div>
-            <x-input-label for="password" :value="__('Password')" class="text-gray-300" />
+            <x-input-label for="password" :value="trans('Password')" class="text-gray-300" />
 
             <x-text-input
                 wire:model="password"
@@ -58,7 +58,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <div class="flex justify-end mt-4">
             <x-button class="bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 text-white">
-                {{ __('Confirm') }}
+                {{ translate('Confirm') }}
             </x-button>
         </div>
     </form>

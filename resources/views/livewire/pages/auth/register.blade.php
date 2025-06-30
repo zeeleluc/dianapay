@@ -40,7 +40,7 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="register">
         <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Name')" class="text-gray-300" />
+            <x-input-label for="name" :value="trans('Name')" class="text-gray-300" />
             <x-text-input
                 wire:model="name"
                 id="name"
@@ -56,7 +56,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Email Address -->
         <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" class="text-gray-300" />
+            <x-input-label for="email" :value="trans('Email')" class="text-gray-300" />
             <x-text-input
                 wire:model="email"
                 id="email"
@@ -71,7 +71,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Password -->
         <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" class="text-gray-300" />
+            <x-input-label for="password" :value="trans('Password')" class="text-gray-300" />
             <x-text-input
                 wire:model="password"
                 id="password"
@@ -86,7 +86,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Confirm Password -->
         <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" class="text-gray-300" />
+            <x-input-label for="password_confirmation" :value="trans('Confirm Password')" class="text-gray-300" />
             <x-text-input
                 wire:model="password_confirmation"
                 id="password_confirmation"
@@ -105,11 +105,11 @@ new #[Layout('layouts.guest')] class extends Component
                 href="{{ route('login') }}"
                 wire:navigate
             >
-                {{ __('Already registered?') }}
+                {{ translate('Already registered?') }}
             </a>
 
             <x-button class="ms-4 bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 text-white">
-                {{ __('Register') }}
+                {{ translate('Register') }}
             </x-button>
         </div>
     </form>
