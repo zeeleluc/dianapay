@@ -15,6 +15,10 @@ new class extends Component
     {
         $this->validate([
             'password' => ['required', 'string', 'current_password'],
+        ], [
+            'password.required' => translate('The password field is required.'),
+            'password.string' => translate('The password must be a string.'),
+            'password.current_password' => translate('The password is incorrect.'),
         ]);
 
         tap(Auth::user(), $logout(...))->delete();
@@ -69,12 +73,12 @@ new class extends Component
             </div>
 
             <div class="mt-6 flex justify-end space-x-3">
-                <x-secondary-button
+                <x-button
                     x-on:click="$dispatch('close')"
                     class="bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500"
                 >
                     {{ translate('Cancel') }}
-                </x-secondary-button>
+                </x-button>
 
                 <x-danger-button class="bg-red-600 hover:bg-red-700 focus:ring-red-500 text-white">
                     {{ translate('Delete Account') }}

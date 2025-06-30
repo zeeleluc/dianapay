@@ -30,6 +30,17 @@ new class extends Component
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+        ], [
+            'name.required' => translate('The name field is required.'),
+            'name.string' => translate('The name must be a string.'),
+            'name.max' => translate('The name may not be greater than :max characters.'),
+
+            'email.required' => translate('The email field is required.'),
+            'email.string' => translate('The email must be a string.'),
+            'email.lowercase' => translate('The email must be lowercase.'),
+            'email.email' => translate('The email must be a valid email address.'),
+            'email.max' => translate('The email may not be greater than :max characters.'),
+            'email.unique' => translate('The email has already been taken.'),
         ]);
 
         $user->fill($validated);
@@ -69,19 +80,19 @@ new class extends Component
         </h2>
 
         <p class="mt-1 text-sm text-gray-300">
-            {{ __("Update your account's profile information and email address.") }}
+            {{ translate("Update your account's profile information and email address.") }}
         </p>
     </header>
 
     <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
         <div>
-            <x-input-label for="name" :value="trans('Name')" class="text-gray-300" />
+            <x-input-label for="name" :value="translate('Name')" class="text-gray-300" />
             <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full bg-gray-700 border-gray-600 text-white" required autofocus autocomplete="name" />
             <x-input-error class="mt-2 text-red-500" :messages="$errors->get('name')" />
         </div>
 
         <div>
-            <x-input-label for="email" :value="trans('Email')" class="text-gray-300" />
+            <x-input-label for="email" :value="translate('Email')" class="text-gray-300" />
             <x-text-input wire:model="email" id="email" name="email" type="email" class="mt-1 block w-full bg-gray-700 border-gray-600 text-white" required autocomplete="username" />
             <x-input-error class="mt-2 text-red-500" :messages="$errors->get('email')" />
 
@@ -106,11 +117,11 @@ new class extends Component
 
         <div class="flex items-center gap-4">
             <x-button class="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500 text-white">
-                {{ translate('Save') }}
+                {{ translate('Submit') }}
             </x-button>
 
             <x-action-message class="text-emerald-400" on="profile-updated">
-                {{ translate('Saved.') }}
+                {{ translate('Submitted.') }}
             </x-action-message>
         </div>
     </form>

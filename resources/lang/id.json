@@ -8,5 +8,22 @@
     "Already registered?": "Sudah terdaftar?",
     "Dashboard": "Dasbor",
     "Profile": "Profil",
-    "Log Out": "Keluar"
+    "Log Out": "Keluar",
+    "Profile Information": "Informasi profil",
+    "Update your account's profile information and email address.": "Perbarui informasi profil dan alamat email akun Anda.",
+    "Name": "Nama",
+    "Email": "E-mail",
+    "Submit": "Kirim",
+    "Submitted.": "Dikirimkan.",
+    "Update Password": "Perbarui Kata Sandi",
+    "Ensure your account is using a long, random password to stay secure.": "Pastikan akun Anda menggunakan kata sandi panjang dan acak agar tetap aman.",
+    "Current Password": "Kata sandi saat ini",
+    "New Password": "Kata sandi baru",
+    "Confirm Password": "Konfirmasi Kata Sandi",
+    "Delete Account": "Hapus akun",
+    "Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.": "Setelah akun Anda dihapus, semua sumber daya dan datanya akan dihapus secara permanen. ",
+    "Are you sure you want to delete your account?": "Apakah Anda yakin ingin menghapus akun Anda?",
+    "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.": "Setelah akun Anda dihapus, semua sumber daya dan datanya akan dihapus secara permanen. ",
+    "Password": "Kata sandi",
+    "Cancel": "Membatalkan"
 }

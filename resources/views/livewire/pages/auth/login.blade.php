@@ -22,6 +22,19 @@ new #[Layout('layouts.guest')] class extends Component
 
         $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
     }
+
+    public function messages(): array
+    {
+        return [
+            'email.required' => translate('The :attribute field is required.', ['attribute' => translate('Email')]),
+            'email.email' => translate('The :attribute must be a valid email address.', ['attribute' => translate('Email')]),
+            'email.max' => translate('The :attribute may not be greater than :max characters.', ['attribute' => translate('Email'), 'max' => 255]),
+
+            'password.required' => translate('The :attribute field is required.', ['attribute' => translate('Password')]),
+            'password.min' => translate('The :attribute must be at least :min characters.', ['attribute' => translate('Password'), 'min' => 8]),
+        ];
+    }
+
 }; ?>
 
 <div>
@@ -31,7 +44,7 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="login">
         <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="trans('Email')" class="text-gray-300" />
+            <x-input-label for="email" :value="translate('Email')" class="text-gray-300" />
             <x-text-input
                 wire:model="form.email"
                 id="email"
@@ -47,7 +60,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Password -->
         <div class="mt-4">
-            <x-input-label for="password" :value="trans('Password')" class="text-gray-300" />
+            <x-input-label for="password" :value="translate('Password')" class="text-gray-300" />
             <x-text-input
                 wire:model="form.password"
                 id="password"

@@ -21,6 +21,14 @@ new class extends Component
             $validated = $this->validate([
                 'current_password' => ['required', 'string', 'current_password'],
                 'password' => ['required', 'string', Password::defaults(), 'confirmed'],
+            ], [
+                'current_password.required' => translate('The current password field is required.'),
+                'current_password.string' => translate('The current password must be a string.'),
+                'current_password.current_password' => translate('The current password is incorrect.'),
+
+                'password.required' => translate('The new password field is required.'),
+                'password.string' => translate('The new password must be a string.'),
+                'password.confirmed' => translate('The new password confirmation does not match.'),
             ]);
         } catch (ValidationException $e) {
             $this->reset('current_password', 'password', 'password_confirmation');
@@ -51,30 +59,30 @@ new class extends Component
 
     <form wire:submit="updatePassword" class="mt-6 space-y-6">
         <div>
-            <x-input-label for="update_password_current_password" :value="trans('Current Password')" class="text-gray-300" />
+            <x-input-label for="update_password_current_password" :value="translate('Current Password')" class="text-gray-300" />
             <x-text-input wire:model="current_password" id="update_password_current_password" name="current_password" type="password" class="mt-1 block w-full bg-gray-700 border-gray-600 text-white" autocomplete="current-password" />
             <x-input-error :messages="$errors->get('current_password')" class="mt-2 text-red-400" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password" :value="trans('New Password')" class="text-gray-300" />
+            <x-input-label for="update_password_password" :value="translate('New Password')" class="text-gray-300" />
             <x-text-input wire:model="password" id="update_password_password" name="password" type="password" class="mt-1 block w-full bg-gray-700 border-gray-600 text-white" autocomplete="new-password" />
             <x-input-error :messages="$errors->get('password')" class="mt-2 text-red-400" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password_confirmation" :value="trans('Confirm Password')" class="text-gray-300" />
+            <x-input-label for="update_password_password_confirmation" :value="translate('Confirm Password')" class="text-gray-300" />
             <x-text-input wire:model="password_confirmation" id="update_password_password_confirmation" name="password_confirmation" type="password" class="mt-1 block w-full bg-gray-700 border-gray-600 text-white" autocomplete="new-password" />
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2 text-red-400" />
         </div>
 
         <div class="flex items-center gap-4">
             <x-button class="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500 text-white">
-                {{ translate('Save') }}
+                {{ translate('Submit') }}
             </x-button>
 
             <x-action-message class="text-emerald-400" on="password-updated">
-                {{ translate('Saved.') }}
+                {{ translate('Submitted.') }}
             </x-action-message>
         </div>
     </form>

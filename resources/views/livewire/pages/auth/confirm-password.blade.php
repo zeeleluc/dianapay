@@ -16,6 +16,9 @@ new #[Layout('layouts.guest')] class extends Component
     {
         $this->validate([
             'password' => ['required', 'string'],
+        ], [
+            'password.required' => translate('validation.required', ['attribute' => translate('Password')]),
+            'password.string'   => translate('validation.string', ['attribute' => translate('Password')]),
         ]);
 
         if (! Auth::guard('web')->validate([
@@ -23,7 +26,7 @@ new #[Layout('layouts.guest')] class extends Component
             'password' => $this->password,
         ])) {
             throw ValidationException::withMessages([
-                'password' => trans('auth.password'),
+                'password' => translate('auth.password'), // incorrect password message
             ]);
         }
 
@@ -41,7 +44,7 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="confirmPassword">
         <!-- Password -->
         <div>
-            <x-input-label for="password" :value="trans('Password')" class="text-gray-300" />
+            <x-input-label for="password" :value="translate('Password')" class="text-gray-300" />
 
             <x-text-input
                 wire:model="password"

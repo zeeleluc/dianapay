@@ -25,14 +25,14 @@ new #[Layout('layouts.guest')] class extends Component
         );
 
         if ($status != Password::RESET_LINK_SENT) {
-            $this->addError('email', __($status));
+            $this->addError('email', translate($status));
 
             return;
         }
 
         $this->reset('email');
 
-        session()->flash('status', __($status));
+        session()->flash('status', translate($status));
     }
 }; ?>
 
@@ -47,7 +47,7 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="sendPasswordResetLink">
         <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="trans('Email')" class="text-gray-300" />
+            <x-input-label for="email" :value="translate('Email')" class="text-gray-300" />
             <x-text-input
                 wire:model="email"
                 id="email"

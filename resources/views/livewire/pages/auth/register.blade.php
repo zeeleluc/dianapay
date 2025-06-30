@@ -16,6 +16,32 @@ new #[Layout('layouts.guest')] class extends Component
     public string $password_confirmation = '';
 
     /**
+     * Return translated validation messages.
+     */
+    protected function messages(): array
+    {
+        return [
+            'name.required' => translate('The :attribute field is required.', ['attribute' => translate('Name')]),
+            'name.string' => translate('The :attribute must be a string.', ['attribute' => translate('Name')]),
+            'name.max' => translate('The :attribute may not be greater than :max characters.', ['attribute' => translate('Name'), 'max' => 255]),
+
+            'email.required' => translate('The :attribute field is required.', ['attribute' => translate('Email')]),
+            'email.string' => translate('The :attribute must be a string.', ['attribute' => translate('Email')]),
+            'email.lowercase' => translate('The :attribute must be lowercase.', ['attribute' => translate('Email')]),
+            'email.email' => translate('The :attribute must be a valid email address.', ['attribute' => translate('Email')]),
+            'email.max' => translate('The :attribute may not be greater than :max characters.', ['attribute' => translate('Email'), 'max' => 255]),
+            'email.unique' => translate('The :attribute has already been taken.', ['attribute' => translate('Email')]),
+
+            'password.required' => translate('The :attribute field is required.', ['attribute' => translate('Password')]),
+            'password.string' => translate('The :attribute must be a string.', ['attribute' => translate('Password')]),
+            'password.confirmed' => translate('The :attribute confirmation does not match.', ['attribute' => translate('Password')]),
+            'password.min' => translate('The :attribute must be at least :min characters.', ['attribute' => translate('Password'), 'min' => 8]),
+
+            // No validation for password_confirmation since it's checked by 'confirmed' rule
+        ];
+    }
+
+    /**
      * Handle an incoming registration request.
      */
     public function register(): void
@@ -24,7 +50,7 @@ new #[Layout('layouts.guest')] class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
-        ]);
+        ], $this->messages());
 
         $validated['password'] = Hash::make($validated['password']);
 
@@ -34,13 +60,14 @@ new #[Layout('layouts.guest')] class extends Component
 
         $this->redirect(route('dashboard', absolute: false), navigate: true);
     }
-}; ?>
+};
+?>
 
 <div>
     <form wire:submit="register">
         <!-- Name -->
         <div>
-            <x-input-label for="name" :value="trans('Name')" class="text-gray-300" />
+            <x-input-label for="name" :value="translate('Name')" class="text-gray-300" />
             <x-text-input
                 wire:model="name"
                 id="name"
@@ -56,7 +83,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Email Address -->
         <div class="mt-4">
-            <x-input-label for="email" :value="trans('Email')" class="text-gray-300" />
+            <x-input-label for="email" :value="translate('Email')" class="text-gray-300" />
             <x-text-input
                 wire:model="email"
                 id="email"
@@ -71,7 +98,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Password -->
         <div class="mt-4">
-            <x-input-label for="password" :value="trans('Password')" class="text-gray-300" />
+            <x-input-label for="password" :value="translate('Password')" class="text-gray-300" />
             <x-text-input
                 wire:model="password"
                 id="password"
@@ -86,7 +113,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Confirm Password -->
         <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="trans('Confirm Password')" class="text-gray-300" />
+            <x-input-label for="password_confirmation" :value="translate('Confirm Password')" class="text-gray-300" />
             <x-text-input
                 wire:model="password_confirmation"
                 id="password_confirmation"

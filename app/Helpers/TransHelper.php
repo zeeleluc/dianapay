@@ -5,11 +5,17 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 
 if (!function_exists('translate')) {
-    function translate($text)
+    function translate(string $text, array $replace = []): string
     {
         $locale = App::getLocale();
 
+        // If English, return original with replacements applied (if any)
         if ($locale === 'en') {
+            if ($replace) {
+                foreach ($replace as $key => $value) {
+                    $text = str_replace(':'.$key, $value, $text);
+                }
+            }
             return $text;
         }
 
@@ -29,25 +35,40 @@ if (!function_exists('translate')) {
         // Load existing translations
         $translations = json_decode(File::get($filePath), true) ?? [];
 
-        // Return existing translation if found
-        if (isset($translations[$text])) {
-            return $translations[$text];
+        // Find translation or fallback to $text
+        $translated = $translations[$text] ?? $text;
+
+        // Apply replacements if provided
+        if ($replace) {
+            foreach ($replace as $key => $value) {
+                $translated = str_replace(':'.$key, $value, $translated);
+            }
         }
 
-        // Translate via Google Translate (free endpoint)
-        $response = Http::get('https://translate.googleapis.com/translate_a/single', [
-            'client' => 'gtx',
-            'sl'     => 'en',
-            'tl'     => $locale,
-            'dt'     => 't',
-            'q'      => $text,
-        ]);
+        // Save new translation if missing (only the base text, without replacements)
+        if (!isset($translations[$text])) {
+            // Translate via Google Translate (free endpoint)
+            $response = Http::get('https://translate.googleapis.com/translate_a/single', [
+                'client' => 'gtx',
+                'sl'     => 'en',
+                'tl'     => $locale,
+                'dt'     => 't',
+                'q'      => $text,
+            ]);
 
-        $translated = $response->json()[0][0][0] ?? $text;
+            $autoTranslated = $response->json()[0][0][0] ?? $text;
 
-        // Save new translation
-        $translations[$text] = $translated;
-        File::put($filePath, json_encode($translations, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+            // Save the base translation without replacements (placeholders remain)
+            $translations[$text] = $autoTranslated;
+            File::put($filePath, json_encode($translations, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+
+            // Apply replacements on auto translated string
+            foreach ($replace as $key => $value) {
+                $autoTranslated = str_replace(':'.$key, $value, $autoTranslated);
+            }
+
+            return $autoTranslated;
+        }
 
         return $translated;
     }

@@ -58,12 +58,12 @@ new #[Layout('layouts.guest')] class extends Component
         // the application's home authenticated view. If there is an error we can
         // redirect them back to where they came from with their error message.
         if ($status != Password::PASSWORD_RESET) {
-            $this->addError('email', __($status));
+            $this->addError('email', translate($status));
 
             return;
         }
 
-        Session::flash('status', __($status));
+        Session::flash('status', translate($status));
 
         $this->redirectRoute('login', navigate: true);
     }
@@ -73,7 +73,7 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="resetPassword">
         <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="trans('Email')" class="text-gray-300" />
+            <x-input-label for="email" :value="translate('Email')" class="text-gray-300" />
             <x-text-input
                 wire:model="email"
                 id="email"
@@ -89,7 +89,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Password -->
         <div class="mt-4">
-            <x-input-label for="password" :value="trans('Password')" class="text-gray-300" />
+            <x-input-label for="password" :value="translate('Password')" class="text-gray-300" />
             <x-text-input
                 wire:model="password"
                 id="password"
@@ -104,7 +104,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         <!-- Confirm Password -->
         <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="trans('Confirm Password')" class="text-gray-300" />
+            <x-input-label for="password_confirmation" :value="translate('Confirm Password')" class="text-gray-300" />
             <x-text-input
                 wire:model="password_confirmation"
                 id="password_confirmation"
