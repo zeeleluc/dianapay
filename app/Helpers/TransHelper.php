@@ -6,9 +6,10 @@ use Illuminate\Support\Facades\Http;
 
 if (!function_exists('translate')) {
     /**
-     * Translates a string by first assembling the full English text, then translating it to the target locale.
-     * Placeholders (e.g., :attribute) are replaced before translation, and the result is cached.
-     * Ensures no strings with placeholders are cached or sent to the translation API.
+     * Translates a string by assembling the full English text, then checking the locale's JSON file.
+     * Placeholders are replaced before checking, and results are cached in the JSON file.
+     * Skips Google API if the assembled string exists as a key in the JSON file.
+     * Avoids sending strings with placeholders to the API.
      *
      * @param string $text The input string with optional placeholders (e.g., "The :attribute field is required.")
      * @param array $replace Key-value pairs for placeholder replacements (e.g., ['attribute' => 'email'])
@@ -29,44 +30,41 @@ if (!function_exists('translate')) {
             $text = $exceptions[$text];
         }
 
-        // Step 1: Assemble the full English string by replacing placeholders
+        // Step 1: Assemble the full English string
         $assembledEnglish = applyReplacements($text, $replace);
 
-        // Step 2: Return the assembled English string if the locale is English
+        // Step 2: Return English string if locale is English
         if ($locale === 'en') {
             return $assembledEnglish;
         }
 
-        // Step 3: Prepare translation cache path
+        // Step 3: Prepare translation file path
         $langDir = resource_path('lang');
         $filePath = "{$langDir}/{$locale}.json";
 
-        // Ensure the language directory exists
+        // Ensure language directory exists
         if (!File::exists($langDir)) {
             File::makeDirectory($langDir, 0755, true);
         }
 
-        // Initialize the translation file if it doesn't exist
+        // Initialize translation file
         if (!File::exists($filePath)) {
             File::put($filePath, json_encode([], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         }
 
-        // Step 4: Load existing translations
+        // Step 4: Load translations and check for cached translation
         $translations = json_decode(File::get($filePath), true) ?? [];
-
-        // Step 5: Return cached translation if it exists
         if (isset($translations[$assembledEnglish])) {
             return $translations[$assembledEnglish];
         }
 
-        // Step 6: Validate that the assembled string has no placeholders
-        if (preg_match('/:[a-zA-Z]+/', $assembledEnglish)) {
-            // Log error and return the assembled English string as a fallback
-            \Log::warning("Unreplaced placeholders found in assembled string: {$assembledEnglish}");
+        // Step 5: Validate no placeholders remain
+        if (preg_match('/:[a-zA-Z0-9_]+/', $assembledEnglish)) {
+            \Log::warning("Unreplaced placeholders in assembled string: {$assembledEnglish}");
             return $assembledEnglish;
         }
 
-        // Step 7: Translate the fully assembled English string (no placeholders)
+        // Step 6: Translate using Google API
         try {
             $response = Http::get('https://translate.googleapis.com/translate_a/single', [
                 'client' => 'gtx',
@@ -76,27 +74,28 @@ if (!function_exists('translate')) {
                 'q'      => $assembledEnglish,
             ]);
 
-            // Extract the translated text or fallback to the English string
-            $translated = $response->successful() && isset($response->json()[0][0][0])
-                ? $response->json()[0][0][0]
-                : $assembledEnglish;
+            $translated = $assembledEnglish;
+            if ($response->successful()) {
+                $responseData = $response->json();
+                if (isset($responseData[0][0][0]) && is_string($responseData[0][0][0])) {
+                    $translated = $responseData[0][0][0];
+                }
+            }
 
-            // Step 8: Cache the translation using the assembled English string as the key
+            // Step 7: Cache the translation in the JSON file
             $translations[$assembledEnglish] = $translated;
             File::put($filePath, json_encode($translations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         } catch (\Exception $e) {
-            // Log the error and return the assembled English string as a fallback
             \Log::error("Translation failed for '{$assembledEnglish}': {$e->getMessage()}");
             return $assembledEnglish;
         }
 
-        // Step 9: Return the translated string
         return $translated;
     }
 }
 
 /**
- * Replaces placeholders (e.g., :attribute) in a string with provided values.
+ * Replaces placeholders in a string with provided values.
  *
  * @param string $text The input string with placeholders
  * @param array $replace Key-value pairs for replacements

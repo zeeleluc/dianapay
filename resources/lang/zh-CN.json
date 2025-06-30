@@ -48,5 +48,8 @@
     "Profile Information": "个人资料信息",
     "Your email address is unverified.": "您的电子邮件地址未经验证。",
     "Click here to re-send the verification email.": "单击此处重新发送验证电子邮件。",
-    "A new verification link has been sent to your email address.": "新的验证链接已发送到您的电子邮件地址。"
+    "A new verification link has been sent to your email address.": "新的验证链接已发送到您的电子邮件地址。",
+    "The provided password is incorrect.": "提供的密码不正确。",
+    "This is a secure area of the application. Please confirm your password before continuing.": "这是应用程序的安全区域。",
+    "Confirm": "确认"
 }
