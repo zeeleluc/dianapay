@@ -69,9 +69,9 @@ new class extends Component
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button class="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500 text-white">
+            <x-button class="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500 text-white">
                 {{ __('Save') }}
-            </x-primary-button>
+            </x-button>
 
             <x-action-message class="text-emerald-400" on="password-updated">
                 {{ __('Saved.') }}

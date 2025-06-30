@@ -10,7 +10,7 @@
 </head>
 <body class="antialiased bg-gray-950">
 
-@livewire('homepage-navbar')
+@include('livewire.welcome.navigation')
 
 <main>
     {{ $slot }}

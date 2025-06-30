@@ -1,26 +1,23 @@
-<nav class="-mx-3 flex flex-1 justify-end">
-    @auth
-        <a
-            href="{{ url('/dashboard') }}"
-            class="rounded-md px-3 py-2 text-white ring-1 ring-transparent transition hover:text-gray-300 focus:outline-none focus-visible:ring-emerald-500"
-        >
-            Dashboard
-        </a>
-    @else
-        <a
-            href="{{ route('login') }}"
-            class="rounded-md px-3 py-2 text-white ring-1 ring-transparent transition hover:text-gray-300 focus:outline-none focus-visible:ring-emerald-500"
-        >
-            Log in
-        </a>
+<nav class="bg-gray-900 text-white px-6 py-8 flex justify-between items-center shadow-md text-xl">
+    <div class="font-bold">
+        {{ config('app.name') }}
+    </div>
 
-        @if (Route::has('register'))
-            <a
-                href="{{ route('register') }}"
-                class="rounded-md px-3 py-2 text-white ring-1 ring-transparent transition hover:text-gray-300 focus:outline-none focus-visible:ring-emerald-500"
-            >
-                Register
-            </a>
-        @endif
-    @endauth
+    <div class="space-x-4">
+        @auth
+            <x-button href="{{ url('/dashboard') }}">
+                {{ __('Dashboard') }}
+            </x-button>
+        @else
+            <x-button href="{{ route('login') }}">
+                {{ __('Log in') }}
+            </x-button>
+
+            @if (Route::has('register'))
+                <x-button href="{{ route('register') }}">
+                    {{ __('Register') }}
+                </x-button>
+            @endif
+        @endauth
+    </div>
 </nav>
