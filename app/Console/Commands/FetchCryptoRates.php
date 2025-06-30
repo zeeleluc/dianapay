@@ -90,6 +90,9 @@ class FetchCryptoRates extends Command
                 }
             }
 
+            $deleted = \App\Models\CurrencyRate::where('recorded_at', '<', Carbon::now()->subDay())->delete();
+            $this->info("Cleaned up {$deleted} currency rate(s) older than 24 hours.");
+
             $this->info('Successfully processed all rates.');
             return 0;
 
