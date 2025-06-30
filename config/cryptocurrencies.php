@@ -1,59 +1,42 @@
 <?php
 
 return [
-    'coingecko' => [
-        'base' => [
-            'currencies' => [
-                'crypto_ids' => [
-                    'usd-coin',
-                    'ethereum',
-                    'tether',
-                    'dai',
-                    'brett',
-                    'toshi',
-                    'cardano',
-                    'litecoin',
-
-                    // New Base L2 notable tokens
-                    'axelar',
-                    'balancer',
-                    'yearn-finance',
-                    'cyberconnect',
-                    'optimism',
-                    'chainlink',
-                    'ski-token',
-                    'pepe',
-                    'degen',
-                    'miggless',
-                    'keycat',
-                ],
-                'fiat' => [
-                    'usd', 'eur', 'jpy', 'gbp', 'cny', 'cad', 'aud', 'chf', 'xcg',
-                ],
-            ],
-            'crypto_map' => [
-                'usd-coin'       => 'USDC',
-                'ethereum'       => 'ETH',
-                'tether'         => 'USDT',
-                'dai'            => 'DAI',
-                'brett'          => 'BRETT',
-                'toshi'          => 'TOSHI',
-                'cardano'        => 'cbADA',
-                'litecoin'       => 'cbLTC',
-
-                // New Base L2 mappings
-                'axelar'         => 'AXL',
-                'balancer'       => 'BAL',
-                'yearn-finance'  => 'YFI',
-                'cyberconnect'   => 'CYBER',
-                'optimism'       => 'OP',
-                'chainlink'      => 'LINK',
-                'ski-token'      => 'SKI',
-                'pepe'           => 'PEPE',
-                'degen'          => 'DEGEN',
-                'miggless'       => 'MIGGLES',
-                'keycat'         => 'KEYCAT',
-            ],
+    'base' => [
+        'ETH' => [
+            'coingecko_id' => 'ethereum',
+            'contract' => null, // native Base ETH
+        ],
+        'USDC' => [
+            'coingecko_id' => 'usd-coin',
+            'contract' => '0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA',
+        ],
+        'USDT' => [
+            'coingecko_id' => 'tether',
+            'contract' => '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2',
+        ],
+        'DAI' => [
+            'coingecko_id' => 'dai',
+            'contract' => '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
+        ],
+        'BRETT' => [
+            'coingecko_id' => 'brett',
+            'contract' => '0x532f27101965dd16442E59d40670FaF5eBB142E4',
+        ],
+        'TOSHI' => [
+            'coingecko_id' => 'toshi',
+            'contract' => '0xAC1Bd2486aAf3B5C0fc3Fd868558b082a531B2B4',
+        ],
+        'LINK' => [
+            'coingecko_id' => 'chainlink',
+            'contract' => '0xd403d1624daef243fbcbd4a80d8a6f36affe32b2',
+        ],
+        'DEGEN' => [
+            'coingecko_id' => 'degen',
+            'contract' => '0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed',
+        ],
+        'MIGGLES' => [
+            'coingecko_id' => 'mister-miggles',
+            'contract' => '0xB1a03EdA10342529bBF8EB700a06C60441fEf25d',
         ],
     ],
 ];

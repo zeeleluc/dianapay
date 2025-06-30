@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\CurrencyRate;
 use App\Services\CurrencyRateService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -14,91 +15,89 @@ class FetchCryptoRates extends Command
 
     public function handle()
     {
-        // Load configurations
-        $blockchains = config('cryptocurrencies.coingecko', []);
+        $blockchains = config('cryptocurrencies', []);
+        $fiatCurrencies = config('fiats', []);
 
         if (empty($blockchains)) {
-            $this->error('No blockchains configured in cryptocurrencies.php');
+            $this->error('No cryptocurrencies configured.');
             return 1;
         }
 
-        try {
-            foreach ($blockchains as $blockchain => $config) {
-                $cryptoIds = $config['currencies']['crypto_ids'] ?? [];
-                $fiatCurrencies = $config['currencies']['fiat'] ?? [];
-                $cryptoMap = $config['crypto_map'] ?? [];
+        foreach ($blockchains as $blockchain => $tokens) {
+            if (empty($tokens)) {
+                $this->warn("No tokens configured for blockchain: {$blockchain}");
+                continue;
+            }
 
-                if (empty($cryptoIds) || empty($fiatCurrencies)) {
-                    $this->error("No cryptocurrencies or fiat currencies configured for blockchain {$blockchain}");
+            // Build crypto_id list and symbol map
+            $cryptoIds = [];
+            $cryptoMap = [];
+            foreach ($tokens as $symbol => $info) {
+                if (!isset($info['coingecko_id'])) continue;
+
+                $cryptoIds[] = $info['coingecko_id'];
+                $cryptoMap[$info['coingecko_id']] = $symbol;
+            }
+
+            $fetchableFiats = array_diff($fiatCurrencies, ['xcg']);
+            $response = Http::get('https://api.coingecko.com/api/v3/simple/price', [
+                'ids' => implode(',', $cryptoIds),
+                'vs_currencies' => implode(',', $fetchableFiats),
+            ]);
+
+            if (!$response->successful()) {
+                $this->error("Failed to fetch rates from CoinGecko for {$blockchain}: " . $response->status());
+                continue;
+            }
+
+            $data = $response->json();
+            $recordedAt = Carbon::now()->startOfMinute();
+
+            foreach ($cryptoIds as $cryptoId) {
+                if (!isset($data[$cryptoId])) {
+                    $this->warn("No data for {$cryptoId} on {$blockchain}");
                     continue;
                 }
 
-                // Fetch rates from CoinGecko (excluding XCG, as it may not be supported)
-                $fetchableFiats = array_diff($fiatCurrencies, ['xcg']);
-                $response = Http::get('https://api.coingecko.com/api/v3/simple/price', [
-                    'ids' => implode(',', $cryptoIds),
-                    'vs_currencies' => implode(',', $fetchableFiats),
-                ]);
+                $cryptoSymbol = $cryptoMap[$cryptoId];
 
-                if (!$response->successful()) {
-                    $this->error("Failed to fetch rates from CoinGecko for blockchain {$blockchain}: " . $response->status());
-                    continue;
-                }
+                foreach ($fiatCurrencies as $fiat) {
+                    $rate = null;
 
-                $data = $response->json();
-                $recordedAt = Carbon::now()->startOfMinute();
+                    if ($fiat === 'xcg') {
+                        $usdRate = $data[$cryptoId]['usd'] ?? null;
+                        if ($usdRate) {
+                            $rate = $usdRate / 1.79;
+                        }
+                    } else {
+                        $rate = $data[$cryptoId][$fiat] ?? null;
+                    }
 
-                foreach ($cryptoIds as $cryptoId) {
-                    if (!isset($data[$cryptoId])) {
-                        $this->warn("No data returned for {$cryptoId} on {$blockchain}");
+                    if ($rate === null) {
+                        $this->warn("Missing rate for {$cryptoSymbol}/{$fiat} on {$blockchain}");
                         continue;
                     }
 
-                    $crypto = $cryptoMap[$cryptoId] ?? strtoupper($cryptoId);
+                    try {
+                        $currencyRate = CurrencyRateService::storeRate(
+                            fiat: strtoupper($fiat),
+                            crypto: $cryptoSymbol,
+                            blockchain: $blockchain,
+                            rate: $rate,
+                            date: $recordedAt
+                        );
 
-                    foreach ($fiatCurrencies as $fiat) {
-                        $rate = null;
-                        if ($fiat === 'xcg') {
-                            // Derive XCG rate from USD rate (1 USD = 1.79 XCG)
-                            if (isset($data[$cryptoId]['usd'])) {
-                                $usdRate = $data[$cryptoId]['usd'];
-                                $rate = $usdRate / 1.79; // e.g., 1 USDT = 1 USD → 1 USDT = 0.558659 XCG
-                            }
-                        } else {
-                            $rate = $data[$cryptoId][$fiat] ?? null;
-                        }
-
-                        if ($rate === null) {
-                            $this->warn("No {$fiat} price found for {$crypto} on {$blockchain}");
-                            continue;
-                        }
-
-                        // Store the rate using CurrencyRateService, which skips duplicates
-                        try {
-                            $currencyRate = CurrencyRateService::storeRate(
-                                fiat: strtoupper($fiat),
-                                crypto: $crypto,
-                                blockchain: $blockchain,
-                                rate: $rate,
-                                date: $recordedAt
-                            );
-                            $this->info("Processed rate: {$currencyRate->fiat}/{$currencyRate->crypto} ({$currencyRate->blockchain}) = {$currencyRate->rate} at {$currencyRate->recorded_at}");
-                        } catch (\InvalidArgumentException $e) {
-                            $this->error("Failed to store rate for {$fiat}/{$crypto} on {$blockchain}: {$e->getMessage()}");
-                        }
+                        $this->info("Saved: {$fiat}/{$cryptoSymbol} ({$blockchain}) = {$rate} @ {$recordedAt}");
+                    } catch (\InvalidArgumentException $e) {
+                        $this->error("Store failed for {$fiat}/{$cryptoSymbol} on {$blockchain}: {$e->getMessage()}");
                     }
                 }
             }
-
-            $deleted = \App\Models\CurrencyRate::where('recorded_at', '<', Carbon::now()->subDay())->delete();
-            $this->info("Cleaned up {$deleted} currency rate(s) older than 24 hours.");
-
-            $this->info('Successfully processed all rates.');
-            return 0;
-
-        } catch (\Exception $e) {
-            $this->error('Error fetching rates from CoinGecko: ' . $e->getMessage());
-            return 1;
         }
+
+        $deleted = CurrencyRate::where('recorded_at', '<', Carbon::now()->subDay())->delete();
+        $this->info("Cleaned up {$deleted} old currency rate(s).");
+
+        return 0;
     }
 }

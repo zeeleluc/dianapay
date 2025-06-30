@@ -9,48 +9,43 @@ class CurrencyRatesTable extends Component
 {
     public function render()
     {
-        $ratesByBlockchain = $this->getRatesByBlockchain();
         return view('livewire.currency-rates-table', [
-            'ratesByBlockchain' => $ratesByBlockchain,
+            'ratesByBlockchain' => $this->getRatesByBlockchain(),
         ]);
     }
 
     private function getRatesByBlockchain(): array
     {
-        // Get distinct blockchains
-        $blockchains = CurrencyRate::distinct()->pluck('blockchain')->toArray();
+        $configuredBlockchains = config('cryptocurrencies', []);
+        $fiats = config('fiats', []);
         $result = [];
 
-        foreach ($blockchains as $blockchain) {
-            // Get unique fiats and cryptos for this blockchain
-            $fiats = CurrencyRate::where('blockchain', $blockchain)
-                ->distinct()
-                ->pluck('fiat')
-                ->sort()
-                ->values()
-                ->toArray();
-            $cryptos = CurrencyRate::where('blockchain', $blockchain)
-                ->distinct()
-                ->pluck('crypto')
-                ->sort()
-                ->values()
-                ->toArray();
+        foreach ($configuredBlockchains as $blockchain => $tokens) {
+            if (empty($tokens)) {
+                continue;
+            }
 
-            // Build the matrix using the latest rate for each fiat/crypto pair
+            $cryptoSymbols = array_keys($tokens);
+            sort($cryptoSymbols);
+            sort($fiats);
+
             $data = [];
-            foreach ($cryptos as $crypto) {
+
+            foreach ($cryptoSymbols as $crypto) {
                 $data[$crypto] = [];
+
                 foreach ($fiats as $fiat) {
                     $rate = CurrencyRate::byCurrencyPair($fiat, $crypto, $blockchain)
                         ->latest()
                         ->value('rate');
+
                     $data[$crypto][$fiat] = $rate ?? null;
                 }
             }
 
             $result[$blockchain] = [
                 'fiats' => $fiats,
-                'cryptos' => $cryptos,
+                'cryptos' => $cryptoSymbols,
                 'data' => $data,
             ];
         }
