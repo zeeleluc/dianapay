@@ -5,71 +5,107 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 
 if (!function_exists('translate')) {
+    /**
+     * Translates a string by first assembling the full English text, then translating it to the target locale.
+     * Placeholders (e.g., :attribute) are replaced before translation, and the result is cached.
+     * Ensures no strings with placeholders are cached or sent to the translation API.
+     *
+     * @param string $text The input string with optional placeholders (e.g., "The :attribute field is required.")
+     * @param array $replace Key-value pairs for placeholder replacements (e.g., ['attribute' => 'email'])
+     * @return string The translated string or the assembled English string if translation fails
+     */
     function translate(string $text, array $replace = []): string
     {
         $locale = App::getLocale();
 
-        // If English, return original with replacements applied (if any)
-        if ($locale === 'en') {
-            if ($replace) {
-                foreach ($replace as $key => $value) {
-                    $text = str_replace(':'.$key, $value, $text);
-                }
-            }
-            return $text;
+        $exceptions = [
+            'passwords.user'      => "We can't find a user with that email address.",
+            'validation.required' => 'The :attribute field is required.',
+            'validation.string'   => 'The :attribute must be a string.',
+            'auth.password'       => 'The provided password is incorrect.',
+        ];
+
+        if (isset($exceptions[$text])) {
+            $text = $exceptions[$text];
         }
 
+        // Step 1: Assemble the full English string by replacing placeholders
+        $assembledEnglish = applyReplacements($text, $replace);
+
+        // Step 2: Return the assembled English string if the locale is English
+        if ($locale === 'en') {
+            return $assembledEnglish;
+        }
+
+        // Step 3: Prepare translation cache path
         $langDir = resource_path('lang');
         $filePath = "{$langDir}/{$locale}.json";
 
-        // Ensure lang directory exists
+        // Ensure the language directory exists
         if (!File::exists($langDir)) {
             File::makeDirectory($langDir, 0755, true);
         }
 
-        // Create empty JSON file if it doesn't exist
+        // Initialize the translation file if it doesn't exist
         if (!File::exists($filePath)) {
-            File::put($filePath, json_encode(new stdClass(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            File::put($filePath, json_encode([], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         }
 
-        // Load existing translations
+        // Step 4: Load existing translations
         $translations = json_decode(File::get($filePath), true) ?? [];
 
-        // Find translation or fallback to $text
-        $translated = $translations[$text] ?? $text;
-
-        // Apply replacements if provided
-        if ($replace) {
-            foreach ($replace as $key => $value) {
-                $translated = str_replace(':'.$key, $value, $translated);
-            }
+        // Step 5: Return cached translation if it exists
+        if (isset($translations[$assembledEnglish])) {
+            return $translations[$assembledEnglish];
         }
 
-        // Save new translation if missing (only the base text, without replacements)
-        if (!isset($translations[$text])) {
-            // Translate via Google Translate (free endpoint)
+        // Step 6: Validate that the assembled string has no placeholders
+        if (preg_match('/:[a-zA-Z]+/', $assembledEnglish)) {
+            // Log error and return the assembled English string as a fallback
+            \Log::warning("Unreplaced placeholders found in assembled string: {$assembledEnglish}");
+            return $assembledEnglish;
+        }
+
+        // Step 7: Translate the fully assembled English string (no placeholders)
+        try {
             $response = Http::get('https://translate.googleapis.com/translate_a/single', [
                 'client' => 'gtx',
                 'sl'     => 'en',
                 'tl'     => $locale,
                 'dt'     => 't',
-                'q'      => $text,
+                'q'      => $assembledEnglish,
             ]);
 
-            $autoTranslated = $response->json()[0][0][0] ?? $text;
+            // Extract the translated text or fallback to the English string
+            $translated = $response->successful() && isset($response->json()[0][0][0])
+                ? $response->json()[0][0][0]
+                : $assembledEnglish;
 
-            // Save the base translation without replacements (placeholders remain)
-            $translations[$text] = $autoTranslated;
-            File::put($filePath, json_encode($translations, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-
-            // Apply replacements on auto translated string
-            foreach ($replace as $key => $value) {
-                $autoTranslated = str_replace(':'.$key, $value, $autoTranslated);
-            }
-
-            return $autoTranslated;
+            // Step 8: Cache the translation using the assembled English string as the key
+            $translations[$assembledEnglish] = $translated;
+            File::put($filePath, json_encode($translations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        } catch (\Exception $e) {
+            // Log the error and return the assembled English string as a fallback
+            \Log::error("Translation failed for '{$assembledEnglish}': {$e->getMessage()}");
+            return $assembledEnglish;
         }
 
+        // Step 9: Return the translated string
         return $translated;
     }
+}
+
+/**
+ * Replaces placeholders (e.g., :attribute) in a string with provided values.
+ *
+ * @param string $text The input string with placeholders
+ * @param array $replace Key-value pairs for replacements
+ * @return string The string with placeholders replaced
+ */
+function applyReplacements(string $text, array $replace): string
+{
+    foreach ($replace as $key => $value) {
+        $text = str_replace(':' . $key, $value, $text);
+    }
+    return $text;
 }

@@ -14,11 +14,14 @@ new #[Layout('layouts.guest')] class extends Component
      */
     public function confirmPassword(): void
     {
+        $attributeName = translate('Password');
+
         $this->validate([
             'password' => ['required', 'string'],
         ], [
-            'password.required' => translate('validation.required', ['attribute' => translate('Password')]),
-            'password.string'   => translate('validation.string', ['attribute' => translate('Password')]),
+            // use actual English message text with :attribute placeholder, wrapped in translate()
+            'password.required' => translate('The :attribute field is required.', ['attribute' => $attributeName]),
+            'password.string'   => translate('The :attribute must be a string.', ['attribute' => $attributeName]),
         ]);
 
         if (! Auth::guard('web')->validate([
@@ -26,7 +29,7 @@ new #[Layout('layouts.guest')] class extends Component
             'password' => $this->password,
         ])) {
             throw ValidationException::withMessages([
-                'password' => translate('auth.password'), // incorrect password message
+                'password' => translate('The provided password is incorrect.'), // literal message
             ]);
         }
 
