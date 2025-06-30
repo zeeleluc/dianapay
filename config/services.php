@@ -19,7 +19,8 @@ return [
     ],
 
     'resend' => [
-        'key' => env('RESEND_KEY'),
+        'api_key' => env('RESEND_KEY'),
+        'from_email' => env('RESEND_FROM_EMAIL', 'DianaPay <no-reply@dianapay.com>'),
     ],
 
     'ses' => [

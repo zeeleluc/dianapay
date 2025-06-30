@@ -8,9 +8,9 @@
     @livewireStyles
     @vite('resources/css/app.css')
 </head>
-<body class="antialiased bg-[#1C1E22]">
+<body class="antialiased bg-gray-950">
 
-@livewire('navbar')
+@livewire('homepage-navbar')
 
 <main>
     {{ $slot }}

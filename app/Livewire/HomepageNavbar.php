@@ -5,10 +5,8 @@ namespace App\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Request;
 
-class Navbar extends Component
+class HomepageNavbar extends Component
 {
-    public bool $large = false;
-
     public function mount()
     {
         $this->large = Request::is('/');
@@ -16,6 +14,6 @@ class Navbar extends Component
 
     public function render()
     {
-        return view('livewire.navbar');
+        return view('livewire.homepage-navbar');
     }
 }
