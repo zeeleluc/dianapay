@@ -2,7 +2,7 @@
     'ratesByBlockchain' => [],
 ])
 
-<div wire:poll.5s class="space-y-8 bg-gray-900 text-white p-6 rounded-xl shadow">
+<div wire:poll.keep-alive class="space-y-8 bg-gray-900 text-white p-6 rounded-xl shadow">
     @forelse ($ratesByBlockchain as $blockchain => $rates)
         <div>
             <h2 class="text-2xl font-semibold mb-4 capitalize">
