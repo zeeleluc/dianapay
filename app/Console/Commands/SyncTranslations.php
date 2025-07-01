@@ -15,8 +15,10 @@ class SyncTranslations extends Command
     public function handle()
     {
         $this->info('Scanning Blade files for translate() calls...');
-
         $bladeFiles = File::allFiles(resource_path('views'));
+
+        $this->info('Scanning PHP files in /app for translate() calls...');
+        $phpFiles = File::allFiles(app_path());
 
         // This will store: ['text to translate' => [ 'paramKey' => 'exampleValue', ... ], ...]
         $translations = [];
@@ -24,7 +26,7 @@ class SyncTranslations extends Command
         // Regex to match translate('some string', ['param' => 'value'])
         $pattern = '/translate\(\s*[\'"]([^\'"]+)[\'"]\s*(?:,\s*(\[[^\]]*\]))?\s*\)/';
 
-        foreach ($bladeFiles as $file) {
+        foreach (array_merge($bladeFiles, $phpFiles) as $file) {
             $contents = File::get($file->getPathname());
 
             if (preg_match_all($pattern, $contents, $matches, PREG_SET_ORDER)) {
@@ -34,7 +36,6 @@ class SyncTranslations extends Command
                     // Params can be empty
                     $params = [];
                     if (isset($match[2])) {
-                        // Evaluate array string safely
                         $params = $this->parseParamsArray($match[2]);
                     }
 

@@ -26,7 +26,6 @@ class CurrencyRatesTable extends Component
             }
 
             $cryptoSymbols = array_keys($tokens);
-            sort($cryptoSymbols);
             sort($fiats);
 
             $data = [];

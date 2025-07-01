@@ -24,6 +24,5 @@ return [
         'th',     // Thai
         'ms',     // Malay
         'fa',     // Persian
-        //'he',     // Hebrew
     ],
 ];
