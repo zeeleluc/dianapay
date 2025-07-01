@@ -32,6 +32,7 @@ class AnonymousPaymentRequest extends Model
         'transaction_tx',
         'status',
         'paid_at',
+        'has_qr_image',
     ];
 
     protected $casts = [
@@ -47,6 +48,7 @@ class AnonymousPaymentRequest extends Model
         'to_wallet_algorand' => 'string',
         'to_wallet_stellar' => 'string',
         'to_wallet_tezos' => 'string',
+        'has_qr_image' => 'boolean',
     ];
 
     protected $dates = [

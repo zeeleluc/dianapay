@@ -86,6 +86,7 @@
                             value="{{ $chain }}"
                             wire:change="syncCryptoSelection('{{ $chain }}')"
                             class="hidden"
+                            wire:loading.attr="disabled"
                         >
                         <span class="rounded px-3 py-1 border border-gray-600 uppercase">{{ $chain }}</span>
                     </label>
@@ -95,16 +96,17 @@
                             @foreach ($cryptos as $crypto)
                                 <label
                                     class="cursor-pointer bg-gray-800 text-gray-300 border-none rounded px-0 py-0 text-sm transition-all duration-200 hover:bg-gray-700
-                                   flex items-center
-                                   [&>input:checked+span]:bg-blue-600
-                                   [&>input:checked+span]:text-white
-                                   [&>input:checked+span]:border-blue-600"
-                                >
+                                       flex items-center
+                                       [&>input:checked+span]:bg-blue-600
+                                       [&>input:checked+span]:text-white
+                                       [&>input:checked+span]:border-blue-600"
+                                    >
                                     <input
                                         type="checkbox"
                                         wire:model="acceptedCryptoSelection"
                                         value="{{ $crypto['symbol'] }}"
                                         class="hidden"
+                                        wire:loading.attr="disabled"
                                     >
                                     <span class="rounded px-2 py-1 border border-gray-600">{{ $crypto['symbol'] }}</span>
                                 </label>
@@ -262,8 +264,49 @@
             @error('description') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> @enderror
         </div>
 
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition">
-            {{ translate('Create Payment Request') }}
+        <button
+            type="submit"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded shadow transition relative disabled:opacity-50 disabled:cursor-not-allowed min-h-[2.5rem]"
+            wire:loading.attr="disabled"
+            wire:loading.class="pointer-events-none"
+        >
+            <!-- Normal text, hidden while loading -->
+            <span
+                wire:loading.remove
+                wire:target="submit"
+                class="inline-flex items-center justify-center w-full h-full absolute inset-0"
+            >
+                {{ translate('Create Payment Request') }}
+            </span>
+
+            <!-- Spinner, shown while loading -->
+            <span
+                wire:loading
+                wire:target="submit"
+                class="inline-flex items-center justify-center w-full h-full absolute inset-0"
+            >
+                <svg
+                    class="animate-spin h-5 mt-2 w-5 text-white block mx-auto"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                >
+                    <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                    ></circle>
+                    <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
+                </svg>
+            </span>
         </button>
+
     </form>
 </div>

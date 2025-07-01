@@ -131,5 +131,7 @@
     "Create Another Payment Request": "Erstellen Sie eine weitere Zahlungsanfrage",
     "Hi!": "Hallo!",
     "You can make the payment securely using this link:": "Sie können die Zahlung mit diesem Link sicher vornehmen:",
-    "Thank you!": "Danke schön!"
+    "Thank you!": "Danke schön!",
+    "I'd like to request a payment of €33.00 in cryptocurrency.": "Ich möchte eine Zahlung von 33,00 € in Kryptowährung anfordern.",
+    "Description: \"asdf\"": "Beschreibung: \"ASDF\""
 }

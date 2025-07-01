@@ -44,13 +44,22 @@ class QrCodeUploaderService
         $path = 'qrs-anonymous-payment-requests/' . $anonymousPaymentRequest->identifier . '.png';
         $disk = Storage::disk('spaces');
 
-        if ($disk->exists($path)) {
+        if ($anonymousPaymentRequest->has_qr_image) {
             return $disk->url($path);
         }
 
-        return $this->upload(
+        $result = $this->upload(
             route('payment.anonymous.show', ['uuid' => $anonymousPaymentRequest->identifier]),
             $path
         );
+
+        if ($result) {
+            $anonymousPaymentRequest->has_qr_image = true;
+            $anonymousPaymentRequest->save();
+
+            return $result;
+        }
+
+        return null;
     }
 }

@@ -8,7 +8,7 @@
     $lines = [];
 
     $lines[] = translate('Hi!');
-    $lines[] = translate("I'd like to request a crypto payment of :currency:amount.", [
+    $lines[] = translate("I'd like to request a payment of :currency:amount in cryptocurrency.", [
         'amount' => $amount,
         'currency' => $symbol,
     ]);
