@@ -135,5 +135,13 @@
     "Supported Blockchains & Cryptocurrencies": "Blockchains e criptomoedas suportadas",
     "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Atualmente, apoiamos as seguintes blockchains e suas criptomoedas. ",
     "To": "Para",
-    "Cryptowallet": "Cryptowallet"
+    "Cryptowallet": "Cryptowallet",
+    "Choose Blockchain": "Escolha Blockchain",
+    "Choose Cryptocurrency": "Escolha criptomoeda",
+    "Please select a blockchain first.": "Selecione um blockchain primeiro.",
+    "No cryptocurrencies available for this blockchain.": "Não há criptomoedas disponíveis para este blockchain.",
+    "Connect Cryptowallet and Pay": "Conecte o Cryptowallet e pague",
+    "No rate available for this selection.": "Nenhuma taxa disponível para esta seleção.",
+    "Previous": "Anterior",
+    "Next": "Próximo"
 }

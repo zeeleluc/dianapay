@@ -135,5 +135,13 @@
     "To": "ل",
     "Cryptowallet": "cryptowallet",
     "Supported Blockchains & Cryptocurrencies": "مدعوم من blockchains والعملات المشفرة",
-    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "نحن ندعم حاليًا blockchains التالية وعملاتها المشفرة. "
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "نحن ندعم حاليًا blockchains التالية وعملاتها المشفرة. ",
+    "Choose Blockchain": "اختر blockchain",
+    "Choose Cryptocurrency": "اختر العملة المشفرة",
+    "Please select a blockchain first.": "الرجاء تحديد blockchain أولا.",
+    "No cryptocurrencies available for this blockchain.": "لا عملات مشفرة متاحة لهذا blockchain.",
+    "No rate available for this selection.": "لا يوجد سعر متاح لهذا الاختيار.",
+    "Previous": "سابق",
+    "Next": "التالي",
+    "Connect Cryptowallet and Pay": "قم بتوصيل cryptowallet ودفع"
 }

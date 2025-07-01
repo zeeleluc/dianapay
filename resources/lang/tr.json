@@ -135,5 +135,13 @@
     "Supported Blockchains & Cryptocurrencies": "Desteklenen blok zincirleri ve kripto para birimleri",
     "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Şu anda aşağıdaki blok zincirlerini ve bunların kripto para birimlerini destekliyoruz. ",
     "To": "İle",
-    "Cryptowallet": "Kriptowalet"
+    "Cryptowallet": "Kriptowalet",
+    "Choose Blockchain": "Blockchain'i seçin",
+    "Choose Cryptocurrency": "Kripto para birimini seçin",
+    "Please select a blockchain first.": "Lütfen önce bir blockchain seçin.",
+    "No cryptocurrencies available for this blockchain.": "Bu blok zinciri için kripto para yoktur.",
+    "Connect Cryptowallet and Pay": "Cryptowallet'i bağlayın ve ödeyin",
+    "No rate available for this selection.": "Bu seçim için oran yok.",
+    "Previous": "Öncesi",
+    "Next": "Sonraki"
 }

@@ -135,5 +135,13 @@
     "To": "에게",
     "Cryptowallet": "cryptowallet",
     "Supported Blockchains & Cryptocurrencies": "지원되는 블록 체인 및 암호 화폐",
-    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "우리는 현재 다음 블록 체인과 암호 화폐를 지원합니다. "
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "우리는 현재 다음 블록 체인과 암호 화폐를 지원합니다. ",
+    "Choose Blockchain": "블록 체인을 선택하십시오",
+    "Choose Cryptocurrency": "cryptocurrency를 선택하십시오",
+    "Please select a blockchain first.": "먼저 블록 체인을 선택하십시오.",
+    "No cryptocurrencies available for this blockchain.": "이 블록 체인에 사용할 수있는 cryptocurrencies가 없습니다.",
+    "Connect Cryptowallet and Pay": "cryptowallet을 연결하고 지불하십시오",
+    "No rate available for this selection.": "이 선택에 사용할 수있는 요금이 없습니다.",
+    "Previous": "이전의",
+    "Next": "다음"
 }

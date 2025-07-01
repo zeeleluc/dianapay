@@ -103,7 +103,7 @@
             @elseif($step === 3)
                 <div wire:poll.5s="updateCryptoAmount">
                     <p class="text-sm mb-2 font-medium">
-                        {{ translate('Connect Cryptowallet and pay:') }}
+                        {{ translate('Connect Cryptowallet and Pay') }}
                     </p>
 
                     @if ($cryptoAmount)

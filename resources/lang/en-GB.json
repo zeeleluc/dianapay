@@ -135,5 +135,9 @@
     "Next": "Next",
     "No rate available for this selection.": "No rate available for this selection.",
     "Exchange rate updates every 5 seconds.": "Exchange rate updates every 5 seconds.",
-    "Connect Cryptowallet and pay:": "Connect Cryptowallet and pay:"
+    "Connect Cryptowallet and pay:": "Connect Cryptowallet and pay:",
+    "Connect Cryptowallet and Pay:": "Connect Cryptowallet and Pay:",
+    "Connect Cryptowallet and Pay": "Connect Cryptowallet and Pay",
+    "Please select a blockchain first.": "Please select a blockchain first.",
+    "No cryptocurrencies available for this blockchain.": "No cryptocurrencies available for this blockchain."
 }

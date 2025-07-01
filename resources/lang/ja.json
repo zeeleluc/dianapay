@@ -137,5 +137,13 @@
     "Cryptowallet": "cryptowallet",
     "Crypto wallet": "暗号ウォレット",
     "Supported Blockchains & Cryptocurrencies": "サポートされているブロックチェーンと暗号通貨",
-    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "現在、次のブロックチェーンとその暗号通貨をサポートしています。"
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "現在、次のブロックチェーンとその暗号通貨をサポートしています。",
+    "Choose Blockchain": "ブロックチェーンを選択します",
+    "Choose Cryptocurrency": "暗号通貨を選択します",
+    "Please select a blockchain first.": "最初にブロックチェーンを選択してください。",
+    "No cryptocurrencies available for this blockchain.": "このブロックチェーンには暗号通貨が利用できません。",
+    "Connect Cryptowallet and Pay": "CryptoWalletを接続して支払います",
+    "No rate available for this selection.": "この選択には利用できません。",
+    "Previous": "前の",
+    "Next": "次"
 }

@@ -135,5 +135,13 @@
     "To": "به",
     "Cryptowallet": "رمز",
     "Supported Blockchains & Cryptocurrencies": "blockchains و cryptocur ارز پشتیبانی شده",
-    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "ما در حال حاضر از blockchain های زیر و ارزهای رمزنگاری شده آنها پشتیبانی می کنیم. "
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "ما در حال حاضر از blockchain های زیر و ارزهای رمزنگاری شده آنها پشتیبانی می کنیم. ",
+    "Choose Blockchain": "blockchain را انتخاب کنید",
+    "Choose Cryptocurrency": "cryptocurrency را انتخاب کنید",
+    "Please select a blockchain first.": "لطفاً ابتدا یک blockchain را انتخاب کنید.",
+    "No cryptocurrencies available for this blockchain.": "هیچ ارز رمزنگاری برای این blockchain موجود نیست.",
+    "Connect Cryptowallet and Pay": "Cryptowallet را وصل کنید و پرداخت کنید",
+    "No rate available for this selection.": "هیچ نرخی برای این انتخاب در دسترس نیست.",
+    "Previous": "قبلی",
+    "Next": "طرف دیگر"
 }

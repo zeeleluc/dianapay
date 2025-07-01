@@ -136,5 +136,13 @@
     "Cryptowallet": "Cryptowallet",
     "Crypto wallet": "Ví tiền điện tử",
     "Supported Blockchains & Cryptocurrencies": "Blockchains và tiền điện tử được hỗ trợ",
-    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Chúng tôi hiện đang hỗ trợ các blockchain sau và tiền điện tử của họ. "
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Chúng tôi hiện đang hỗ trợ các blockchain sau và tiền điện tử của họ. ",
+    "Choose Blockchain": "Chọn Blockchain",
+    "Choose Cryptocurrency": "Chọn tiền điện tử",
+    "Please select a blockchain first.": "Vui lòng chọn một blockchain trước.",
+    "No cryptocurrencies available for this blockchain.": "Không có tiền điện tử có sẵn cho blockchain này.",
+    "Connect Cryptowallet and Pay": "Kết nối Cryptowallet và trả tiền",
+    "No rate available for this selection.": "Không có tỷ lệ có sẵn cho lựa chọn này.",
+    "Previous": "Trước",
+    "Next": "Kế tiếp"
 }

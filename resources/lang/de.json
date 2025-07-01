@@ -137,5 +137,13 @@
     "To": "Zu",
     "Cryptowallet": "Kryptowallet",
     "Supported Blockchains & Cryptocurrencies": "Unterstützte Blockchains und Kryptowährungen",
-    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Derzeit unterstützen wir die folgenden Blockchains und ihre Kryptowährungen. "
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Derzeit unterstützen wir die folgenden Blockchains und ihre Kryptowährungen. ",
+    "Choose Cryptocurrency": "Wählen Sie Kryptowährung",
+    "Please select a blockchain first.": "Bitte wählen Sie zuerst eine Blockchain.",
+    "Choose Blockchain": "Wählen Sie Blockchain",
+    "No cryptocurrencies available for this blockchain.": "Für diese Blockchain sind keine Kryptowährungen verfügbar.",
+    "Connect Cryptowallet and Pay": "Verbinden Sie Cryptowallet und bezahlen Sie",
+    "No rate available for this selection.": "Keine Rate für diese Auswahl verfügbar.",
+    "Previous": "Vorherige",
+    "Next": "Nächste"
 }

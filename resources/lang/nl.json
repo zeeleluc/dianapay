@@ -140,5 +140,13 @@
     "Cryptowallet": "Cryptowallet",
     "Supported Blockchains & Cryptocurrencies": "Ondersteunde blockchains en cryptocurrencies",
     "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "We ondersteunen momenteel de volgende blockchains en hun cryptocurrencies. ",
-    "Crypto wallet": "Crypto -portemonnee"
+    "Crypto wallet": "Crypto -portemonnee",
+    "Choose Blockchain": "Kies Blockchain",
+    "Choose Cryptocurrency": "Kies cryptocurrency",
+    "Please select a blockchain first.": "Selecteer eerst een blockchain.",
+    "No cryptocurrencies available for this blockchain.": "Geen cryptocurrencies beschikbaar voor deze blockchain.",
+    "Connect Cryptowallet and Pay": "Verbind Cryptowallet en betaal",
+    "No rate available for this selection.": "Geen tarief beschikbaar voor deze selectie.",
+    "Previous": "Vorig",
+    "Next": "Volgende"
 }

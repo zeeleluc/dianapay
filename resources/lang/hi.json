@@ -135,5 +135,13 @@
     "To": "को",
     "Cryptowallet": "क्रिप्टोवालेट",
     "Supported Blockchains & Cryptocurrencies": "समर्थित ब्लॉकचेन और क्रिप्टोकरेंसी",
-    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "वर्तमान में हम निम्नलिखित ब्लॉकचेन और उनकी क्रिप्टोकरेंसी का समर्थन करते हैं। "
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "वर्तमान में हम निम्नलिखित ब्लॉकचेन और उनकी क्रिप्टोकरेंसी का समर्थन करते हैं। ",
+    "Choose Blockchain": "ब्लॉकचेन चुनें",
+    "Please select a blockchain first.": "कृपया पहले एक ब्लॉकचेन चुनें।",
+    "No cryptocurrencies available for this blockchain.": "इस ब्लॉकचेन के लिए कोई क्रिप्टोकरेंसी उपलब्ध नहीं है।",
+    "Connect Cryptowallet and Pay": "CryptoWallet और भुगतान कनेक्ट करें",
+    "Previous": "पहले का",
+    "Next": "अगला",
+    "Choose Cryptocurrency": "क्रिप्टोक्यूरेंसी चुनें",
+    "No rate available for this selection.": "इस चयन के लिए कोई दर उपलब्ध नहीं है।"
 }

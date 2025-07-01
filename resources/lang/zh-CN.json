@@ -136,5 +136,13 @@
     "Cryptowallet": "Cryptowallet",
     "Crypto wallet": "加密钱包",
     "Supported Blockchains & Cryptocurrencies": "支持的区块链和加密货币",
-    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "我们目前支持以下区块链及其加密货币。"
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "我们目前支持以下区块链及其加密货币。",
+    "Choose Blockchain": "选择区块链",
+    "Choose Cryptocurrency": "选择加密货币",
+    "Please select a blockchain first.": "请先选择一个区块链。",
+    "No cryptocurrencies available for this blockchain.": "该区块链无需加密货币。",
+    "Connect Cryptowallet and Pay": "连接cryptowallet并付款",
+    "No rate available for this selection.": "此选择没有可用的费率。",
+    "Previous": "以前的",
+    "Next": "下一个"
 }

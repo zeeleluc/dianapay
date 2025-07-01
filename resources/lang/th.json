@@ -135,5 +135,13 @@
     "To": "ถึง",
     "Cryptowallet": "Cryptowallet",
     "Supported Blockchains & Cryptocurrencies": "รองรับ blockchains & cryptocurrencies",
-    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "ขณะนี้เราสนับสนุน blockchains ต่อไปนี้และ cryptocurrencies ของพวกเขา "
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "ขณะนี้เราสนับสนุน blockchains ต่อไปนี้และ cryptocurrencies ของพวกเขา ",
+    "Choose Blockchain": "เลือก blockchain",
+    "Choose Cryptocurrency": "เลือก cryptocurrency",
+    "Please select a blockchain first.": "โปรดเลือก blockchain ก่อน",
+    "No cryptocurrencies available for this blockchain.": "ไม่มี cryptocurrencies สำหรับ blockchain นี้",
+    "Connect Cryptowallet and Pay": "เชื่อมต่อ cryptowallet และจ่ายเงิน",
+    "No rate available for this selection.": "ไม่มีอัตราสำหรับการเลือกนี้",
+    "Previous": "ก่อนหน้า",
+    "Next": "ต่อไป"
 }

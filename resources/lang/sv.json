@@ -138,5 +138,13 @@
     "To": "Till",
     "Cryptowallet": "Kryptowallet",
     "Supported Blockchains & Cryptocurrencies": "Stödda blockchains & cryptocurrencies",
-    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Vi stöder för närvarande följande blockchains och deras cryptocurrencies. "
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Vi stöder för närvarande följande blockchains och deras cryptocurrencies. ",
+    "Choose Blockchain": "Välj blockchain",
+    "Choose Cryptocurrency": "Välj cryptocurrency",
+    "Please select a blockchain first.": "Välj först en blockchain.",
+    "No cryptocurrencies available for this blockchain.": "Inga kryptokurser tillgängliga för denna blockchain.",
+    "Connect Cryptowallet and Pay": "Anslut kryptowallet och betala",
+    "No rate available for this selection.": "Ingen ränta tillgänglig för detta val.",
+    "Previous": "Tidigare",
+    "Next": "Nästa"
 }

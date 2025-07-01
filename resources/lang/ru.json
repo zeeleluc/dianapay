@@ -137,5 +137,13 @@
     "To": "К",
     "Cryptowallet": "Криптоволлет",
     "Supported Blockchains & Cryptocurrencies": "Поддерживаемые блокчейны и криптовалюты",
-    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "В настоящее время мы поддерживаем следующие блокчейны и их криптовалюты. "
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "В настоящее время мы поддерживаем следующие блокчейны и их криптовалюты. ",
+    "Choose Blockchain": "Выберите блокчейн",
+    "Choose Cryptocurrency": "Выберите криптовалюту",
+    "Please select a blockchain first.": "Пожалуйста, выберите блокчейн в первую очередь.",
+    "No cryptocurrencies available for this blockchain.": "Никаких криптовалют для этого блокчейна.",
+    "Connect Cryptowallet and Pay": "Подключить криптоволлет и заплатить",
+    "No rate available for this selection.": "Недоступная ставка для этого выбора.",
+    "Previous": "Предыдущий",
+    "Next": "Следующий"
 }

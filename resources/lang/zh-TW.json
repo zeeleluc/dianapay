@@ -135,5 +135,13 @@
     "To": "到",
     "Cryptowallet": "Cryptowallet",
     "Supported Blockchains & Cryptocurrencies": "支持的區塊鍊和加密貨幣",
-    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "我們目前支持以下區塊鍊及其加密貨幣。享受無縫付款，每單位貨幣交易僅為0.4％的低費用。"
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "我們目前支持以下區塊鍊及其加密貨幣。享受無縫付款，每單位貨幣交易僅為0.4％的低費用。",
+    "Choose Blockchain": "選擇區塊鏈",
+    "Choose Cryptocurrency": "選擇加密貨幣",
+    "Please select a blockchain first.": "請先選擇一個區塊鏈。",
+    "No cryptocurrencies available for this blockchain.": "該區塊鏈無需加密貨幣。",
+    "Connect Cryptowallet and Pay": "連接cryptowallet並付款",
+    "No rate available for this selection.": "此選擇沒有可用的費率。",
+    "Previous": "以前的",
+    "Next": "下一個"
 }

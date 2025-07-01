@@ -135,5 +135,13 @@
     "To": "Ke",
     "Cryptowallet": "Cryptowallet",
     "Supported Blockchains & Cryptocurrencies": "Blockchains yang didukung & cryptocurrency",
-    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Kami saat ini mendukung blockchain berikut dan cryptocurrency mereka. "
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Kami saat ini mendukung blockchain berikut dan cryptocurrency mereka. ",
+    "Choose Blockchain": "Pilih Blockchain",
+    "Choose Cryptocurrency": "Pilih cryptocurrency",
+    "Please select a blockchain first.": "Pilih blockchain terlebih dahulu.",
+    "No cryptocurrencies available for this blockchain.": "Tidak ada cryptocurrency yang tersedia untuk blockchain ini.",
+    "Connect Cryptowallet and Pay": "Hubungkan CryptoWallet dan bayar",
+    "No rate available for this selection.": "Tidak ada tarif yang tersedia untuk pilihan ini.",
+    "Previous": "Sebelumnya",
+    "Next": "Berikutnya"
 }
