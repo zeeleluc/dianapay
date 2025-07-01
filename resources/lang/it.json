@@ -137,5 +137,9 @@
     "I'd like to request a crypto payment of €200.00.": "Vorrei richiedere un pagamento crittografico di € 200,00.",
     "Description: \"Hoi Diana\"": "Descrizione: \"Hoi Diana\"",
     "I'd like to request a payment of €22.00 in cryptocurrency.": "Vorrei richiedere un pagamento di € 22,00 in criptovaluta.",
-    "Description: \"asdfas\"": "Descrizione: \"Asdfas\""
+    "Description: \"asdfas\"": "Descrizione: \"Asdfas\"",
+    "To": "A",
+    "Cryptowallet": "Cryptowallet",
+    "Supported Blockchains & Cryptocurrencies": "Blockchain e criptovalute supportate",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Attualmente supportiamo le seguenti blockchain e le loro criptovalute. "
 }

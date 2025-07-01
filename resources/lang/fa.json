@@ -131,5 +131,9 @@
     "Create Another Payment Request": "درخواست پرداخت دیگری ایجاد کنید",
     "Hi!": "سلام",
     "You can make the payment securely using this link:": "با استفاده از این لینک می توانید پرداخت را ایمن کنید:",
-    "Thank you!": "ممنون"
+    "Thank you!": "ممنون",
+    "To": "به",
+    "Cryptowallet": "رمز",
+    "Supported Blockchains & Cryptocurrencies": "blockchains و cryptocur ارز پشتیبانی شده",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "ما در حال حاضر از blockchain های زیر و ارزهای رمزنگاری شده آنها پشتیبانی می کنیم. "
 }

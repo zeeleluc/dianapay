@@ -133,5 +133,9 @@
     "You can make the payment securely using this link:": "Вы можете надежно сделать оплату, используя эту ссылку:",
     "Thank you!": "Спасибо!",
     "I'd like to request a crypto payment of $33.00.": "Я хотел бы запросить крипто -платеж в размере 33,00 долларов.",
-    "Description: \"sdf\"": "Описание: \"SDF\""
+    "Description: \"sdf\"": "Описание: \"SDF\"",
+    "To": "К",
+    "Cryptowallet": "Криптоволлет",
+    "Supported Blockchains & Cryptocurrencies": "Поддерживаемые блокчейны и криптовалюты",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "В настоящее время мы поддерживаем следующие блокчейны и их криптовалюты. "
 }

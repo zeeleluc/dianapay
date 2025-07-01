@@ -131,5 +131,10 @@
     "Create Another Payment Request": "创建另一个付款请求",
     "Hi!": "你好！",
     "You can make the payment securely using this link:": "您可以使用此链接安全地付款：",
-    "Thank you!": "谢谢你！"
+    "Thank you!": "谢谢你！",
+    "To": "到",
+    "Cryptowallet": "Cryptowallet",
+    "Crypto wallet": "加密钱包",
+    "Supported Blockchains & Cryptocurrencies": "支持的区块链和加密货币",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "我们目前支持以下区块链及其加密货币。"
 }

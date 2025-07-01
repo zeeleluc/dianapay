@@ -131,5 +131,10 @@
     "Create Another Payment Request": "Tạo một yêu cầu thanh toán khác",
     "Hi!": "CHÀO!",
     "You can make the payment securely using this link:": "Bạn có thể thực hiện thanh toán một cách an toàn bằng cách sử dụng liên kết này:",
-    "Thank you!": "Cảm ơn!"
+    "Thank you!": "Cảm ơn!",
+    "To": "ĐẾN",
+    "Cryptowallet": "Cryptowallet",
+    "Crypto wallet": "Ví tiền điện tử",
+    "Supported Blockchains & Cryptocurrencies": "Blockchains và tiền điện tử được hỗ trợ",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Chúng tôi hiện đang hỗ trợ các blockchain sau và tiền điện tử của họ. "
 }

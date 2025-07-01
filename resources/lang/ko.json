@@ -131,5 +131,9 @@
     "Create Another Payment Request": "다른 지불 요청을 만듭니다",
     "Hi!": "안녕!",
     "You can make the payment securely using this link:": "이 링크를 사용하여 지불을 안전하게 지불 할 수 있습니다.",
-    "Thank you!": "감사합니다!"
+    "Thank you!": "감사합니다!",
+    "To": "에게",
+    "Cryptowallet": "cryptowallet",
+    "Supported Blockchains & Cryptocurrencies": "지원되는 블록 체인 및 암호 화폐",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "우리는 현재 다음 블록 체인과 암호 화폐를 지원합니다. "
 }

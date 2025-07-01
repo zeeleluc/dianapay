@@ -131,5 +131,9 @@
     "Create Another Payment Request": "Utwórz kolejne żądanie płatności",
     "Hi!": "Cześć!",
     "You can make the payment securely using this link:": "Możesz bezpiecznie dokonać płatności za pomocą tego linku:",
-    "Thank you!": "Dziękuję!"
+    "Thank you!": "Dziękuję!",
+    "To": "Do",
+    "Cryptowallet": "Cryptowallet",
+    "Supported Blockchains & Cryptocurrencies": "Obsługiwane blockchains i kryptowaluty",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Obecnie obsługujemy następujące łańcuchy bloków i ich kryptowaluty. "
 }

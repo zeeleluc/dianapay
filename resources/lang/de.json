@@ -133,5 +133,9 @@
     "You can make the payment securely using this link:": "Sie können die Zahlung mit diesem Link sicher vornehmen:",
     "Thank you!": "Danke schön!",
     "I'd like to request a payment of €33.00 in cryptocurrency.": "Ich möchte eine Zahlung von 33,00 € in Kryptowährung anfordern.",
-    "Description: \"asdf\"": "Beschreibung: \"ASDF\""
+    "Description: \"asdf\"": "Beschreibung: \"ASDF\"",
+    "To": "Zu",
+    "Cryptowallet": "Kryptowallet",
+    "Supported Blockchains & Cryptocurrencies": "Unterstützte Blockchains und Kryptowährungen",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Derzeit unterstützen wir die folgenden Blockchains und ihre Kryptowährungen. "
 }

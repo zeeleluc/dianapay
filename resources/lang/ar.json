@@ -131,5 +131,9 @@
     "Create Another Payment Request": "إنشاء طلب دفع آخر",
     "Hi!": "أهلاً!",
     "You can make the payment securely using this link:": "يمكنك إجراء الدفع بشكل آمن باستخدام هذا الرابط:",
-    "Thank you!": "شكرًا لك!"
+    "Thank you!": "شكرًا لك!",
+    "To": "ل",
+    "Cryptowallet": "cryptowallet",
+    "Supported Blockchains & Cryptocurrencies": "مدعوم من blockchains والعملات المشفرة",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "نحن ندعم حاليًا blockchains التالية وعملاتها المشفرة. "
 }

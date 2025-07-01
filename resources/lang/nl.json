@@ -135,5 +135,10 @@
     "Create Another Payment Request": "Maak een ander betalingsverzoek",
     "Hi!": "Hoi!",
     "You can make the payment securely using this link:": "U kunt de betaling veilig doen met behulp van deze link:",
-    "Thank you!": "Bedankt!"
+    "Thank you!": "Bedankt!",
+    "To": "Naar",
+    "Cryptowallet": "Cryptowallet",
+    "Supported Blockchains & Cryptocurrencies": "Ondersteunde blockchains en cryptocurrencies",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "We ondersteunen momenteel de volgende blockchains en hun cryptocurrencies. ",
+    "Crypto wallet": "Crypto -portemonnee"
 }

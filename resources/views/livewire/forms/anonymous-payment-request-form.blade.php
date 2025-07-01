@@ -124,7 +124,7 @@
         @if (count(array_intersect(['base', 'polygon', 'bnb', 'ethereum'], $acceptedChains)) > 0)
             <div>
                 <label for="to_wallet_evm" class="block mb-2 font-semibold text-gray-300">
-                    {{ translate('To EVM Cryptowallet') }}
+                    {{ translate('To') }} EVM {{ translate('Cryptowallet') }}
                 </label>
                 <x-text-input
                     wire:model.defer="to_wallet_evm"

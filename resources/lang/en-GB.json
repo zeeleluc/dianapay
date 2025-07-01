@@ -121,5 +121,12 @@
     "Create Another Payment Request": "Create Another Payment Request",
     "Hi!": "Hi!",
     "You can make the payment securely using this link:": "You can make the payment securely using this link:",
-    "Thank you!": "Thank you!"
+    "Thank you!": "Thank you!",
+    "To": "To",
+    "Cryptowallet": "Cryptowallet",
+    "Crypto wallet": "Crypto wallet",
+    "Supported Blockchains & Cryptocurrencies": "Supported Blockchains & Cryptocurrencies",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.",
+    "I'd like to request a payment of $1.00 in cryptocurrency.": "I'd like to request a payment of $1.00 in cryptocurrency.",
+    "Description: \"asdasfa\"": "Description: \"asdasfa\""
 }

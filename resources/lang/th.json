@@ -131,5 +131,9 @@
     "Create Another Payment Request": "สร้างคำขอการชำระเงินอื่น",
     "Hi!": "สวัสดี!",
     "You can make the payment securely using this link:": "คุณสามารถชำระเงินได้อย่างปลอดภัยโดยใช้ลิงค์นี้:",
-    "Thank you!": "ขอบคุณ!"
+    "Thank you!": "ขอบคุณ!",
+    "To": "ถึง",
+    "Cryptowallet": "Cryptowallet",
+    "Supported Blockchains & Cryptocurrencies": "รองรับ blockchains & cryptocurrencies",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "ขณะนี้เราสนับสนุน blockchains ต่อไปนี้และ cryptocurrencies ของพวกเขา "
 }

@@ -132,5 +132,10 @@
     "Create Another Payment Request": "別の支払いリクエストを作成します",
     "Hi!": "こんにちは！",
     "You can make the payment securely using this link:": "このリンクを使用して、支払いを安全に作成できます。",
-    "Thank you!": "ありがとう！"
+    "Thank you!": "ありがとう！",
+    "To": "に",
+    "Cryptowallet": "cryptowallet",
+    "Crypto wallet": "暗号ウォレット",
+    "Supported Blockchains & Cryptocurrencies": "サポートされているブロックチェーンと暗号通貨",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "現在、次のブロックチェーンとその暗号通貨をサポートしています。"
 }

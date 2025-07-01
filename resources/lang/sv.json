@@ -134,5 +134,9 @@
     "Create Another Payment Request": "Skapa en annan betalningsbegäran",
     "Hi!": "Hej!",
     "You can make the payment securely using this link:": "Du kan göra betalningen säkert med den här länken:",
-    "Thank you!": "Tack!"
+    "Thank you!": "Tack!",
+    "To": "Till",
+    "Cryptowallet": "Kryptowallet",
+    "Supported Blockchains & Cryptocurrencies": "Stödda blockchains & cryptocurrencies",
+    "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "Vi stöder för närvarande följande blockchains och deras cryptocurrencies. "
 }
