@@ -85,10 +85,16 @@
                 @endif
             </p>
 
-            <p><strong>{{ translate('Created At') }}:</strong> {{ $paymentRequest->created_at->toDayDateTimeString() }}</p>
+            <p>
+                <strong>{{ translate('Created At') }}:</strong> {{ $paymentRequest->created_at->toDayDateTimeString() }}
+                <sup>UTC</sup>
+            </p>
 
             @if($paymentRequest->paid_at)
-                <p><strong>{{ translate('Paid At') }}:</strong> {{ $paymentRequest->paid_at->toDayDateTimeString() }}</p>
+                <p>
+                    <strong>{{ translate('Paid At') }}:</strong> {{ $paymentRequest->paid_at->toDayDateTimeString() }}
+                    <sup>UTC</sup>
+                </p>
             @endif
         </div>
 
