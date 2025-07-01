@@ -128,5 +128,12 @@
     "Supported Blockchains & Cryptocurrencies": "Supported Blockchains & Cryptocurrencies",
     "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.": "We currently support the following blockchains and their cryptocurrencies. Enjoy seamless payments with a low fee of just 0.4% per monocurrency transaction.",
     "I'd like to request a payment of $1.00 in cryptocurrency.": "I'd like to request a payment of $1.00 in cryptocurrency.",
-    "Description: \"asdasfa\"": "Description: \"asdasfa\""
+    "Description: \"asdasfa\"": "Description: \"asdasfa\"",
+    "Choose Blockchain": "Choose Blockchain",
+    "Choose Cryptocurrency": "Choose Cryptocurrency",
+    "Previous": "Previous",
+    "Next": "Next",
+    "No rate available for this selection.": "No rate available for this selection.",
+    "Exchange rate updates every 5 seconds.": "Exchange rate updates every 5 seconds.",
+    "Connect Cryptowallet and pay:": "Connect Cryptowallet and pay:"
 }

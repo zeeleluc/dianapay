@@ -8,11 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class CurrencyRateService
 {
-    public static function getRate(string $fiat, string $crypto, string $blockchain, $date = null): ?CurrencyRate
+    public static function getRate(string $fiat, string $crypto, string $blockchain): ?CurrencyRate
     {
-        $date = $date instanceof Carbon ? $date->startOfMinute() : Carbon::parse($date ?? now())->startOfMinute();
         return CurrencyRate::byCurrencyPair($fiat, $crypto, $blockchain)
-            ->where('recorded_at', $date)
+            ->orderBy('recorded_at', 'desc')
             ->first();
     }
 
