@@ -128,5 +128,8 @@
     "WhatsApp": "Whatsapp",
     "Scan to Pay": "สแกนเพื่อจ่าย",
     "Go to Payment Page": "ไปที่หน้าชำระเงิน",
-    "Create Another Payment Request": "สร้างคำขอการชำระเงินอื่น"
+    "Create Another Payment Request": "สร้างคำขอการชำระเงินอื่น",
+    "Hi!": "สวัสดี!",
+    "You can make the payment securely using this link:": "คุณสามารถชำระเงินได้อย่างปลอดภัยโดยใช้ลิงค์นี้:",
+    "Thank you!": "ขอบคุณ!"
 }

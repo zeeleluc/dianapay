@@ -128,5 +128,8 @@
     "WhatsApp": "WhatsApp",
     "Scan to Pay": "扫描付款",
     "Go to Payment Page": "转到付款页面",
-    "Create Another Payment Request": "创建另一个付款请求"
+    "Create Another Payment Request": "创建另一个付款请求",
+    "Hi!": "你好！",
+    "You can make the payment securely using this link:": "您可以使用此链接安全地付款：",
+    "Thank you!": "谢谢你！"
 }

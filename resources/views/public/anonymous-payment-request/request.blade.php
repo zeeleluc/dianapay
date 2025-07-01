@@ -2,8 +2,26 @@
     $fiat = strtolower($paymentRequest->fiat);
     $symbols = config('fiats', []);
     $symbol = $symbols[$fiat] ?? strtoupper($fiat);
+    $amount = number_format($paymentRequest->amount_minor / (10 ** \App\Enums\FiatEnum::decimalsFor($paymentRequest->fiat)), 2);
+    $description = trim($paymentRequest->description);
 
-    $message = translate('Please pay me at this link:') . ' ' . $showUrl;
+    $lines = [];
+
+    $lines[] = translate('Hi!');
+    $lines[] = translate("I'd like to request a crypto payment of :currency:amount.", [
+        'amount' => $amount,
+        'currency' => $symbol,
+    ]);
+
+    if ($description) {
+        $lines[] = translate('Description: ":description"', ['description' => $description]);
+    }
+
+    $lines[] = translate("You can make the payment securely using this link:");
+    $lines[] = $showUrl;
+    $lines[] = translate("Thank you!");
+
+    $message = implode(PHP_EOL . PHP_EOL, $lines);
     $encodedMessage = urlencode($message);
 @endphp
 
@@ -26,27 +44,27 @@
             <a href="sgnl://send?text={{ $encodedMessage }}"
                class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition text-white font-semibold"
                title="Signal">
-                {{ translate('Signal') }}
+                    Signal
             </a>
 
             {{-- WhatsApp --}}
             <a href="https://wa.me/?text={{ $encodedMessage }}" target="_blank" rel="noopener noreferrer"
                class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition text-white font-semibold"
                title="WhatsApp">
-                {{ translate('WhatsApp') }}
+                    WhatsApp
             </a>
 
             {{-- Email --}}
             <a href="mailto:?subject={{ urlencode(translate('Payment Request')) }}&body={{ $encodedMessage }}"
                class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition text-white font-semibold"
                title="Email">
-                {{ translate('Email') }}
+                    E-mail
             </a>
         </div>
 
         {{-- QR Code linking to the show page --}}
         <a href="{{ $showUrl }}" target="_blank" rel="noopener noreferrer" class="block max-w-xs mx-auto">
-            <img src="https://via.placeholder.com/240x240.png?text=QR+Code" alt="{{ translate('Scan to Pay') }}" class="rounded-lg shadow-lg" />
+            <img src="{{ $qrUrl }}" alt="{{ translate('Scan to Pay') }}" class="rounded-lg shadow-lg" />
         </a>
 
         {{-- Status and timestamps --}}

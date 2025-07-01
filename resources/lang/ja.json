@@ -129,5 +129,8 @@
     "WhatsApp": "whatsapp",
     "Scan to Pay": "スキャンして支払う",
     "Go to Payment Page": "支払いページに移動します",
-    "Create Another Payment Request": "別の支払いリクエストを作成します"
+    "Create Another Payment Request": "別の支払いリクエストを作成します",
+    "Hi!": "こんにちは！",
+    "You can make the payment securely using this link:": "このリンクを使用して、支払いを安全に作成できます。",
+    "Thank you!": "ありがとう！"
 }

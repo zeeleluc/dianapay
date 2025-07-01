@@ -128,5 +128,8 @@
     "WhatsApp": "Whatsapp",
     "Scan to Pay": "Ödemek için tarama",
     "Go to Payment Page": "Ödeme sayfasına git",
-    "Create Another Payment Request": "Başka bir ödeme isteği oluşturun"
+    "Create Another Payment Request": "Başka bir ödeme isteği oluşturun",
+    "Hi!": "MERHABA!",
+    "You can make the payment securely using this link:": "Bu bağlantıyı kullanarak ödemeyi güvenli bir şekilde yapabilirsiniz:",
+    "Thank you!": "Teşekkür ederim!"
 }

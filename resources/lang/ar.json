@@ -128,5 +128,8 @@
     "WhatsApp": "Whatsapp",
     "Scan to Pay": "مسح للدفع",
     "Go to Payment Page": "انتقل إلى صفحة الدفع",
-    "Create Another Payment Request": "إنشاء طلب دفع آخر"
+    "Create Another Payment Request": "إنشاء طلب دفع آخر",
+    "Hi!": "أهلاً!",
+    "You can make the payment securely using this link:": "يمكنك إجراء الدفع بشكل آمن باستخدام هذا الرابط:",
+    "Thank you!": "شكرًا لك!"
 }

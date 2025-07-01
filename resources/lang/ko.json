@@ -128,5 +128,8 @@
     "WhatsApp": "whatsapp",
     "Scan to Pay": "지불하기 위해 스캔하십시오",
     "Go to Payment Page": "지불 페이지로 이동하십시오",
-    "Create Another Payment Request": "다른 지불 요청을 만듭니다"
+    "Create Another Payment Request": "다른 지불 요청을 만듭니다",
+    "Hi!": "안녕!",
+    "You can make the payment securely using this link:": "이 링크를 사용하여 지불을 안전하게 지불 할 수 있습니다.",
+    "Thank you!": "감사합니다!"
 }

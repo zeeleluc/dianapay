@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AnonymousPaymentRequest;
+use App\Services\QrCodeUploaderService;
 
 class PublicAnonymousPaymentController extends Controller
 {
@@ -38,6 +39,7 @@ class PublicAnonymousPaymentController extends Controller
             'paymentRequest' => $paymentRequest,
             'showUrl' => route('payment.anonymous.show', ['uuid' => $paymentRequest->identifier]),
             'createUrl' => route('payment.anonymous.create'),
+            'qrUrl' => (new QrCodeUploaderService())->getOrCreateAnonymousPaymentRequestQR($paymentRequest),
         ]);
     }
 }

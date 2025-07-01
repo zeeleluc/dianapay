@@ -5,6 +5,7 @@ namespace App\Livewire\Forms;
 use App\Enums\FiatEnum;
 use App\Models\AnonymousPaymentRequest;
 use App\Rules\WalletAddress;
+use App\Services\QrCodeUploaderService;
 use Livewire\Component;
 
 class AnonymousPaymentRequestForm extends Component
@@ -238,6 +239,8 @@ class AnonymousPaymentRequestForm extends Component
         ]);
 
         session()->flash('message', translate('Payment request created successfully!'));
+
+        (new QrCodeUploaderService())->getOrCreateAnonymousPaymentRequestQR($paymentRequest);
 
         // Redirect to the route with the UUID parameter
         return redirect()->route('payment.anonymous.request', ['uuid' => $paymentRequest->identifier]);
