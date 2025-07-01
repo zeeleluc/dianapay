@@ -121,5 +121,12 @@
     "Status": "상태",
     "Created At": "만들어졌습니다",
     "Paid At": "지불 한",
-    "Connect Cryptowallet": "cryptowallet을 연결하십시오"
+    "Connect Cryptowallet": "cryptowallet을 연결하십시오",
+    "Please pay me at this link:": "이 링크에서 지불하십시오 :",
+    "Payment Request": "지불 요청",
+    "Signal": "신호",
+    "WhatsApp": "whatsapp",
+    "Scan to Pay": "지불하기 위해 스캔하십시오",
+    "Go to Payment Page": "지불 페이지로 이동하십시오",
+    "Create Another Payment Request": "다른 지불 요청을 만듭니다"
 }

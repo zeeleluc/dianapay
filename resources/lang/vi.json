@@ -121,5 +121,12 @@
     "Status": "Trạng thái",
     "Created At": "Được tạo ra tại",
     "Paid At": "Trả tiền tại",
-    "Connect Cryptowallet": "Kết nối Cryptowallet"
+    "Connect Cryptowallet": "Kết nối Cryptowallet",
+    "Please pay me at this link:": "Vui lòng thanh toán cho tôi tại liên kết này:",
+    "Payment Request": "Yêu cầu thanh toán",
+    "Signal": "Tín hiệu",
+    "WhatsApp": "WhatsApp",
+    "Scan to Pay": "Quét để thanh toán",
+    "Go to Payment Page": "Chuyển đến trang thanh toán",
+    "Create Another Payment Request": "Tạo một yêu cầu thanh toán khác"
 }

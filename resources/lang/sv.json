@@ -124,5 +124,12 @@
     "Status": "Status",
     "Created At": "Skapad på",
     "Paid At": "Betalt",
-    "Connect Cryptowallet": "Anslut kryptowallet"
+    "Connect Cryptowallet": "Anslut kryptowallet",
+    "Please pay me at this link:": "Vänligen betala mig på den här länken:",
+    "Payment Request": "Betalningsbegäran",
+    "Signal": "Signal",
+    "WhatsApp": "Whatsapp",
+    "Scan to Pay": "Skanna att betala",
+    "Go to Payment Page": "Gå till betalningssidan",
+    "Create Another Payment Request": "Skapa en annan betalningsbegäran"
 }

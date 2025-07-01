@@ -121,5 +121,12 @@
     "Status": "Статус",
     "Created At": "Создан в",
     "Paid At": "Выплачивается в",
-    "Connect Cryptowallet": "Подключите Cryptowolet"
+    "Connect Cryptowallet": "Подключите Cryptowolet",
+    "Please pay me at this link:": "Пожалуйста, заплатите мне по этой ссылке:",
+    "Payment Request": "Запрос на оплату",
+    "Signal": "Сигнал",
+    "WhatsApp": "WhatsApp",
+    "Scan to Pay": "Сканировать, чтобы заплатить",
+    "Go to Payment Page": "Перейти на страницу оплаты",
+    "Create Another Payment Request": "Создайте еще один запрос на оплату"
 }

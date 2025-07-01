@@ -121,5 +121,12 @@
     "Status": "Status",
     "Created At": "Utworzony w",
     "Paid At": "Zapłacone w",
-    "Connect Cryptowallet": "Połącz Cryptowallet"
+    "Connect Cryptowallet": "Połącz Cryptowallet",
+    "Please pay me at this link:": "Proszę zapłacić mi za ten link:",
+    "Payment Request": "Żądanie płatności",
+    "Signal": "Sygnał",
+    "WhatsApp": "WhatsApp",
+    "Scan to Pay": "Skanuj zapłacić",
+    "Go to Payment Page": "Przejdź do strony płatności",
+    "Create Another Payment Request": "Utwórz kolejne żądanie płatności"
 }

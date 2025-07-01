@@ -121,5 +121,12 @@
     "Status": "وضعیت",
     "Created At": "در",
     "Paid At": "پرداخت شده در",
-    "Connect Cryptowallet": "CryptowAllet را وصل کنید"
+    "Connect Cryptowallet": "CryptowAllet را وصل کنید",
+    "Please pay me at this link:": "لطفا در این لینک به من پرداخت کنید:",
+    "Payment Request": "درخواست پرداخت",
+    "Signal": "نشانه",
+    "WhatsApp": "واتساپ",
+    "Scan to Pay": "اسکن برای پرداخت",
+    "Go to Payment Page": "به صفحه پرداخت بروید",
+    "Create Another Payment Request": "درخواست پرداخت دیگری ایجاد کنید"
 }

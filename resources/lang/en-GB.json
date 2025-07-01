@@ -111,5 +111,12 @@
     "The description must be a string.": "The description must be a string.",
     "You must select at least one cryptocurrency.": "You must select at least one cryptocurrency.",
     "The cryptocurrency selection must be an array.": "The cryptocurrency selection must be an array.",
-    "Payment request created successfully!": "Payment request created successfully!"
+    "Payment request created successfully!": "Payment request created successfully!",
+    "Please pay me at this link:": "Please pay me at this link:",
+    "Payment Request": "Payment Request",
+    "Signal": "Signal",
+    "WhatsApp": "WhatsApp",
+    "Scan to Pay": "Scan to Pay",
+    "Go to Payment Page": "Go to Payment Page",
+    "Create Another Payment Request": "Create Another Payment Request"
 }

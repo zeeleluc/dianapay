@@ -121,5 +121,12 @@
     "Status": "स्थिति",
     "Created At": "पर बनाया गया",
     "Paid At": "पर भुगतान किया गया",
-    "Connect Cryptowallet": "CryptoWallet कनेक्ट करें"
+    "Connect Cryptowallet": "CryptoWallet कनेक्ट करें",
+    "Please pay me at this link:": "कृपया मुझे इस लिंक पर भुगतान करें:",
+    "Payment Request": "भुगतान अनुरोध",
+    "Signal": "संकेत",
+    "WhatsApp": "WhatsApp",
+    "Scan to Pay": "भुगतान करने के लिए स्कैन करना",
+    "Go to Payment Page": "भुगतान पृष्ठ पर जाएं",
+    "Create Another Payment Request": "एक और भुगतान अनुरोध बनाएं"
 }

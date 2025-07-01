@@ -121,5 +121,12 @@
     "Status": "Status",
     "Created At": "Dicipta di",
     "Connect Cryptowallet": "Sambungkan Cryptowallet",
-    "Paid At": "Dibayar di"
+    "Paid At": "Dibayar di",
+    "Please pay me at this link:": "Tolong bayar saya di pautan ini:",
+    "Payment Request": "Permintaan pembayaran",
+    "Signal": "Isyarat",
+    "WhatsApp": "WhatsApp",
+    "Scan to Pay": "Imbas untuk membayar",
+    "Go to Payment Page": "Pergi ke halaman pembayaran",
+    "Create Another Payment Request": "Buat permintaan pembayaran lain"
 }

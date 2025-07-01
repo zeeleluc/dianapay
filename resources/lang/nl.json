@@ -125,5 +125,12 @@
     "Status": "Status",
     "Created At": "Gemaakt op",
     "Connect Cryptowallet": "Verbind Cryptowallet",
-    "Paid At": "Betaald op"
+    "Paid At": "Betaald op",
+    "Please pay me at this link:": "Betaal me alsjeblieft op deze link:",
+    "Payment Request": "Betalingsverzoek",
+    "Signal": "Signaal",
+    "WhatsApp": "Whatsapp",
+    "Scan to Pay": "Scannen om te betalen",
+    "Go to Payment Page": "Ga naar de betalingspagina",
+    "Create Another Payment Request": "Maak een ander betalingsverzoek"
 }

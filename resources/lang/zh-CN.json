@@ -121,5 +121,12 @@
     "Status": "地位",
     "Created At": "创建在",
     "Paid At": "支付",
-    "Connect Cryptowallet": "连接cryptowallet"
+    "Connect Cryptowallet": "连接cryptowallet",
+    "Please pay me at this link:": "请在此链接上付我：",
+    "Payment Request": "付款请求",
+    "Signal": "信号",
+    "WhatsApp": "WhatsApp",
+    "Scan to Pay": "扫描付款",
+    "Go to Payment Page": "转到付款页面",
+    "Create Another Payment Request": "创建另一个付款请求"
 }

@@ -121,5 +121,12 @@
     "Status": "Durum",
     "Created At": "Yaratılmış",
     "Paid At": "Ödenmiş",
-    "Connect Cryptowallet": "Cryptowallet'i bağlayın"
+    "Connect Cryptowallet": "Cryptowallet'i bağlayın",
+    "Please pay me at this link:": "Lütfen bana bu bağlantıdan ödeme:",
+    "Payment Request": "Ödeme talebi",
+    "Signal": "Sinyal",
+    "WhatsApp": "Whatsapp",
+    "Scan to Pay": "Ödemek için tarama",
+    "Go to Payment Page": "Ödeme sayfasına git",
+    "Create Another Payment Request": "Başka bir ödeme isteği oluşturun"
 }

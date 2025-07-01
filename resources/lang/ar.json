@@ -121,5 +121,12 @@
     "Status": "حالة",
     "Created At": "تم إنشاؤها في",
     "Paid At": "دفعت في",
-    "Connect Cryptowallet": "توصيل cryptowallet"
+    "Connect Cryptowallet": "توصيل cryptowallet",
+    "Please pay me at this link:": "من فضلك ادفع لي على هذا الرابط:",
+    "Payment Request": "طلب الدفع",
+    "Signal": "إشارة",
+    "WhatsApp": "Whatsapp",
+    "Scan to Pay": "مسح للدفع",
+    "Go to Payment Page": "انتقل إلى صفحة الدفع",
+    "Create Another Payment Request": "إنشاء طلب دفع آخر"
 }

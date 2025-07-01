@@ -122,5 +122,12 @@
     "Status": "状態",
     "Created At": "で作成されました",
     "Paid At": "で支払われます",
-    "Connect Cryptowallet": "cryptowalletを接続します"
+    "Connect Cryptowallet": "cryptowalletを接続します",
+    "Please pay me at this link:": "このリンクで私に支払ってください：",
+    "Payment Request": "支払いリクエスト",
+    "Signal": "信号",
+    "WhatsApp": "whatsapp",
+    "Scan to Pay": "スキャンして支払う",
+    "Go to Payment Page": "支払いページに移動します",
+    "Create Another Payment Request": "別の支払いリクエストを作成します"
 }

@@ -121,5 +121,12 @@
     "Status": "สถานะ",
     "Created At": "สร้างขึ้นที่",
     "Paid At": "จ่ายเงิน",
-    "Connect Cryptowallet": "เชื่อมต่อ cryptowallet"
+    "Connect Cryptowallet": "เชื่อมต่อ cryptowallet",
+    "Please pay me at this link:": "กรุณาจ่ายเงินให้ฉันที่ลิงค์นี้:",
+    "Payment Request": "คำขอชำระเงิน",
+    "Signal": "สัญญาณ",
+    "WhatsApp": "Whatsapp",
+    "Scan to Pay": "สแกนเพื่อจ่าย",
+    "Go to Payment Page": "ไปที่หน้าชำระเงิน",
+    "Create Another Payment Request": "สร้างคำขอการชำระเงินอื่น"
 }
