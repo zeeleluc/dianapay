@@ -26,10 +26,8 @@ Route::middleware('web')->group(function () {
 
     Route::get('/', Home::class)->name('home');
     Route::get('/payment/anonymous', AnonymousPaymentRequestForm::class)->name('payment.anonymous.create');
-
-//    Route::get('/payment/anonymous', [PublicAnonymousPaymentController::class, 'create'])
-//        ->name('payment.anonymous.create');
-
+    Route::get('/payment/anonymous/request/{uuid}', [PublicAnonymousPaymentController::class, 'request'])
+        ->name('payment.anonymous.request');
     Route::get('/payment/anonymous/{uuid}', [PublicAnonymousPaymentController::class, 'show'])
         ->name('payment.anonymous.show');
 

@@ -114,5 +114,12 @@
     "The amount must be at least 0.": "Die Menge muss mindestens 0 betragen.",
     "The minor amount must be an integer.": "Die geringfügige Menge muss eine Ganzzahl sein.",
     "The minor amount must be at least 0.": "Der kleinere Betrag muss mindestens 0 betragen.",
-    "The minor amount is invalid for the selected fiat currency.": "Der geringfügige Betrag ist für die ausgewählte Fiat -Währung ungültig."
+    "The minor amount is invalid for the selected fiat currency.": "Der geringfügige Betrag ist für die ausgewählte Fiat -Währung ungültig.",
+    "Payment request not found.": "Zahlungsanfrage nicht gefunden.",
+    "Please Pay Me": "Bitte bezahlen Sie mich",
+    "Amount to Pay": "Zu zahlen",
+    "Status": "Status",
+    "Created At": "Erstellt at",
+    "Paid At": "Bezahlt bei",
+    "Connect Cryptowallet": "Schließen Sie Cryptowallet an"
 }

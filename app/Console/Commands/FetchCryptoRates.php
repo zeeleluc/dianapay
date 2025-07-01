@@ -16,7 +16,7 @@ class FetchCryptoRates extends Command
     public function handle()
     {
         $blockchains = config('cryptocurrencies', []);
-        $fiatCurrencies = config('fiats', []);
+        $fiatCurrencies = array_keys(config('fiats', []));
 
         if (empty($blockchains)) {
             $this->error('No cryptocurrencies configured.');

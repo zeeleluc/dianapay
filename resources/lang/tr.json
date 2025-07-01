@@ -114,5 +114,12 @@
     "The amount must be at least 0.": "Miktar en az 0 olmalıdır.",
     "The minor amount must be an integer.": "Küçük miktar bir tamsayı olmalıdır.",
     "The minor amount must be at least 0.": "Küçük miktar en az 0 olmalıdır.",
-    "The minor amount is invalid for the selected fiat currency.": "Küçük miktar seçilen fiat para birimi için geçersizdir."
+    "The minor amount is invalid for the selected fiat currency.": "Küçük miktar seçilen fiat para birimi için geçersizdir.",
+    "Payment request not found.": "Ödeme talebi bulunamadı.",
+    "Please Pay Me": "Lütfen bana öde",
+    "Amount to Pay": "Ödeme tutarı",
+    "Status": "Durum",
+    "Created At": "Yaratılmış",
+    "Paid At": "Ödenmiş",
+    "Connect Cryptowallet": "Cryptowallet'i bağlayın"
 }

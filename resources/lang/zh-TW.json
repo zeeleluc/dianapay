@@ -114,5 +114,12 @@
     "The amount must be at least 0.": "金額必須至少為0。",
     "The minor amount must be an integer.": "少量必須是整數。",
     "The minor amount must be at least 0.": "少量必須至少為0。",
-    "The minor amount is invalid for the selected fiat currency.": "對於選定的法定貨幣而言，少數金額無效。"
+    "The minor amount is invalid for the selected fiat currency.": "對於選定的法定貨幣而言，少數金額無效。",
+    "Payment request not found.": "找不到付款請求。",
+    "Please Pay Me": "請付我",
+    "Amount to Pay": "付款金額",
+    "Status": "地位",
+    "Created At": "創建在",
+    "Paid At": "支付",
+    "Connect Cryptowallet": "連接cryptowallet"
 }

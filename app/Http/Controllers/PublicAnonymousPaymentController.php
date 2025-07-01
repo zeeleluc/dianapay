@@ -15,11 +15,29 @@ class PublicAnonymousPaymentController extends Controller
         $paymentRequest = AnonymousPaymentRequest::where('identifier', $uuid)->first();
 
         if (!$paymentRequest) {
-            abort(404, 'Payment request not found.');
+            abort(404, translate('Payment request not found.'));
         }
 
         return view('public.anonymous-payment-request.show', [
             'paymentRequest' => $paymentRequest,
-        ])->layout('layouts.homepage');
+        ]);
+    }
+
+    /**
+     * Show the anonymous payment request by UUID in request format.
+     */
+    public function request(string $uuid)
+    {
+        $paymentRequest = AnonymousPaymentRequest::where('identifier', $uuid)->first();
+
+        if (!$paymentRequest) {
+            abort(404, translate('Payment request not found.'));
+        }
+
+        return view('public.anonymous-payment-request.request', [
+            'paymentRequest' => $paymentRequest,
+            'showUrl' => route('payment.anonymous.show', ['uuid' => $paymentRequest->identifier]),
+            'createUrl' => route('payment.anonymous.create'),
+        ]);
     }
 }

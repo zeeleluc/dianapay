@@ -6,7 +6,7 @@ enum FiatEnum: string
 {
     public static function all(): array
     {
-        return config('fiats', []);
+        return array_keys(config('fiats', []));
     }
 
     public static function isValid(string $fiat): bool

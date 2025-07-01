@@ -222,7 +222,7 @@ class AnonymousPaymentRequestForm extends Component
             }
         }
 
-        AnonymousPaymentRequest::create([
+        $paymentRequest = AnonymousPaymentRequest::create([
             'fiat' => strtolower($this->fiat),
             'amount_minor' => $amount_minor_total,
             'to_wallet_evm' => $this->to_wallet_evm,
@@ -238,7 +238,9 @@ class AnonymousPaymentRequestForm extends Component
         ]);
 
         session()->flash('message', translate('Payment request created successfully!'));
-        $this->resetForm();
+
+        // Redirect to the route with the UUID parameter
+        return redirect()->route('payment.anonymous.request', ['uuid' => $paymentRequest->identifier]);
     }
 
     public function getHasMinorAmountProperty(): bool
@@ -267,7 +269,7 @@ class AnonymousPaymentRequestForm extends Component
     public function render()
     {
         return view('livewire.forms.anonymous-payment-request-form', [
-            'fiats' => config('fiats'),
-        ])->layout('layouts.homepage');
+            'fiats' => array_keys(config('fiats')),
+        ])->layout('components.layouts.homepage');
     }
 }

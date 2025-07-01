@@ -117,5 +117,12 @@
     "The amount must be at least 0.": "Beloppet måste vara minst 0.",
     "The minor amount must be an integer.": "Den mindre beloppet måste vara ett heltal.",
     "The minor amount must be at least 0.": "Det mindre beloppet måste vara minst 0.",
-    "The minor amount is invalid for the selected fiat currency.": "Det mindre beloppet är ogiltigt för den valda fiatvalutan."
+    "The minor amount is invalid for the selected fiat currency.": "Det mindre beloppet är ogiltigt för den valda fiatvalutan.",
+    "Payment request not found.": "Betalningsförfrågan hittades inte.",
+    "Please Pay Me": "Snälla betala mig",
+    "Amount to Pay": "Belopp",
+    "Status": "Status",
+    "Created At": "Skapad på",
+    "Paid At": "Betalt",
+    "Connect Cryptowallet": "Anslut kryptowallet"
 }

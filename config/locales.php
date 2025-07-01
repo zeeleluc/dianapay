@@ -2,7 +2,8 @@
 
 return [
     'allowed' => [
-        'en',     // English
+        'en',  // English (USA)
+        'en-GB',  // English (UK)
         'es',     // Spanish
         'zh-CN',  // Chinese (Simplified)
         'zh-TW',  // Chinese (Traditional)

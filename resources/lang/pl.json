@@ -114,5 +114,12 @@
     "The amount must be at least 0.": "Kwota musi wynosić co najmniej 0.",
     "The minor amount must be an integer.": "Niewielka kwota musi być liczbą całkowitą.",
     "The minor amount must be at least 0.": "Niewielka kwota musi wynosić co najmniej 0.",
-    "The minor amount is invalid for the selected fiat currency.": "Niewielka kwota jest nieprawidłowa dla wybranej waluty fiat."
+    "The minor amount is invalid for the selected fiat currency.": "Niewielka kwota jest nieprawidłowa dla wybranej waluty fiat.",
+    "Payment request not found.": "Żądanie płatności nie znaleziono.",
+    "Please Pay Me": "Proszę, zapłać mi",
+    "Amount to Pay": "Kwota do zapłaty",
+    "Status": "Status",
+    "Created At": "Utworzony w",
+    "Paid At": "Zapłacone w",
+    "Connect Cryptowallet": "Połącz Cryptowallet"
 }

@@ -114,5 +114,12 @@
     "The amount must be at least 0.": "مقدار باید حداقل 0 باشد.",
     "The minor amount must be an integer.": "مقدار جزئی باید یک عدد صحیح باشد.",
     "The minor amount must be at least 0.": "مبلغ جزئی باید حداقل 0 باشد.",
-    "The minor amount is invalid for the selected fiat currency.": "مبلغ جزئی برای ارز انتخاب شده فیات نامعتبر است."
+    "The minor amount is invalid for the selected fiat currency.": "مبلغ جزئی برای ارز انتخاب شده فیات نامعتبر است.",
+    "Payment request not found.": "درخواست پرداخت یافت نشد.",
+    "Please Pay Me": "لطفا به من پرداخت کنید",
+    "Amount to Pay": "مبلغی برای پرداخت",
+    "Status": "وضعیت",
+    "Created At": "در",
+    "Paid At": "پرداخت شده در",
+    "Connect Cryptowallet": "CryptowAllet را وصل کنید"
 }

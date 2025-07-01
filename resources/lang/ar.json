@@ -114,5 +114,12 @@
     "The amount must be at least 0.": "يجب أن يكون المبلغ على الأقل 0.",
     "The minor amount must be an integer.": "يجب أن يكون المبلغ البسيط عددًا صحيحًا.",
     "The minor amount must be at least 0.": "يجب أن يكون المبلغ البسيط على الأقل 0.",
-    "The minor amount is invalid for the selected fiat currency.": "المبلغ الثانوي غير صالح للعملة المحددة."
+    "The minor amount is invalid for the selected fiat currency.": "المبلغ الثانوي غير صالح للعملة المحددة.",
+    "Payment request not found.": "طلب الدفع غير موجود.",
+    "Please Pay Me": "من فضلك دفع لي",
+    "Amount to Pay": "مبلغ الدفع",
+    "Status": "حالة",
+    "Created At": "تم إنشاؤها في",
+    "Paid At": "دفعت في",
+    "Connect Cryptowallet": "توصيل cryptowallet"
 }

@@ -114,5 +114,12 @@
     "The amount must be at least 0.": "จำนวนเงินจะต้องเป็นอย่างน้อย 0",
     "The minor amount must be an integer.": "จำนวนเล็กน้อยจะต้องเป็นจำนวนเต็ม",
     "The minor amount must be at least 0.": "จำนวนเล็กน้อยต้องมีอย่างน้อย 0",
-    "The minor amount is invalid for the selected fiat currency.": "จำนวนเล็กน้อยไม่ถูกต้องสำหรับสกุลเงินคำสั่งที่เลือก"
+    "The minor amount is invalid for the selected fiat currency.": "จำนวนเล็กน้อยไม่ถูกต้องสำหรับสกุลเงินคำสั่งที่เลือก",
+    "Payment request not found.": "ไม่พบคำขอชำระเงิน",
+    "Please Pay Me": "กรุณาจ่ายเงินให้ฉัน",
+    "Amount to Pay": "จำนวนเงินที่ต้องจ่าย",
+    "Status": "สถานะ",
+    "Created At": "สร้างขึ้นที่",
+    "Paid At": "จ่ายเงิน",
+    "Connect Cryptowallet": "เชื่อมต่อ cryptowallet"
 }

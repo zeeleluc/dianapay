@@ -114,5 +114,12 @@
     "The amount must be at least 0.": "A quantidade deve ser pelo menos 0.",
     "The minor amount must be an integer.": "A quantidade menor deve ser um número inteiro.",
     "The minor amount must be at least 0.": "A quantidade menor deve ser pelo menos 0.",
-    "The minor amount is invalid for the selected fiat currency.": "O valor menor é inválido para a moeda fiduciária selecionada."
+    "The minor amount is invalid for the selected fiat currency.": "O valor menor é inválido para a moeda fiduciária selecionada.",
+    "Payment request not found.": "Solicitação de pagamento não encontrada.",
+    "Please Pay Me": "Por favor me pague",
+    "Amount to Pay": "Valor a pagar",
+    "Status": "Status",
+    "Created At": "Criado em",
+    "Paid At": "Pago em",
+    "Connect Cryptowallet": "Conecte o CryptoWallet"
 }

@@ -115,5 +115,12 @@
     "The minor amount must be an integer.": "少量は整数でなければなりません。",
     "The minor amount must be at least 0.": "少ない量は少なくとも0でなければなりません。",
     "The minor amount is invalid for the selected fiat currency.": "選択されたフィアット通貨では、少量は無効です。",
-    "支払いリクエストは正常に作成されました！": "支払いリクエストは正常に作成されました！"
+    "支払いリクエストは正常に作成されました！": "支払いリクエストは正常に作成されました！",
+    "Payment request not found.": "支払い要求が見つかりません。",
+    "Please Pay Me": "私に支払ってください",
+    "Amount to Pay": "支払う金額",
+    "Status": "状態",
+    "Created At": "で作成されました",
+    "Paid At": "で支払われます",
+    "Connect Cryptowallet": "cryptowalletを接続します"
 }

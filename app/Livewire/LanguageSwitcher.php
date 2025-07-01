@@ -15,7 +15,8 @@ class LanguageSwitcher extends Component
     public array $flags;
 
     public $localeLabels = [
-        'en' => 'EN',
+        'en' => 'USA',
+        'en-GB' => 'EN',
         'es' => 'ES',
         'zh-CN' => 'CN',
         'zh-TW' => 'TW',

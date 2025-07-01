@@ -114,5 +114,12 @@
     "The amount must be at least 0.": "Jumlah mestilah sekurang -kurangnya 0.",
     "The minor amount must be an integer.": "Jumlah kecil mestilah integer.",
     "The minor amount must be at least 0.": "Jumlah kecil mestilah sekurang -kurangnya 0.",
-    "The minor amount is invalid for the selected fiat currency.": "Jumlah kecil tidak sah untuk mata wang fiat yang dipilih."
+    "The minor amount is invalid for the selected fiat currency.": "Jumlah kecil tidak sah untuk mata wang fiat yang dipilih.",
+    "Payment request not found.": "Permintaan pembayaran tidak dijumpai.",
+    "Please Pay Me": "Tolong bayar saya",
+    "Amount to Pay": "Jumlah untuk membayar",
+    "Status": "Status",
+    "Created At": "Dicipta di",
+    "Connect Cryptowallet": "Sambungkan Cryptowallet",
+    "Paid At": "Dibayar di"
 }

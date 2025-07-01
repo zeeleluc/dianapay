@@ -114,5 +114,12 @@
     "The amount must be at least 0.": "Сумма должна быть не менее 0.",
     "The minor amount must be an integer.": "Незначительная сумма должна быть целым числом.",
     "The minor amount must be at least 0.": "Незначительная сумма должна быть не менее 0.",
-    "The minor amount is invalid for the selected fiat currency.": "Незначительная сумма является недействительной для выбранной фиатной валюты."
+    "The minor amount is invalid for the selected fiat currency.": "Незначительная сумма является недействительной для выбранной фиатной валюты.",
+    "Payment request not found.": "Запрос на оплату не найден.",
+    "Please Pay Me": "Пожалуйста, заплати мне",
+    "Amount to Pay": "Сумма для оплаты",
+    "Status": "Статус",
+    "Created At": "Создан в",
+    "Paid At": "Выплачивается в",
+    "Connect Cryptowallet": "Подключите Cryptowolet"
 }

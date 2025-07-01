@@ -114,5 +114,12 @@
     "The amount must be at least 0.": "राशि कम से कम 0 होनी चाहिए।",
     "The minor amount must be an integer.": "मामूली राशि एक पूर्णांक होनी चाहिए।",
     "The minor amount must be at least 0.": "मामूली राशि कम से कम 0 होनी चाहिए।",
-    "The minor amount is invalid for the selected fiat currency.": "चयनित फिएट मुद्रा के लिए मामूली राशि अमान्य है।"
+    "The minor amount is invalid for the selected fiat currency.": "चयनित फिएट मुद्रा के लिए मामूली राशि अमान्य है।",
+    "Payment request not found.": "भुगतान अनुरोध नहीं मिला।",
+    "Please Pay Me": "कृपया मुझे भुगतान करें",
+    "Amount to Pay": "भुगतान करने की राशि",
+    "Status": "स्थिति",
+    "Created At": "पर बनाया गया",
+    "Paid At": "पर भुगतान किया गया",
+    "Connect Cryptowallet": "CryptoWallet कनेक्ट करें"
 }

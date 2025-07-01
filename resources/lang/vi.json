@@ -114,5 +114,12 @@
     "The amount must be at least 0.": "Số tiền phải là ít nhất 0.",
     "The minor amount must be an integer.": "Số lượng nhỏ phải là một số nguyên.",
     "The minor amount must be at least 0.": "Số lượng nhỏ phải là ít nhất 0.",
-    "The minor amount is invalid for the selected fiat currency.": "Số tiền nhỏ không hợp lệ cho tiền tệ fiat đã chọn."
+    "The minor amount is invalid for the selected fiat currency.": "Số tiền nhỏ không hợp lệ cho tiền tệ fiat đã chọn.",
+    "Payment request not found.": "Yêu cầu thanh toán không tìm thấy.",
+    "Please Pay Me": "Hãy trả tiền cho tôi",
+    "Amount to Pay": "Số tiền phải trả",
+    "Status": "Trạng thái",
+    "Created At": "Được tạo ra tại",
+    "Paid At": "Trả tiền tại",
+    "Connect Cryptowallet": "Kết nối Cryptowallet"
 }

@@ -118,5 +118,12 @@
     "The amount must be at least 0.": "Het bedrag moet minimaal 0 zijn.",
     "The minor amount must be an integer.": "Het kleine bedrag moet een geheel getal zijn.",
     "The minor amount must be at least 0.": "Het kleine bedrag moet minimaal 0 zijn.",
-    "The minor amount is invalid for the selected fiat currency.": "Het kleine bedrag is ongeldig voor de geselecteerde fiat -valuta."
+    "The minor amount is invalid for the selected fiat currency.": "Het kleine bedrag is ongeldig voor de geselecteerde fiat -valuta.",
+    "Payment request not found.": "Betalingsverzoek niet gevonden.",
+    "Please Pay Me": "Betaal me alsjeblieft",
+    "Amount to Pay": "Bedrag om te betalen",
+    "Status": "Status",
+    "Created At": "Gemaakt op",
+    "Connect Cryptowallet": "Verbind Cryptowallet",
+    "Paid At": "Betaald op"
 }

@@ -10,7 +10,7 @@
             {{ translate('Crypto Payments — Easy, Fast, Global.') }}
         </p>
 
-        <x-button variant="secondary" class="text-base sm:text-lg md:text-xl py-3 px-5 sm:py-4 sm:px-6">
+        <x-button href="{{ route('payment.anonymous.create') }}" variant="secondary" class="text-base sm:text-lg md:text-xl py-3 px-5 sm:py-4 sm:px-6">
             {{ translate('Create Anonymous Single Payment') }}
         </x-button>
     </div>

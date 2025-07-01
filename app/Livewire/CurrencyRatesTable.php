@@ -17,7 +17,7 @@ class CurrencyRatesTable extends Component
     private function getRatesByBlockchain(): array
     {
         $configuredBlockchains = config('cryptocurrencies', []);
-        $fiats = config('fiats', []);
+        $fiats = array_keys(config('fiats', []));
         $result = [];
 
         foreach ($configuredBlockchains as $blockchain => $tokens) {

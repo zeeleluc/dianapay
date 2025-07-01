@@ -2,7 +2,8 @@
 // config/language_flags.php
 
 return [
-    'en'    => '🇬🇧', // English
+    'en' => '🇺🇸', // English (USA)
+    'en-GB' => '🇬🇧', // English (UK)
     'es'    => '🇪🇸', // Spanish
     'zh-CN' => '🇨🇳', // Chinese Simplified
     'zh-TW' => '🇹🇼', // Chinese Traditional
@@ -24,5 +25,4 @@ return [
     'th'    => '🇹🇭', // Thai
     'ms'    => '🇲🇾', // Malay
     'fa'    => '🇮🇷', // Persian (Iran)
-    'he'    => '🇮🇱', // Hebrew (Israel)
 ];
