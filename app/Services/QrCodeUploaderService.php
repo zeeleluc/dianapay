@@ -49,7 +49,10 @@ class QrCodeUploaderService
         }
 
         $result = $this->upload(
-            route('payment.anonymous.show', ['uuid' => $anonymousPaymentRequest->identifier]),
+            route('payment.anonymous.show', [
+                'locale' => get_locale(),
+                'uuid' => $anonymousPaymentRequest->identifier
+            ]),
             $path
         );
 

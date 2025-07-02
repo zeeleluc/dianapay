@@ -32,7 +32,7 @@
                     @php
                         $chain = config("chains.{$chainKey}");
                         $chainName = $chain['long_name'] ?? ucfirst($chainKey);
-                        $chainUrl = route('articles.show', ['slug1' => 'blockchain', 'slug2' => $chainKey]);
+                        $chainUrl = route('articles.show', ['locale' => get_locale(), 'slug1' => 'blockchain', 'slug2' => $chainKey]);
                     @endphp
                     <li>
                         <a href="{{ $chainUrl }}" class="hover:text-white transition">

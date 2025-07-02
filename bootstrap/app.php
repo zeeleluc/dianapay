@@ -28,7 +28,12 @@ return \Illuminate\Foundation\Application::configure(basePath: dirname(__DIR__))
             AddQueuedCookiesToResponse::class,
             VerifyCsrfToken::class,
             SubstituteBindings::class,
-            SetLocale::class,
+            SetLocale::class, // Use the class directly to avoid alias issues
+        ]);
+
+        // Explicitly register the alias (optional, for clarity)
+        $middleware->alias([
+            'setLocale' => \App\Http\Middleware\SetLocale::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

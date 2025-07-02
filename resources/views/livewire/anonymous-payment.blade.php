@@ -6,7 +6,9 @@
 
 <div class="w-full p-8 bg-darker rounded-lg shadow-lg text-gray-100 flex flex-col items-center text-center">
 
-    <h1 class="text-3xl font-extrabold mb-6">{{ translate('Please Pay Me') }}</h1>
+    <h1 class="text-3xl font-extrabold mb-6">
+        Crypt Me Up
+    </h1>
 
     <div class="mb-8 text-3xl font-semibold">
         {{ $symbol }}{{ number_format($anonymousPaymentRequest->amount_minor / (10 ** \App\Enums\FiatEnum::decimalsFor($anonymousPaymentRequest->fiat)), 2) }}

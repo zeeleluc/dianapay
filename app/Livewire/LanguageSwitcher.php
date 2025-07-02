@@ -6,6 +6,9 @@ use Livewire\Component;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
 
 class LanguageSwitcher extends Component
 {
@@ -39,7 +42,7 @@ class LanguageSwitcher extends Component
         'ms'    => 'MS',
         'fa'    => 'FA',
         'he'    => 'HE',
-        'pap'   => 'PAP', // Papiamentu (Curaçao)
+        'pap'   => 'PAP',
     ];
 
     public function mount()
@@ -47,22 +50,50 @@ class LanguageSwitcher extends Component
         $this->allowedLocales = Config::get('locales.allowed', ['en']);
         $this->flags = Config::get('language_flags', []);
         $this->locale = Session::get('locale', Config::get('app.locale', 'en'));
-        App::setLocale($this->locale);
+        \Illuminate\Support\Facades\App::setLocale($this->locale);
+        Log::info('LanguageSwitcher mounted', ['locale' => $this->locale]);
     }
 
-    public function switchLocale(string $locale): void
+    public function switchLocale(string $locale)
     {
+        Log::info('LanguageSwitcher switchLocale called', [
+            'locale' => $locale,
+            'currentRouteName' => Route::currentRouteName(),
+            'currentParams' => Route::current()->parameters(),
+        ]);
+
         if (in_array($locale, $this->allowedLocales)) {
             Session::put('locale', $locale);
-            App::setLocale($locale);
+            \Illuminate\Support\Facades\App::setLocale($locale);
             $this->locale = $locale;
             $this->open = false;
-            $this->redirect(request()->header('referer') ?? '/');
+
+            // Get the last visited route from the session
+            $lastRoute = Session::get('last_route', [
+                'name' => 'home',
+                'params' => ['locale' => $locale],
+            ]);
+
+            // Build the redirect URL
+            $redirectUrl = route($lastRoute['name'], array_merge($lastRoute['params'], ['locale' => $locale]));
+            Log::info('LanguageSwitcher redirecting', ['redirectUrl' => $redirectUrl]);
+
+            return Redirect::to($redirectUrl, 301);
         }
     }
 
     public function render()
     {
+        // Store the current route in the session if it's not a Livewire or lang switch route
+        $currentRouteName = Route::currentRouteName();
+        if ($currentRouteName && !in_array($currentRouteName, ['lang.switch', 'locale.redirect']) && !request()->is('livewire/*')) {
+            Session::put('last_route', [
+                'name' => $currentRouteName,
+                'params' => Route::current()->parameters(),
+            ]);
+        }
+
+        Log::info('LanguageSwitcher rendering', ['locale' => $this->locale]);
         return view('livewire.language-switcher');
     }
 }

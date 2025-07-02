@@ -27,7 +27,7 @@
 
     <section class="pt-24 bg-darker text-white">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-            <h2 class="text-5xl font-bold mb-14 text-center">{{ translate('Our Products & Features') }}</h2>
+            <h2 class="text-5xl font-bold mb-14 text-center">{{ translate('Our Products') }}</h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                 <!-- Feature Card 1 -->
@@ -43,7 +43,7 @@
                         <li>{!! translate('Monocurrency payments') !!}</li>
                     </ul>
 
-                    <x-button href="{{ route('payment.anonymous.create') }}" variant="secondary" class="text-base sm:text-lg py-3 px-5">
+                    <x-button href="{{ route('payment.anonymous.create', get_locale()) }}" variant="secondary" class="text-base sm:text-lg py-3 px-5">
                         {{ translate('Create Payment') }}
                     </x-button>
                 </div>
@@ -126,7 +126,7 @@
                 @foreach ($activeChains as $key => $chain)
                     @php
                         $cryptos = CryptoEnum::forChain($key);
-                        $chainUrl = route('articles.show', ['slug1' => 'blockchain', 'slug2' => $key]);
+                        $chainUrl = route('articles.show', ['locale' => get_locale(), 'slug1' => 'blockchain', 'slug2' => $key]);
                     @endphp
 
                     <div class="rounded-xl p-6 bg-darker text-center space-y-4">
@@ -148,6 +148,7 @@
                                         @php
                                             $name = config("cryptocurrencies.{$crypto['chain']}.{$crypto['symbol']}.name") ?? $crypto['symbol'];
                                             $cryptoUrl = route('articles.show', [
+                                                'locale' => get_locale(),
                                                 'slug1' => 'blockchain',
                                                 'slug2' => $crypto['chain'],
                                                 'slug3' => strtolower($crypto['symbol'])
@@ -175,7 +176,7 @@
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                     @foreach ($inactiveChains as $key => $chain)
                         @php
-                            $chainUrl = route('articles.show', ['slug1' => 'blockchain', 'slug2' => $key]);
+                            $chainUrl = route('articles.show', ['locale' => get_locale(), 'slug1' => 'blockchain', 'slug2' => $key]);
                         @endphp
 
                         <a href="{{ $chainUrl }}"

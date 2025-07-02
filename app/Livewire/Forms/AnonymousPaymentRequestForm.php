@@ -243,7 +243,10 @@ class AnonymousPaymentRequestForm extends Component
         (new QrCodeUploaderService())->getOrCreateAnonymousPaymentRequestQR($paymentRequest);
 
         // Redirect to the route with the UUID parameter
-        return redirect()->route('payment.anonymous.request', ['uuid' => $paymentRequest->identifier]);
+        return redirect()->route('payment.anonymous.request', [
+            'locale' => get_locale(),
+            'uuid' => $paymentRequest->identifier
+        ]);
     }
 
     public function getHasMinorAmountProperty(): bool

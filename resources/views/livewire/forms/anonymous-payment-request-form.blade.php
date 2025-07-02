@@ -277,7 +277,7 @@
                 wire:loading.class="pointer-events-none"
             >
                 <span wire:loading.remove wire:target="submit" class="inline-flex items-center justify-center w-full h-full absolute inset-0">
-                    {{ translate('Create Payment Request') }}
+                    Crypt Me Up
                 </span>
 
                 <span wire:loading wire:target="submit" class="inline-flex items-center justify-center w-full h-full absolute inset-0">
@@ -290,7 +290,11 @@
         </form>
     </div>
 
-    <div class="bg-darker text-white py-12 px-4 sm:px-6">
+    <x-wavy-section>
+        {!! translate('Hit that blue button and get ready for crypto magic!') !!}
+    </x-wavy-section>
+
+    <div class="bg-dark text-white py-12 px-4 sm:px-6">
         <div class="w-full lg:max-w-screen-lg mx-auto text-gray-100 shadow-lg my-20">
             <h2 class="text-3xl lg:text-6xl font-bold mb-6">
                 {!! translate('About Anonymous Crypto Payments') !!}
@@ -314,4 +318,5 @@
             </p>
         </div>
     </div>
+
 </div>

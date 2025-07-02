@@ -8,7 +8,7 @@ use Illuminate\Http\RedirectResponse;
 
 class ArticleController extends Controller
 {
-    public function show(string $slug1, ?string $slug2 = null, ?string $slug3 = null): ViewResponse|RedirectResponse
+    public function show(string $locale, string $slug1, ?string $slug2 = null, ?string $slug3 = null): ViewResponse|RedirectResponse
     {
         $slugs = array_filter([$slug1, $slug2, $slug3], fn($v) => !is_null($v));
         $slugPath = implode('/', $slugs);
@@ -20,7 +20,7 @@ class ArticleController extends Controller
         $hasSidebar = View::exists($sidebarView);
 
         if (! $hasContent && ! $hasSidebar) {
-            return redirect()->route('home');
+            return redirect()->route('home', get_locale());
         }
 
         $title = $this->getSlugLabel(end($slugs));
@@ -51,7 +51,7 @@ class ArticleController extends Controller
         $breadcrumbs = [
             [
                 'label' => translate('Main Page'),
-                'url' => route('home'),
+                'url' => route('home', get_locale()),
             ],
         ];
 
@@ -65,6 +65,8 @@ class ArticleController extends Controller
             for ($i = 0; $i < 3; $i++) {
                 $params['slug' . ($i + 1)] = $accumulatedSlugs[$i] ?? null;
             }
+
+            $params['locale'] = get_locale();
 
             $breadcrumbs[] = [
                 'label' => $this->getSlugLabel($slug),
