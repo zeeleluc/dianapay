@@ -47,11 +47,25 @@ class AnonymousPayment extends Component
 
     public function getAvailableCryptosProperty(): array
     {
-        return $this->selectedChain
-            ? \App\Enums\CryptoEnum::forChain($this->selectedChain)
-            : [];
-    }
+        if (! $this->selectedChain) {
+            return [];
+        }
 
+        // Get accepted cryptos as associative array
+        $accepted = json_decode($this->anonymousPaymentRequest->accepted_crypto, true);
+
+        if (! is_array($accepted) || ! isset($accepted[$this->selectedChain])) {
+            return [];
+        }
+
+        // All cryptos available for this chain
+        $available = \App\Enums\CryptoEnum::forChain($this->selectedChain);
+
+        // Filter based on what's accepted for this chain
+        return array_values(array_filter($available, function ($crypto) use ($accepted) {
+            return in_array($crypto['symbol'], $accepted[$this->selectedChain]);
+        }));
+    }
 
     public function updatedSelectedCrypto()
     {

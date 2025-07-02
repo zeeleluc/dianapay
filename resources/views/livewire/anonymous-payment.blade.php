@@ -55,14 +55,14 @@
 
         <!-- Single step block -->
         <div class="p-6 rounded-lg border-2 transition
-            {{ $step === 1 ? 'border-yellow-400 bg-yellow-100 text-yellow-800' : '' }}
-            {{ $step === 2 ? 'border-yellow-400 bg-yellow-100 text-yellow-800' : '' }}
-            {{ $step === 3 ? 'border-yellow-400 bg-yellow-100 text-yellow-800' : '' }}">
+            {{ $step === 1 ? 'border-yellow-400 bg-dark text-gray-200' : '' }}
+            {{ $step === 2 ? 'border-yellow-400 bg-dark text-gray-200' : '' }}
+            {{ $step === 3 ? 'border-yellow-400 bg-dark text-gray-200' : '' }}">
 
             <h2 class="text-xl font-bold mb-2">Step {{ $step }}</h2>
 
             @if ($step === 1)
-                <p class="text-sm mb-4">{{ translate('Choose Blockchain') }}</p>
+                <p class="text-sm mb-4">{!! translate('Choose Blockchain') !!}</p>
 
                 <div class="grid grid-cols-2 sm:grid-cols-2 gap-4">
                     @foreach($this->chains as $chain)
@@ -76,15 +76,15 @@
                     @endforeach
                 </div>
             @elseif($step === 2)
-                <p class="text-sm mb-4">{{ translate('Choose Cryptocurrency') }}</p>
+                <p class="text-sm mb-4">{!! translate('Choose Cryptocurrency') !!}</p>
 
                 @if (!$selectedChain)
                     <div class="text-red-600 text-sm">
-                        {{ translate('Please select a blockchain first.') }}
+                        {!! translate('Please select a blockchain first.') !!}
                     </div>
                 @elseif (empty($this->availableCryptos))
                     <div class="text-gray-500 text-sm">
-                        {{ translate('No cryptocurrencies available for this blockchain.') }}
+                        {!! translate('No cryptocurrencies available for this blockchain.') !!}
                     </div>
                 @else
                     <div class="grid grid-cols-2 sm:grid-cols-2 gap-4">
@@ -103,11 +103,11 @@
             @elseif($step === 3)
                 <div wire:poll.5s="updateCryptoAmount">
                     <p class="text-sm mb-2 font-medium">
-                        {{ translate('Connect Cryptowallet and Pay') }}
+                        {!! translate('Connect Cryptowallet and Pay') !!}
                     </p>
 
                     @if ($cryptoAmount)
-                        <div class="text-2xl font-bold text-orange-800 mb-2">
+                        <div class="text-2xl font-bold text-orange-200 mb-2">
                             {{ number_format($cryptoAmount, 8) }}
                             <br />
                             {{ strtoupper($selectedCrypto) }}
