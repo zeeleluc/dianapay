@@ -1,8 +1,7 @@
-<div class="bg-darkest py-16 px-6 text-center rounded-lg">
-    <p class="text-5xl sm:text-6xl font-extrabold leading-tight text-white max-w-4xl mx-auto">
-        {!! translate('Seamless monocurrency payments with just 0.4% fee, direct crypto-to-crypto transactions. No swapping, no bridging.') !!}
-    </p>
-</div>
+
+<x-wavy-section>
+    {!! translate('Seamless monocurrency payments with just 0.4% fee, direct crypto-to-crypto transactions. No swapping, no bridging.') !!}
+</x-wavy-section>
 
 <footer class="bg-dark text-gray-300 py-12 px-6 sm:px-12">
 

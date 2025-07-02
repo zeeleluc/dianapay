@@ -10,10 +10,10 @@
     @livewireStyles
     @vite('resources/css/app.css')
 </head>
-<body class="antialiased bg-gray-950">
+<body class="antialiased bg-dark">
 
 <main class="min-h-screen flex flex-col items-center justify-center pt-6 space-y-6 w-80 md:w-96 mx-auto">
-    <div class="w-full bg-gray-800 rounded-md px-4 py-2 flex justify-center">
+    <div class="w-full bg-darker rounded-md px-4 py-2 flex justify-center">
         <livewire:language-switcher class="whitespace-nowrap" />
     </div>
 

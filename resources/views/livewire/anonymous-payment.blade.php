@@ -4,14 +4,14 @@
     $symbol = $symbols[$fiat] ?? strtoupper($fiat);
 @endphp
 
-<div class="w-full p-8 bg-gray-900 rounded-lg shadow-lg text-gray-100 flex flex-col items-center text-center">
+<div class="w-full p-8 bg-darker rounded-lg shadow-lg text-gray-100 flex flex-col items-center text-center">
     <h1 class="text-3xl font-extrabold mb-6">{{ translate('Please Pay Me') }}</h1>
 
     <div class="mb-8 text-3xl font-semibold">
         {{ $symbol }}{{ number_format($anonymousPaymentRequest->amount_minor / (10 ** \App\Enums\FiatEnum::decimalsFor($anonymousPaymentRequest->fiat)), 2) }}
     </div>
 
-    <div class="mb-8 bg-gray-800 rounded-lg p-4 shadow-inner text-gray-300 max-w-xl w-full">
+    <div class="mb-8 bg-dark rounded-lg p-4 shadow-inner text-gray-300 max-w-xl w-full">
         {{ $anonymousPaymentRequest->description }}
     </div>
 

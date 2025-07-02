@@ -26,37 +26,40 @@
 @endphp
 
 <x-layouts.homepage>
-    <div class="w-full lg:max-w-xl lg:mx-auto mt-10 p-8 bg-gray-900 rounded-lg shadow-lg text-gray-100 flex flex-col items-center text-center space-y-8">
 
-        <h1 class="text-3xl font-extrabold">{{ translate('Payment Request') }}</h1>
+    <x-wavy-section>
+        {!! translate('Share Your Anonymous Cryptocurrency Payment Request') !!}
+    </x-wavy-section>
+
+    <div class="w-full bg-darker lg:max-w-xl lg:mx-auto mt-10 p-8 rounded-lg text-gray-100 flex flex-col items-center text-center space-y-8 mb-14">
 
         <div class="text-4xl font-semibold">
             {{ $symbol }}
             {{ number_format($paymentRequest->amount_minor / (10 ** \App\Enums\FiatEnum::decimalsFor($paymentRequest->fiat)), 2) }}
         </div>
 
-        <div class="bg-gray-800 rounded-lg p-6 shadow-inner text-gray-300 max-w-xl w-full">
+        <div class="bg-dark rounded-lg p-6 shadow-inner text-gray-300 max-w-xl w-full">
             {{ $paymentRequest->description }}
         </div>
 
         <div class="flex flex-wrap justify-center gap-4 max-w-xl w-full">
             {{-- Signal --}}
             <a href="sgnl://send?text={{ $encodedMessage }}"
-               class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition text-white font-semibold"
+               class="px-4 py-2 bg-dark rounded hover:bg-gray-600 transition text-white font-semibold"
                title="Signal">
                     Signal
             </a>
 
             {{-- WhatsApp --}}
             <a href="https://wa.me/?text={{ $encodedMessage }}" target="_blank" rel="noopener noreferrer"
-               class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition text-white font-semibold"
+               class="px-4 py-2 bg-dark rounded hover:bg-gray-600 transition text-white font-semibold"
                title="WhatsApp">
                     WhatsApp
             </a>
 
             {{-- Email --}}
             <a href="mailto:?subject={{ urlencode(translate('Payment Request')) }}&body={{ $encodedMessage }}"
-               class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition text-white font-semibold"
+               class="px-4 py-2 bg-dark rounded hover:bg-gray-600 transition text-white font-semibold"
                title="Email">
                     E-mail
             </a>

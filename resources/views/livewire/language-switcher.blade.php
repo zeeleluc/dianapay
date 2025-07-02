@@ -1,7 +1,7 @@
 <div class="relative language-switcher text-white text-sm w-full max-w-xs sm:max-w-none">
     <button
         type="button"
-        class="dropdown-toggle flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-auto"
+        class="dropdown-toggle flex items-center space-x-2 bg-darker hover:bg-gray-700 px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-auto"
         wire:click="$toggle('open')"
     >
         <span>{{ $flags[$locale] ?? '🏳️' }}</span>
@@ -15,7 +15,7 @@
 
     @if ($open ?? false)
         <ul
-            class="dropdown-menu absolute right-0 mt-1 w-full sm:w-64 bg-gray-800 border border-gray-700 rounded shadow-lg z-50 grid grid-cols-3 gap-2 p-2 text-sm"
+            class="dropdown-menu absolute right-0 mt-1 w-full sm:w-64 bg-darker border border-gray-700 rounded shadow-lg z-50 grid grid-cols-3 gap-2 p-2 text-sm"
             style="min-width: 12rem;"
         >
             @foreach ($allowedLocales as $lang)
