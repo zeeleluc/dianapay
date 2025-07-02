@@ -94,9 +94,9 @@ return [
         'active' => false,
         'evm' => false,
     ],
-    'xrp' => [
-        'short_name' => 'XRP',
-        'long_name' => 'Ripple',
+    'xrpl' => [
+        'short_name' => 'XRPL',
+        'long_name' => 'XRPL',
         'logo' => null,
         'color_primary' => '#00A8E0', // Vibrant blue (corrected)
         'color_secondary' => '#66d4ff', // Softer, lighter blue

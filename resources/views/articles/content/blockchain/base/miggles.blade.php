@@ -1,0 +1,3 @@
+<p class="text-lg">{!! translate('Mister Miggles (MIGGLES) is a niche token on Coinbase\'s Base blockchain, designed to support specialized projects and communities within the network. It offers a unique identity and utility for its holders, focusing on fostering engagement and creativity.') !!}</p>
+<p class="text-lg mt-5">{!! translate('MIGGLES benefits from Base’s fast transaction speeds and low costs, making it ideal for micro-transactions, rewards, and gamification within decentralized apps.') !!}</p>
+<p class="text-lg mt-5">{!! translate('As Base expands, Mister Miggles aims to be a vibrant part of the ecosystem’s diverse token economy, encouraging innovation and user participation.') !!}</p>

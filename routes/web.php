@@ -24,6 +24,9 @@ Route::middleware('web')->group(function () {
         return Redirect::back();
     });
 
+    Route::get('/articles/{slug1}/{slug2?}/{slug3?}', [\App\Http\Controllers\ArticleController::class, 'show'])
+        ->name('articles.show');
+
     Route::get('/', Home::class)->name('home');
     Route::get('payment/anonymous', AnonymousPaymentRequestForm::class)->name('payment.anonymous.create');
     Route::get('payment/anonymous/request/{uuid}', [PublicAnonymousPaymentController::class, 'request'])->name('payment.anonymous.request');

@@ -1,0 +1,3 @@
+<p class="text-lg">{!! translate('Toshi (TOSHI) is a versatile token on Coinbase\'s Base blockchain, created to support decentralized applications and community initiatives. It combines the security of Ethereum’s ecosystem with Base’s scalability advantages.') !!}</p>
+<p class="text-lg mt-5">{!! translate('TOSHI enables users to participate in various DeFi activities, governance mechanisms, and incentivizes development across the Base platform with its programmable features.') !!}</p>
+<p class="text-lg mt-5">{!! translate('As Base adoption increases, Toshi aims to offer a flexible and reliable token for users and developers seeking fast, cost-efficient blockchain solutions.') !!}</p>

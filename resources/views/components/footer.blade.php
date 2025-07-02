@@ -1,16 +1,11 @@
-
-<x-wavy-section>
-    {!! translate('Seamless monocurrency payments with just 0.4% fee, direct crypto-to-crypto transactions. No swapping, no bridging.') !!}
-</x-wavy-section>
-
 <footer class="bg-dark text-gray-300 py-12 px-6 sm:px-12">
 
     <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
 
         {{-- About / Logo --}}
         <div>
-            <a href="{{ url('/') }}" class="inline-block mb-4">
-                <img src="{{ asset('images/logo-white.svg') }}" alt="{{ translate('Logo') }}" class="h-10 w-auto">
+            <a class="text-white" href="/" wire:navigate>
+                <x-application-logo class="w-20 h-20 text-white" />
             </a>
             <p class="text-gray-400 text-sm leading-relaxed max-w-xs">
                 {{ translate(':appName provides seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.', ['appName' => config('app.name')]) }}

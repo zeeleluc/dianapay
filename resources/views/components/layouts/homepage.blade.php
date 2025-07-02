@@ -18,6 +18,10 @@
     {{ $slot }}
 </main>
 
+<x-wavy-section>
+    {!! translate('Seamless monocurrency payments with just 0.4% fee, direct crypto-to-crypto transactions. No swapping, no bridging.') !!}
+</x-wavy-section>
+
 <x-footer />
 
 @livewireScripts

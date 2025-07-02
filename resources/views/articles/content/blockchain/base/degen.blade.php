@@ -1,0 +1,3 @@
+<p class="text-lg">{!! translate('Degen (DEGEN) is a token tailored for high-risk, high-reward DeFi enthusiasts on the Base blockchain. It symbolizes the adventurous spirit of decentralized finance, encouraging participation in cutting-edge projects and experimental protocols.') !!}</p>
+<p class="text-lg mt-5">{!! translate('With DEGEN, users can access unique incentives, yield farming opportunities, and governance rights on Base-native platforms that cater to more aggressive investment strategies.') !!}</p>
+<p class="text-lg mt-5">{!! translate('As the Base ecosystem matures, DEGEN offers a community-driven token for users seeking to engage deeply with innovative and potentially rewarding blockchain applications.') !!}</p>

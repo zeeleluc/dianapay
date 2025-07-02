@@ -5,6 +5,7 @@
 @endphp
 
 <div class="w-full p-8 bg-darker rounded-lg shadow-lg text-gray-100 flex flex-col items-center text-center">
+
     <h1 class="text-3xl font-extrabold mb-6">{{ translate('Please Pay Me') }}</h1>
 
     <div class="mb-8 text-3xl font-semibold">
@@ -158,4 +159,5 @@
             {{ translate('Connect Cryptowallet') }}
         </button>
     @endif
+
 </div>
