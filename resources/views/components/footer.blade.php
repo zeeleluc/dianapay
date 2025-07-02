@@ -32,9 +32,10 @@
                     @php
                         $chain = config("chains.{$chainKey}");
                         $chainName = $chain['long_name'] ?? ucfirst($chainKey);
+                        $chainUrl = route('articles.show', ['slug1' => 'blockchain', 'slug2' => $chainKey]);
                     @endphp
                     <li>
-                        <a href="{{ url("/chains/{$chainKey}") }}" class="hover:text-white transition">
+                        <a href="{{ $chainUrl }}" class="hover:text-white transition">
                             {{ translate($chainName) }}
                         </a>
                     </li>

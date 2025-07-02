@@ -126,15 +126,20 @@
                 @foreach ($activeChains as $key => $chain)
                     @php
                         $cryptos = CryptoEnum::forChain($key);
+                        $chainUrl = route('articles.show', ['slug1' => 'blockchain', 'slug2' => $key]);
                     @endphp
 
                     <div class="rounded-xl p-6 bg-darker text-center space-y-4">
-                        <div class="inline-block px-3 py-1 rounded-full text-2xl font-semibold text-white"
-                             style="background: {{ $chain['color_primary'] }}">
+                        <a href="{{ $chainUrl }}" class="inline-block px-3 py-1 rounded-full text-2xl font-semibold text-white hover:opacity-90"
+                           style="background: {{ $chain['color_primary'] }}">
                             {{ strtoupper($chain['short_name']) }}
-                        </div>
+                        </a>
 
-                        <h3 class="text-xl font-semibold">{{ $chain['long_name'] }}</h3>
+                        <h3 class="text-xl font-semibold">
+                            <a href="{{ $chainUrl }}" class="hover:underline">
+                                {{ $chain['long_name'] }}
+                            </a>
+                        </h3>
 
                         @if (!empty($cryptos))
                             <div class="mt-4">
@@ -142,11 +147,17 @@
                                     @foreach ($cryptos as $crypto)
                                         @php
                                             $name = config("cryptocurrencies.{$crypto['chain']}.{$crypto['symbol']}.name") ?? $crypto['symbol'];
+                                            $cryptoUrl = route('articles.show', [
+                                                'slug1' => 'blockchain',
+                                                'slug2' => $crypto['chain'],
+                                                'slug3' => strtolower($crypto['symbol'])
+                                            ]);
                                         @endphp
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white border-none"
-                                              style="background: {{ $chain['color_primary'] }}">
-                                            {{ $name }} ({{ $crypto['symbol'] }})
-                                        </span>
+                                        <a href="{{ $cryptoUrl }}"
+                                           class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white border-none hover:opacity-90 transition"
+                                           style="background: {{ $chain['color_primary'] }}">
+                                            {{ $name }} ({{ strtoupper($crypto['symbol']) }})
+                                        </a>
                                     @endforeach
                                 </div>
                             </div>
@@ -157,11 +168,18 @@
 
             {{-- Coming Soon --}}
             <div class="border-t border-gray-700 pt-12">
-                <h3 class="text-2xl font-semibold text-gray-300 mb-12">{!! translate('Blockchains Coming Soon') !!}</h3>
+                <h3 class="text-2xl font-semibold text-gray-300 mb-12">
+                    {!! translate('Blockchains Coming Soon') !!}
+                </h3>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                     @foreach ($inactiveChains as $key => $chain)
-                        <div class="rounded-lg bg-darker px-4 pb-5 pt-7 text-center flex flex-col items-center space-y-2">
+                        @php
+                            $chainUrl = route('articles.show', ['slug1' => 'blockchain', 'slug2' => $key]);
+                        @endphp
+
+                        <a href="{{ $chainUrl }}"
+                           class="rounded-lg bg-darker px-4 pb-5 pt-7 text-center flex flex-col items-center space-y-2 hover:bg-dark transition">
                             <div class="inline-block px-3 py-1 rounded-full text-sm font-semibold text-white"
                                  style="background: {{ $chain['color_primary'] }}">
                                 {{ strtoupper($chain['short_name']) }}
@@ -169,7 +187,7 @@
                             <div class="text-base font-medium text-gray-200 pt-2 block">
                                 {{ $chain['long_name'] }}
                             </div>
-                        </div>
+                        </a>
                     @endforeach
                 </div>
             </div>

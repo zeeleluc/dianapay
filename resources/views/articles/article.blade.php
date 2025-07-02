@@ -23,7 +23,7 @@
             {{-- Right/Main Content Column --}}
             <main class="md:col-span-3 bg-darkest text-gray-100 p-8 rounded-2xl border border-dark shadow prose prose-invert max-w-none">
                 <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 drop-shadow-lg leading-tight">
-                    {{ translate($title) }}
+                    {{ $title }}
                 </h1>
                 {!! $content ?? '' !!}
             </main>

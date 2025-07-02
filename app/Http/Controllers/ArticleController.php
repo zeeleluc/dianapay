@@ -77,7 +77,6 @@ class ArticleController extends Controller
 
     private function getSlugLabel(string $slug): string
     {
-        // Token label map
         $tokenMap = [
             'eth' => 'Ether (ETH)',
             'usdc' => 'USD Coin (USDC)',
@@ -91,7 +90,6 @@ class ArticleController extends Controller
             'base' => 'Base',
         ];
 
-        // Blockchain config array (you could load this from a config file too)
         $blockchains = [
             'ethereum' => 'Ethereum Mainnet',
             'polygon' => 'Polygon (Matic)',
