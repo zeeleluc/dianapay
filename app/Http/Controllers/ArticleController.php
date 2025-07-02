@@ -79,6 +79,10 @@ class ArticleController extends Controller
 
     private function getSlugLabel(string $slug): string
     {
+        $generalMap = [
+            'faq' => 'FAQ',
+        ];
+
         $tokenMap = [
             'eth' => 'Ether (ETH)',
             'usdc' => 'USD Coin (USDC)',
@@ -112,6 +116,10 @@ class ArticleController extends Controller
         ];
 
         $slugLower = strtolower($slug);
+
+        if (isset($generalMap[$slugLower])) {
+            return $generalMap[$slugLower];
+        }
 
         if (isset($tokenMap[$slugLower])) {
             return $tokenMap[$slugLower];

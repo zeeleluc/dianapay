@@ -45,6 +45,7 @@ Route::middleware('web')->group(function () {
             Route::get('/terms', fn () => app(\App\Http\Controllers\ArticleController::class)->show(request()->route('locale'), 'terms'))->name('terms');
             Route::get('/privacy', fn () => app(\App\Http\Controllers\ArticleController::class)->show(request()->route('locale'), 'privacy'))->name('privacy');
             Route::get('/about', fn () => app(\App\Http\Controllers\ArticleController::class)->show(request()->route('locale'), 'about'))->name('about');
+            Route::get('/contact', fn () => app(\App\Http\Controllers\ArticleController::class)->show(request()->route('locale'), 'contact'))->name('contact');
             Route::get('/faq', fn () => app(\App\Http\Controllers\ArticleController::class)->show(request()->route('locale'), 'faq'))->name('faq');
             Route::get('/pricing', fn () => app(\App\Http\Controllers\ArticleController::class)->show(request()->route('locale'), 'pricing'))->name('pricing');
 
