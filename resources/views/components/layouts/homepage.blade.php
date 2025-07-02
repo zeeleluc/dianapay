@@ -10,13 +10,15 @@
     @livewireStyles
     @vite('resources/css/app.css')
 </head>
-<body class="antialiased bg-gray-950">
+<body class="antialiased bg-dark">
 
 @include('livewire.welcome.navigation')
 
 <main>
     {{ $slot }}
 </main>
+
+<x-footer />
 
 @livewireScripts
 @vite('resources/js/app.js')

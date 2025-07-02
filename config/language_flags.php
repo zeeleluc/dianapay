@@ -2,7 +2,7 @@
 // config/language_flags.php
 
 return [
-    'en' => '🇺🇸', // English (USA)
+    'en'    => '🇺🇸', // English (USA)
     'en-GB' => '🇬🇧', // English (UK)
     'es'    => '🇪🇸', // Spanish
     'zh-CN' => '🇨🇳', // Chinese Simplified
@@ -25,4 +25,5 @@ return [
     'th'    => '🇹🇭', // Thai
     'ms'    => '🇲🇾', // Malay
     'fa'    => '🇮🇷', // Persian (Iran)
+    'pap'   => '🇨🇼', // Papiamentu (Curaçao)
 ];

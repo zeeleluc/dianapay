@@ -2,7 +2,7 @@
 
 return [
     'allowed' => [
-        'en',  // English (USA)
+        'en',     // English (USA)
         'en-GB',  // English (UK)
         'es',     // Spanish
         'zh-CN',  // Chinese (Simplified)
@@ -25,5 +25,6 @@ return [
         'th',     // Thai
         'ms',     // Malay
         'fa',     // Persian
+        'pap',    // Papiamentu (Curaçao, Aruba, Bonaire)
     ],
 ];
