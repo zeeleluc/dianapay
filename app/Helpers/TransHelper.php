@@ -3,163 +3,241 @@
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
-/**
- * Cache translated highlight words for the current locale.
- */
-function getHighlightWords(): array
-{
-    static $words = null;
-
-    if ($words === null) {
-        $locale = App::getLocale();
-
-        // Base English words to highlight
-        $baseWords = [
-            'crypto',
-            'payments',
-            'monocurrency',
-            'cryptocurrency',
-            'cryptocurrencies',
-            'anonymous',
-        ];
-
-        if ($locale === 'en') {
-            $words = $baseWords;
-        } else {
-            // Translate highlight words into the target locale
-            $words = [];
-            foreach ($baseWords as $word) {
-                $translatedWord = translateText($word, [], false); // No highlighting during translation
-                $words[] = $translatedWord;
-            }
-        }
-    }
-
-    return $words;
-}
-
-/**
- * Core translation function.
- * @param bool $applyHighlight Whether to highlight words after translation.
- */
-function translateText(string $text, array $replace = [], bool $applyHighlight = true): string
-{
-    $locale = App::getLocale();
-
-    // Handle exceptions (predefined translations)
-    $exceptions = [
-        'passwords.user'      => "We can't find a user with that email address.",
-        'validation.required' => 'The :attribute field is required.',
-        'validation.string'   => 'The :attribute must be a string.',
-        'auth.password'       => 'The provided password is incorrect.',
-    ];
-
-    if (isset($exceptions[$text])) {
-        $text = $exceptions[$text];
-    }
-
-    // Apply replacements (e.g., :attribute)
-    $assembledEnglish = applyReplacements($text, $replace);
-
-    // Return early for English, with optional highlighting
-    if ($locale === 'en') {
-        return $applyHighlight ? highlightWords($assembledEnglish) : $assembledEnglish;
-    }
-
-    // Load or create translation file
-    $langDir = resource_path('lang');
-    $filePath = "{$langDir}/{$locale}.json";
-
-    if (!File::exists($langDir)) {
-        File::makeDirectory($langDir, 0755, true);
-    }
-
-    if (!File::exists($filePath)) {
-        File::put($filePath, json_encode([], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-    }
-
-    $translations = json_decode(File::get($filePath), true) ?? [];
-
-    // Check if translation exists
-    if (isset($translations[$assembledEnglish])) {
-        return $applyHighlight ? highlightWords($translations[$assembledEnglish]) : $translations[$assembledEnglish];
-    }
-
-    // Warn about unreplaced placeholders
-    if (preg_match('/:[a-zA-Z0-9_]+/', $assembledEnglish)) {
-        \Log::warning("Unreplaced placeholders in assembled string: {$assembledEnglish}");
-        return $applyHighlight ? highlightWords($assembledEnglish) : $assembledEnglish;
-    }
-
-    // Fetch translation from Google API
-    try {
-        $response = Http::get('https://translate.googleapis.com/translate_a/single', [
-            'client' => 'gtx',
-            'sl'     => 'en',
-            'tl'     => $locale,
-            'dt'     => 't',
-            'q'      => $assembledEnglish,
-        ]);
-
-        $translated = $assembledEnglish;
-
-        if ($response->successful()) {
-            $responseData = $response->json();
-            if (isset($responseData[0][0][0]) && is_string($responseData[0][0][0])) {
-                $translated = $responseData[0][0][0];
-            }
-        }
-
-        // Cache the translation
-        $translations[$assembledEnglish] = $translated;
-        File::put($filePath, json_encode($translations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-    } catch (\Exception $e) {
-        \Log::error("Translation failed for '{$assembledEnglish}': {$e->getMessage()}");
-        return $applyHighlight ? highlightWords($assembledEnglish) : $assembledEnglish;
-    }
-
-    return $applyHighlight ? highlightWords($translated) : $translated;
-}
-
-/**
- * Public translation function (with highlighting by default).
- */
 if (!function_exists('translate')) {
     function translate(string $text, array $replace = []): string
     {
-        return translateText($text, $replace, true);
+        return Translator::translate($text, $replace, true);
     }
 }
 
-/**
- * Replace placeholders with values.
- */
-function applyReplacements(string $text, array $replace): string
+class Translator
 {
-    foreach ($replace as $key => $value) {
-        $text = str_replace(':' . $key, $value, $text);
+    protected static array $highlightWords = [
+        'crypto',
+        'payments',
+        'monocurrency',
+        'cryptocurrency',
+        'cryptocurrencies',
+        'anonymous',
+    ];
+
+    protected static array $customWordOverrides = [
+        'crypto' => [
+            'en'    => 'crypto',
+            'en-GB' => 'crypto',
+            'es'    => 'cripto',
+            'zh-CN' => '加密货币',     // jiāmì huòbì (crypto currency)
+            'zh-TW' => '加密貨幣',
+            'ar'    => 'كريبتو',
+            'hi'    => 'क्रिप्टो',
+            'fr'    => 'crypto',
+            'de'    => 'Krypto',
+            'ru'    => 'крипто',
+            'pt'    => 'cripto',
+            'ja'    => '暗号資産',     // angō shisan (crypto asset)
+            'ko'    => '크립토',
+            'it'    => 'cripto',
+            'tr'    => 'kripto',
+            'nl'    => 'crypto',
+            'sv'    => 'krypto',
+            'pl'    => 'krypto',
+            'vi'    => 'tiền mã hóa', // or just 'crypto'
+            'id'    => 'kripto',
+            'th'    => 'คริปโต',
+            'ms'    => 'kripto',
+            'fa'    => 'کریپتو',
+            'pap'   => 'kripto',
+        ],
+
+        'cryptocurrency' => [
+            'en'    => 'cryptocurrency',
+            'en-GB' => 'cryptocurrency',
+            'es'    => 'criptomoneda',
+            'zh-CN' => '加密货币',
+            'zh-TW' => '加密貨幣',
+            'ar'    => 'عملة مشفرة',
+            'hi'    => 'क्रिप्टोकरेंसी',
+            'fr'    => 'cryptomonnaie',
+            'de'    => 'Kryptowährung',
+            'ru'    => 'криптовалюта',
+            'pt'    => 'criptomoeda',
+            'ja'    => '暗号通貨',
+            'ko'    => '암호화폐',
+            'it'    => 'criptovaluta',
+            'tr'    => 'kripto para',
+            'nl'    => 'cryptomunt',
+            'sv'    => 'kryptovaluta',
+            'pl'    => 'kryptowaluta',
+            'vi'    => 'tiền điện tử',
+            'id'    => 'mata uang kripto',
+            'th'    => 'สกุลเงินดิจิทัล',
+            'ms'    => 'mata wang kripto',
+            'fa'    => 'رمزارز',
+            'pap'   => 'moneda kripto',
+        ],
+    ];
+
+    public static function translate(string $text, array $replace = [], bool $highlight = true): string
+    {
+        $locale = App::getLocale();
+
+        // Handle exceptions
+        $exceptions = [
+            'passwords.user'      => "We can't find a user with that email address.",
+            'validation.required' => 'The :attribute field is required.',
+            'validation.string'   => 'The :attribute must be a string.',
+            'auth.password'       => 'The provided password is incorrect.',
+        ];
+
+        if (isset($exceptions[$text])) {
+            $text = $exceptions[$text];
+        }
+
+        // Replace variables like :attribute
+        $text = self::applyReplacements($text, $replace);
+
+        if ($locale === 'en') {
+            return $highlight ? self::highlight($text) : $text;
+        }
+
+        // Translation caching file
+        $langFile = resource_path("lang/{$locale}.json");
+        $translations = File::exists($langFile)
+            ? json_decode(File::get($langFile), true) ?? []
+            : [];
+
+        // Return cached translation if available
+        if (isset($translations[$text])) {
+            return $highlight ? self::highlight($translations[$text]) : $translations[$text];
+        }
+
+        // Skip translating if placeholders weren't replaced
+        if (preg_match('/:[a-zA-Z0-9_]+/', $text)) {
+            Log::warning("Unreplaced placeholders in string: {$text}");
+            return $highlight ? self::highlight($text) : $text;
+        }
+
+        // Apply custom word replacements
+        $textForTranslation = self::applyCustomOverrides($text, $locale);
+
+        // Translate using Google API
+        $translated = self::fetchGoogleTranslation($textForTranslation, $locale) ?? $text;
+
+        // Vervang "uw" door "je" alleen voor Nederlands
+        if ($locale === 'nl') {
+            $translated = preg_replace_callback('/\b(uw)\b/i', function ($matches) {
+                return self::matchCase('je', $matches[1]);
+            }, $translated);
+        }
+
+        // Save to translation cache
+        $translations[$text] = $translated;
+        File::put($langFile, json_encode($translations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+        return $highlight ? self::highlight($translated) : $translated;
     }
-    return $text;
-}
 
-/**
- * Highlight words by wrapping them in a span with color.
- */
-function highlightWords(string $text): string
-{
-    $highlightWords = getHighlightWords();
-
-    foreach ($highlightWords as $word) {
-        $patternWord = preg_quote($word, '/');
-        $patternWord = str_replace(' ', '\s+', $patternWord);
-
-        $text = preg_replace_callback(
-            '/\b(' . $patternWord . ')\b/i',
-            fn($matches) => '<span style="color: #FACC14">' . $matches[1] . '</span>',
-            $text
-        );
+    protected static function applyReplacements(string $text, array $replace): string
+    {
+        foreach ($replace as $key => $value) {
+            $text = str_replace(':' . $key, $value, $text);
+        }
+        return $text;
     }
 
-    return $text;
+    protected static function applyCustomOverrides(string $text, string $locale): string
+    {
+        foreach (self::$customWordOverrides as $word => $overrides) {
+            if (!isset($overrides[$locale])) continue;
+
+            $translated = $overrides[$locale];
+
+            $text = preg_replace_callback(
+                '/\b(' . preg_quote($word, '/') . ')\b/i',
+                function ($matches) use ($translated) {
+                    return self::matchCase($translated, $matches[1]);
+                },
+                $text
+            );
+        }
+        return $text;
+    }
+
+    protected static function fetchGoogleTranslation(string $text, string $locale): ?string
+    {
+        try {
+            $response = Http::get('https://translate.googleapis.com/translate_a/single', [
+                'client' => 'gtx',
+                'sl'     => 'en',
+                'tl'     => $locale,
+                'dt'     => 't',
+                'q'      => $text,
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return $data[0][0][0] ?? null;
+            }
+        } catch (\Exception $e) {
+            Log::error("Google Translate API failed: " . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    protected static function highlight(string $text): string
+    {
+        foreach (self::getHighlightWords() as $word) {
+            $pattern = '/\b(' . preg_quote($word, '/') . ')\b/i';
+
+            $text = preg_replace_callback(
+                $pattern,
+                function ($matches) {
+                    return '<span style="color: #FACC14">' . $matches[1] . '</span>';
+                },
+                $text
+            );
+        }
+        return $text;
+    }
+
+    protected static function getHighlightWords(): array
+    {
+        static $translated = [];
+
+        $locale = App::getLocale();
+        if (!isset($translated[$locale])) {
+            $translated[$locale] = [];
+
+            if ($locale === 'en') {
+                $translated[$locale] = self::$highlightWords;
+            } else {
+                foreach (self::$highlightWords as $word) {
+                    $translatedWord = self::translate($word, [], false);
+                    $translated[$locale][] = $translatedWord;
+                }
+            }
+        }
+
+        return $translated[$locale];
+    }
+
+    protected static function matchCase(string $replacement, string $original): string
+    {
+        // UPPER CASE
+        if (mb_strtoupper($original) === $original) {
+            return mb_strtoupper($replacement);
+        }
+
+        // Title Case
+        if (mb_strtoupper(mb_substr($original, 0, 1)) . mb_strtolower(mb_substr($original, 1)) === $original) {
+            return mb_strtoupper(mb_substr($replacement, 0, 1)) . mb_substr($replacement, 1);
+        }
+
+        // Lower case or default
+        return mb_strtolower($replacement);
+    }
+
 }
