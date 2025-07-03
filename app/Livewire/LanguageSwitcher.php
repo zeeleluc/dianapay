@@ -19,7 +19,7 @@ class LanguageSwitcher extends Component
 
     public $localeLabels = [
         'en'    => 'USA',
-        'en-GB' => 'EN',
+        'en-GB' => 'UK',
         'es'    => 'ES',
         'zh-CN' => 'CN',
         'zh-TW' => 'TW',

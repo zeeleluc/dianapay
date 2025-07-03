@@ -2,29 +2,34 @@
 
 return [
     'allowed' => [
+        // English (priority first)
         'en',     // English (USA)
         'en-GB',  // English (UK)
+
+        // European languages (most used to less used)
         'es',     // Spanish
-        'zh-CN',  // Chinese (Simplified)
-        'zh-TW',  // Chinese (Traditional)
-        'ar',     // Arabic
-        'hi',     // Hindi
         'fr',     // French
         'de',     // German
-        'ru',     // Russian
         'pt',     // Portuguese
+        'it',     // Italian
+        'nl',     // Dutch
+        'pl',     // Polish
+        'sv',     // Swedish
+
+        // Rest of the world (most used to less used)
+        'zh-CN',  // Chinese (Simplified)
+        'hi',     // Hindi
+        'ar',     // Arabic
+        'ru',     // Russian
         'ja',     // Japanese
         'ko',     // Korean
-        'it',     // Italian
         'tr',     // Turkish
-        'nl',     // Dutch
-        'sv',     // Swedish
-        'pl',     // Polish
         'vi',     // Vietnamese
         'id',     // Indonesian
         'th',     // Thai
         'ms',     // Malay
         'fa',     // Persian
+        'zh-TW',  // Chinese (Traditional)
         'pap',    // Papiamentu (Curaçao, Aruba, Bonaire)
     ],
 ];
