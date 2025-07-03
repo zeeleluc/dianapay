@@ -78,6 +78,8 @@ class LanguageSwitcher extends Component
             $redirectUrl = route($lastRoute['name'], array_merge($lastRoute['params'], ['locale' => $locale]));
             Log::info('LanguageSwitcher redirecting', ['redirectUrl' => $redirectUrl]);
 
+            Session::forget('langnotice');
+
             return Redirect::to($redirectUrl, 301);
         }
     }

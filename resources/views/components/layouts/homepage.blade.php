@@ -12,6 +12,8 @@
 </head>
 <body class="antialiased bg-dark">
 
+<livewire:language-notice />
+
 @include('livewire.welcome.navigation')
 
 <main>
