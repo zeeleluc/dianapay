@@ -26,9 +26,6 @@
     "Contact": "Temas etmek",
     "Supported Blockchains": "Desteklenen blok zincirleri",
     "Stay Connected": "Bağlı kalmak",
-    "All rights reserved.": "Her hakkı saklıdır.",
-    "Terms": "Şartlar",
-    "Privacy Policy": "Gizlilik Politikası",
     "Crypto Payments Made Effortless": "Kripto ödemeleri zahmetsiz hale getirildi",
     "Seamless monocurrency payments with just 0.4% fee, direct crypto-to-crypto transactions. No swapping, no bridging.": "Sadece% 0,4 ücret, doğrudan kripto-kripto işlemleri ile kesintisiz monok para ödemeleri. ",
     "Dashboard": "Gösterge paneli",
@@ -251,7 +248,6 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "Hızlı yerleşimlerle esnek, düşük ücretli bir ödeme seçeneği sunmak için bu ağı yakında entegre etmeyi planlıyoruz. ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "Bu merkezi olmayan defter, saniyeler içinde işlem onaylarıyla hızlı, verimli sınır ötesi ödemeler için tasarlanmıştır. ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "Platform ayrıca kullanıcıların özel jetonlar oluşturmasına ve aktarmasına olanak tanır ve çok yönlü finansal ürünler sağlar. ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "Düşük ücretler ve hızlı işlemlerle sorunsuz blockchain ödeme çözümleri sunuyoruz. ",
     "You are viewing an auto-translated version of the original English content": "Orijinal İngilizce içeriğinin otomatik olarak translasyonlu bir sürümünü görüntülüyorsunuz",
     "crypto": "kripto",
     "payments": "ödemeler",
@@ -259,5 +255,8 @@
     "cryptocurrency": "Kripto para",
     "cryptocurrencies": "kripto para birimleri",
     "anonymous": "anonim",
-    "key": "anahtar"
+    "key": "anahtar",
+    "This tool facilitates crypto payments between users. No fiat currency exchange takes place. The amounts shown in fiat are for value indication purposes only. We do not hold any funds and do not operate as a financial service provider.": "Bu araç, kullanıcılar arasındaki kripto ödemelerini kolaylaştırır. ",
+    "We provide seamless blockchain payment solutions with low fees and fast transactions.": "Düşük ücretler ve hızlı işlemlerle sorunsuz blockchain ödeme çözümleri sunuyoruz.",
+    "Simplify Crypto Payments": "Kripto ödemelerini basitleştirin"
 }

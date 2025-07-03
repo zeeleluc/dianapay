@@ -1,6 +1,6 @@
-<footer class="bg-dark text-gray-300 py-12 px-6 sm:px-12">
+<footer class="bg-dark text-gray-300 pb-12 px-6 sm:px-12">
 
-    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mt-14">
 
         {{-- About / Logo --}}
         <div>
@@ -12,7 +12,7 @@
                     Crypt Me Up
                 </strong>
                 <br />
-                {{ translate('We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.') }}
+                {{ translate('We provide seamless blockchain payment solutions with low fees and fast transactions.') }}
             </p>
         </div>
 
@@ -57,10 +57,22 @@
             </div>
         </div>
     </div>
-
-    <div class="mt-12 border-t border-gray-800 pt-6 text-center text-gray-500 text-sm">
-        &copy; {{ date('Y') }} {{ config('app.name') }}. {{ translate('All rights reserved.') }} |
-        <a href="{{ url(get_locale() . '/terms') }}" class="hover:text-white">{{ translate('Terms') }}</a> |
-        <a href="{{ url(get_locale() . '/privacy') }}" class="hover:text-white">{{ translate('Privacy Policy') }}</a>
-    </div>
 </footer>
+
+<x-wavy-section>
+    {!! translate('Simplify Crypto Payments') !!}
+</x-wavy-section>
+
+<div class="bg-dark text-gray-300 pb-12 px-6 sm:px-12">
+
+    <div class="max-w-5xl mx-auto md:grid-cols-4 text-center text-base mt-5">
+        This tool facilitates crypto payments between users. No fiat currency exchange takes place. The amounts shown in fiat are for value indication purposes only. We do not hold any funds and do not operate as a financial service provider.
+        <strong>Crypt Me Up</strong> is a product of Zeelebosch Curaçao B.V., a company registered in Curaçao.
+    </div>
+
+    <div class="mt-2 pt-2 text-center text-gray-500 text-sm">
+        &copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved. |
+        <a href="{{ url(get_locale() . '/terms') }}" class="hover:text-white">Terms</a> |
+        <a href="{{ url(get_locale() . '/privacy') }}" class="hover:text-white">Privacy Policy</a>
+    </div>
+</div>

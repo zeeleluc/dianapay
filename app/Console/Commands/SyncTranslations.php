@@ -57,7 +57,7 @@ class SyncTranslations extends Command
         }
 
         foreach ($locales as $locale) {
-            if ($locale === 'en-GB') continue; // Skip source language
+            if ($locale === 'en') continue; // Skip source language
 
             App::setLocale($locale);
             $this->info("Processing locale: {$locale}");
@@ -94,16 +94,16 @@ class SyncTranslations extends Command
         $this->info('Checking for unused translations...');
 
         $langPath = resource_path('lang');
-        $sourceFile = "{$langPath}/en-GB.json";
+        $sourceFile = "{$langPath}/en.json";
 
         if (!File::exists($sourceFile)) {
-            $this->warn('Source translation file (en-GB.json) not found. Skipping cleanup.');
+            $this->warn('Source translation file (en.json) not found. Skipping cleanup.');
             return;
         }
 
         $sourceTranslations = json_decode(File::get($sourceFile), true);
         if (!is_array($sourceTranslations)) {
-            $this->error('Failed to parse en-GB.json. Ensure valid JSON.');
+            $this->error('Failed to parse en.json. Ensure valid JSON.');
             return;
         }
 

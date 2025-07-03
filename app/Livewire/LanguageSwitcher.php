@@ -15,40 +15,19 @@ class LanguageSwitcher extends Component
     public bool $open = false;
     public string $locale;
     public array $allowedLocales;
-    public array $flags;
 
     public $localeLabels = [
-        'en'    => 'USA',
-        'en-GB' => 'UK',
-        'es'    => 'ES',
-        'zh-CN' => 'CN',
-        'zh-TW' => 'TW',
-        'ar'    => 'AR',
-        'hi'    => 'HI',
-        'fr'    => 'FR',
-        'de'    => 'DE',
-        'ru'    => 'RU',
-        'pt'    => 'PT',
-        'ja'    => 'JA',
-        'ko'    => 'KO',
-        'it'    => 'IT',
-        'tr'    => 'TR',
-        'nl'    => 'NL',
-        'sv'    => 'SV',
-        'pl'    => 'PL',
-        'vi'    => 'VI',
-        'id'    => 'ID',
-        'th'    => 'TH',
-        'ms'    => 'MS',
-        'fa'    => 'FA',
-        'he'    => 'HE',
-        'pap'   => 'PAP',
+        'en'  => 'English',
+        'es'  => 'Español',
+        'ru'  => 'Русский',
+        'tr'  => 'Türkçe',
+        'id'  => 'Bahasa Indonesia',
+        'pap' => 'Papiamentu',
     ];
 
     public function mount()
     {
         $this->allowedLocales = Config::get('locales.allowed', ['en']);
-        $this->flags = Config::get('language_flags', []);
         $this->locale = Session::get('locale', Config::get('app.locale', 'en'));
         \Illuminate\Support\Facades\App::setLocale($this->locale);
         Log::info('LanguageSwitcher mounted', ['locale' => $this->locale]);

@@ -14,7 +14,7 @@ class LanguageNotice extends Component
         $locale = app()->getLocale();
 
         // Show notice only for non-English locales and if not dismissed yet
-        if (!in_array($locale, ['en', 'en-GB']) && !Session::has('langnotice')) {
+        if (!in_array($locale, ['en', 'en']) && !Session::has('langnotice')) {
             $this->visible = true;
         }
     }

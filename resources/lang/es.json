@@ -29,9 +29,6 @@
     "Contact": "Contacto",
     "Supported Blockchains": "Blockchains compatibles",
     "Stay Connected": "Mantente conectado",
-    "All rights reserved.": "Reservados todos los derechos.",
-    "Terms": "Términos",
-    "Privacy Policy": "política de privacidad",
     "Crypto Payments Made Effortless": "Pagos de Cripto hechos sin esfuerzo",
     "Seamless monocurrency payments with just 0.4% fee, direct crypto-to-crypto transactions. No swapping, no bridging.": "Pagos de monocurrencias sin problemas con solo 0.4% de tarifa, transacciones directas de Cripto a Re-C,. ",
     "Dashboard": "Panel",
@@ -251,7 +248,6 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "Planeamos integrar esta red pronto para ofrecer una opción de pago flexible de baja tarifa con asentamientos rápidos. ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "Este libro mayor descentralizado está diseñado para pagos transfronterizos rápidos y eficientes con confirmaciones de transacciones en segundos. ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "La plataforma también permite a los usuarios crear y transferir tokens personalizados, lo que permite productos financieros versátiles. ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "Proporcionamos soluciones de pago de cadena de bloques sin problemas con tarifas bajas y transacciones rápidas. ",
     "You are viewing an auto-translated version of the original English content": "Está viendo una versión automatizada del contenido en inglés original",
     "crypto": "cripto",
     "payments": "pagos",
@@ -259,5 +255,7 @@
     "cryptocurrency": "criptomoneda",
     "cryptocurrencies": "criptomonedas",
     "anonymous": "anónimo",
-    "key": "llave"
+    "key": "llave",
+    "We provide seamless blockchain payment solutions with low fees and fast transactions.": "Proporcionamos soluciones de pago de cadena de bloques sin problemas con tarifas bajas y transacciones rápidas.",
+    "Simplify Crypto Payments": "Simplificar los pagos de Cripto"
 }

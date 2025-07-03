@@ -26,9 +26,6 @@
     "Contact": "Kontak",
     "Supported Blockchains": "Blockchains yang didukung",
     "Stay Connected": "Tetap terhubung",
-    "All rights reserved.": "Semua hak dilindungi undang -undang.",
-    "Terms": "Ketentuan",
-    "Privacy Policy": "Kebijakan Privasi",
     "Crypto Payments Made Effortless": "Pembayaran Kripto dilakukan dengan mudah",
     "Seamless monocurrency payments with just 0.4% fee, direct crypto-to-crypto transactions. No swapping, no bridging.": "Pembayaran monokurrensi yang mulus dengan biaya hanya 0,4%, transaksi Kripto-ke-Kripto langsung. ",
     "Dashboard": "Dasbor",
@@ -251,7 +248,6 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "Kami berencana untuk mengintegrasikan jaringan ini segera menawarkan opsi pembayaran yang fleksibel dan rendah dengan penyelesaian cepat. ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "Buku besar yang terdesentralisasi ini dirancang untuk pembayaran lintas batas yang cepat dan efisien dengan konfirmasi transaksi dalam hitungan detik. ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "Platform ini juga memungkinkan pengguna untuk membuat dan mentransfer token khusus, memungkinkan produk keuangan serbaguna. ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "Kami memberikan solusi pembayaran blockchain yang mulus dengan biaya rendah dan transaksi cepat. ",
     "You are viewing an auto-translated version of the original English content": "Anda melihat versi yang diterjemahkan secara otomatis dari konten bahasa Inggris asli",
     "crypto": "Kripto",
     "payments": "pembayaran",
@@ -259,5 +255,7 @@
     "cryptocurrency": "Mata Uang Kripto",
     "cryptocurrencies": "cryptocurrency",
     "anonymous": "anonim",
-    "key": "kunci"
+    "key": "kunci",
+    "We provide seamless blockchain payment solutions with low fees and fast transactions.": "Kami memberikan solusi pembayaran blockchain yang mulus dengan biaya rendah dan transaksi cepat.",
+    "Simplify Crypto Payments": "Sederhanakan pembayaran Kripto"
 }

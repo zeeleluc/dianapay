@@ -24,9 +24,6 @@
     "Contact": "Контакт",
     "Supported Blockchains": "Поддерживаемые блокчейны",
     "Stay Connected": "Оставаться на связи",
-    "All rights reserved.": "Все права защищены.",
-    "Terms": "Условия",
-    "Privacy Policy": "политика конфиденциальности",
     "Crypto Payments Made Effortless": "Крипто платежи сделаны без усилий",
     "Seamless monocurrency payments with just 0.4% fee, direct crypto-to-crypto transactions. No swapping, no bridging.": "Бесплатные монокулютные платежи с платой всего 0,4%, прямые транзакции к Крипто-к Крипро. ",
     "Dashboard": "Приборная панель",
@@ -251,7 +248,6 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "Мы планируем в ближайшее время интегрировать эту сеть, чтобы предложить гибкий вариант оплаты с низким уровнем выплаты с быстрыми расчетами. ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "Эта децентрализованная книга предназначена для быстрых, эффективных трансграничных платежей с подтверждениями транзакций за считанные секунды. ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "Платформа также позволяет пользователям создавать и передавать пользовательские токены, обеспечивая универсальные финансовые продукты. ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "Мы предоставляем бесшовные решения для платежей блокчейна с низкими сборами и быстрыми транзакциями. ",
     "You are viewing an auto-translated version of the original English content": "Вы просматриваете автоматическую трансляционную версию оригинального английского контента",
     "crypto": "Крипто",
     "payments": "платежи",
@@ -259,5 +255,7 @@
     "cryptocurrency": "Криптовала",
     "cryptocurrencies": "криптовалюты",
     "anonymous": "анонимный",
-    "key": "ключ"
+    "key": "ключ",
+    "We provide seamless blockchain payment solutions with low fees and fast transactions.": "Мы предоставляем бесшовные решения для платежей блокчейна с низкими сборами и быстрыми транзакциями.",
+    "Simplify Crypto Payments": "Упростите крипто платежи"
 }

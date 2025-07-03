@@ -26,9 +26,6 @@
     "Contact": "Kontakto",
     "Supported Blockchains": "Blockchains Sostené",
     "Stay Connected": "Keda Konektá",
-    "All rights reserved.": "Tur derecho reserva.",
-    "Terms": "Términonan",
-    "Privacy Policy": "Polítika di Privasidat",
     "Crypto Payments Made Effortless": "Pagonan di Kripto A Hasi Sin Esfuerso",
     "Seamless monocurrency payments with just 0.4% fee, direct crypto-to-crypto transactions. No swapping, no bridging.": "Pagonan di monomoneda sin costura cu apenas 0.4% di transaccionnan di pago. ",
     "Dashboard": "Dashboard",
@@ -252,7 +249,6 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "Nos tin planea pa integra e red aki pronto pa ofrece un opcion di pago flexibel, abou cu areglonan rapido. ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "E ledger descentralisa aki ta diseña pa pagonan transfronterizo rapido y eficiente cu confirmacionnan di transaccion den seconde. ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "E plataforma tambe ta permití e usuarionan pa krea i transferí tokens personalisá, ku ta permití produktonan finansiero versátil. ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "Nos ta proveé ​​solushonnan di pago di blockchain sin kostura ku tarifanan abou i transakshonnan rápido. ",
     "You are viewing an auto-translated version of the original English content": "Bo ta mirando un vershon outo-tradusí di e kontenido original ingles",
     "crypto": "kripto",
     "payments": "pagonan",
@@ -260,5 +256,8 @@
     "cryptocurrency": "moneda kripto",
     "cryptocurrencies": "kriptomonedanan",
     "anonymous": "anónimo",
-    "key": "yabi"
+    "key": "yabi",
+    "This tool facilitates crypto payments between users. No fiat currency exchange takes place. The amounts shown in fiat are for value indication purposes only. We do not hold any funds and do not operate as a financial service provider.": "E herment aki ta facilita pagonan di kripto entre usuarionan. ",
+    "We provide seamless blockchain payment solutions with low fees and fast transactions.": "Nos ta proveé ​​solushonnan di pago di blockchain sin kostura ku tarifanan abou i transakshonnan rápido.",
+    "Simplify Crypto Payments": "Simplifiká Pagonan di Kripto"
 }

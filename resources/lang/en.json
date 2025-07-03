@@ -24,9 +24,6 @@
     "Contact": "Contact",
     "Supported Blockchains": "Supported Blockchains",
     "Stay Connected": "Stay Connected",
-    "All rights reserved.": "All rights reserved.",
-    "Terms": "Terms",
-    "Privacy Policy": "Privacy Policy",
     "Crypto Payments Made Effortless": "Crypto Payments Made Effortless",
     "Seamless monocurrency payments with just 0.4% fee, direct crypto-to-crypto transactions. No swapping, no bridging.": "Seamless monocurrency payments with just 0.4% fee, direct crypto-to-crypto transactions. No swapping, no bridging.",
     "Dashboard": "Dashboard",
@@ -216,5 +213,10 @@
     "This digital token is designed for users who embrace high-risk, high-reward opportunities in decentralized finance. It supports innovative financial strategies with features like yield farming, staking, and governance, encouraging active participation and community engagement within a dynamic ecosystem.": "This digital token is designed for users who embrace high-risk, high-reward opportunities in decentralized finance. It supports innovative financial strategies with features like yield farming, staking, and governance, encouraging active participation and community engagement within a dynamic ecosystem.",
     "This digital token is designed for niche communities and unique projects, fostering creativity and active participation within specialized circles. Its scalable network supports fast, low-cost transactions, making it ideal for frequent micro-payments like digital rewards, loyalty programs, and gamification.": "This digital token is designed for niche communities and unique projects, fostering creativity and active participation within specialized circles. Its scalable network supports fast, low-cost transactions, making it ideal for frequent micro-payments like digital rewards, loyalty programs, and gamification.",
     "We have integrated this token into our ecosystem, enabling seamless transactions with speed and affordability. This provides users and merchants alike with a versatile payment option that enhances engagement and supports innovative, community-driven use cases.": "We have integrated this token into our ecosystem, enabling seamless transactions with speed and affordability. This provides users and merchants alike with a versatile payment option that enhances engagement and supports innovative, community-driven use cases.",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide."
+    "crypto": "crypto",
+    "payments": "payments",
+    "monocurrency": "monocurrency",
+    "cryptocurrency": "cryptocurrency",
+    "cryptocurrencies": "cryptocurrencies",
+    "anonymous": "anonymous"
 }
