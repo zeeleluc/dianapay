@@ -20,7 +20,7 @@
         <div>
             <h3 class="text-white font-semibold mb-4">{{ translate('Quick Links') }}</h3>
             <ul class="space-y-2 text-sm">
-                <li><a href="{{ url('/') }}" class="hover:text-white transition">{{ translate('Home') }}</a></li>
+                <li><a href="{{ url('/') }}" class="hover:text-white transition">{{ translate('Main Page') }}</a></li>
                 <li><a href="{{ url('/about') }}" class="hover:text-white transition">{{ translate('About Us') }}</a></li>
                 <li><a href="{{ url('/pricing') }}" class="hover:text-white transition">{{ translate('Pricing') }}</a></li>
                 <li><a href="{{ url('/faq') }}" class="hover:text-white transition">{{ translate('FAQ') }}</a></li>

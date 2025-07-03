@@ -20,7 +20,6 @@
     "This content is only available exclusively in English.": "เนื้อหานี้มีเฉพาะในภาษาอังกฤษเท่านั้น",
     "Submitted.": "ส่ง.",
     "Quick Links": "ลิงค์ด่วน",
-    "Home": "บ้าน",
     "About Us": "เกี่ยวกับเรา",
     "Pricing": "การกำหนดราคา",
     "FAQ": "คำถามที่พบบ่อย",
@@ -208,8 +207,6 @@
     "We plan to integrate this solution into our ecosystem soon to provide faster, more cost-effective transactions. Its growing utility and advanced network capabilities make it a valuable addition to our roadmap.": "เราวางแผนที่จะรวมโซลูชันนี้เข้ากับระบบนิเวศของเราในไม่ช้าเพื่อให้การทำธุรกรรมที่รวดเร็วและคุ้มค่ามากขึ้น ",
     "This fast, cost-efficient environment is built to support scalable decentralized applications with ease. Designed for secure and low-cost transactions, it enables smooth experiences for developers, users, and businesses alike, especially in areas like payments, finance, and digital services.": "สภาพแวดล้อมที่รวดเร็วและประหยัดค่าใช้จ่ายนี้ถูกสร้างขึ้นเพื่อรองรับแอปพลิเคชันกระจายอำนาจที่ปรับขนาดได้ได้อย่างง่ายดาย ",
     "We’ve integrated this network as the first supported layer-2 solution in our ecosystem, and it’s now available for sending and receiving payments. Its speed, low fees, and seamless onboarding make it ideal for webshops and real-time transactions.": "เราได้รวมเครือข่ายนี้เป็นโซลูชัน Layer-2 ที่รองรับครั้งแรกในระบบนิเวศของเราและขณะนี้พร้อมสำหรับการส่งและรับการชำระเงิน ",
-    "Notice": "สังเกต",
-    "You are viewing an auto-translated version of the original English content": "คุณกำลังดูเนื้อหาภาษาอังกฤษดั้งเดิมรุ่นที่แปลอัตโนมัติ",
     "crypto": "คริปโต",
     "payments": "การชำระเงิน",
     "monocurrency": "การทำซ้ำ",
@@ -261,5 +258,6 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "เราวางแผนที่จะรวมเครือข่ายนี้เร็ว ๆ นี้เพื่อเสนอตัวเลือกการชำระเงินที่ยืดหยุ่นและมีค่าธรรมเนียมต่ำพร้อมการตั้งถิ่นฐานที่รวดเร็ว ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "บัญชีแยกประเภทกระจายอำนาจนี้ออกแบบมาสำหรับการชำระเงินข้ามพรมแดนที่รวดเร็วและมีประสิทธิภาพพร้อมการยืนยันการทำธุรกรรมในไม่กี่วินาที ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "แพลตฟอร์มนี้ยังช่วยให้ผู้ใช้สามารถสร้างและถ่ายโอนโทเค็นที่กำหนดเองได้เปิดใช้งานผลิตภัณฑ์ทางการเงินที่หลากหลาย ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "เราให้บริการโซลูชันการชำระเงิน blockchain ที่ไร้รอยต่อด้วยค่าธรรมเนียมต่ำและธุรกรรมที่รวดเร็ว "
+    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "เราให้บริการโซลูชันการชำระเงิน blockchain ที่ไร้รอยต่อด้วยค่าธรรมเนียมต่ำและธุรกรรมที่รวดเร็ว ",
+    "You are viewing an auto-translated version of the original English content": "คุณกำลังดูเนื้อหาภาษาอังกฤษดั้งเดิมรุ่นที่แปลอัตโนมัติ"
 }

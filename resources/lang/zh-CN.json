@@ -18,7 +18,6 @@
     "Community Portal": "社区门户",
     "Submitted.": "提交。",
     "Quick Links": "快速链接",
-    "Home": "家",
     "About Us": "关于我们",
     "Pricing": "定价",
     "FAQ": "常问问题",
@@ -208,8 +207,6 @@
     "We plan to integrate this solution into our ecosystem soon to provide faster, more cost-effective transactions. Its growing utility and advanced network capabilities make it a valuable addition to our roadmap.": "我们计划很快将该解决方案集成到我们的生态系统中，以提供更快，更具成本效益的交易。",
     "This fast, cost-efficient environment is built to support scalable decentralized applications with ease. Designed for secure and low-cost transactions, it enables smooth experiences for developers, users, and businesses alike, especially in areas like payments, finance, and digital services.": "这种快速，成本效益的环境旨在轻松地支持可扩展的分散应用程序。",
     "We’ve integrated this network as the first supported layer-2 solution in our ecosystem, and it’s now available for sending and receiving payments. Its speed, low fees, and seamless onboarding make it ideal for webshops and real-time transactions.": "我们将该网络集成为生态系统中第一个支持的第2层解决方案，现在可以发送和接收付款。",
-    "Notice": "注意",
-    "You are viewing an auto-translated version of the original English content": "您正在查看原始英语内容的自动翻译版本",
     "crypto": "加密货币",
     "payments": "付款",
     "monocurrency": "单电流",
@@ -261,5 +258,6 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "我们计划很快将该网络集成，以便为快速定居点提供灵活的低收费付款选项。",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "该分散的分类帐是为快速，高效的跨境支付而设计的，并在几秒钟内通过交易确认。",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "该平台还允许用户创建和传输自定义令牌，从而实现多功能金融产品。",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "我们提供低费用和快速交易的无缝区块链支付解决方案。"
+    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "我们提供低费用和快速交易的无缝区块链支付解决方案。",
+    "You are viewing an auto-translated version of the original English content": "您正在查看原始英语内容的自动翻译版本"
 }

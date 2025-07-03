@@ -30,7 +30,6 @@
     "Rates": "Tariffe",
     "Seamless monocurrency payments with just 0.4% fee, direct crypto-to-crypto transactions. No swapping, no bridging.": "Pagamenti di monocurrenza senza soluzione di continuità con solo 0,4% di commissione, transazioni dirette da cripto-a-script. ",
     "Quick Links": "Collegamenti rapidi",
-    "Home": "Casa",
     "About Us": "Chi siamo",
     "Pricing": "Prezzi",
     "FAQ": "FAQ",
@@ -200,8 +199,6 @@
     "You must select at least one cryptocurrency.": "È necessario selezionare almeno un criptvaluta.",
     "The cryptocurrency selection must be an array.": "La selezione di Criptavaluta deve essere un array.",
     "Payment request created successfully!": "Richiesta di pagamento creata correttamente!",
-    "Notice": "Avviso",
-    "You are viewing an auto-translated version of the original English content": "Stai visualizzando una versione tradotta automatica del contenuto inglese originale",
     "This decentralized network is designed for speed, low fees, and security, offering instant finality and support for everything from simple payments to advanced smart contracts. Its efficient architecture allows for thousands of transactions per second, making it suitable for both individuals and enterprises.": "Questa rete decentralizzata è progettata per velocità, tasse basse e sicurezza, offrendo finalità istantanea e supporto per tutto, dai semplici pagamenti ai contratti intelligenti avanzati. ",
     "We’re actively working to integrate this technology into our ecosystem to support future transactions. Its performance, accessibility, and innovative design make it a strong candidate for expanding our supported payment options.": "Stiamo lavorando attivamente per integrare questa tecnologia nel nostro ecosistema per supportare le transazioni future. ",
     "This technology enhances transaction speed and lowers costs by processing data more efficiently while maintaining the security of the underlying network. It’s designed to support high-volume activity, making it ideal for applications that require fast, low-fee transactions at scale.": "Questa tecnologia migliora la velocità delle transazioni e riduce i costi elaborando i dati in modo più efficiente mantenendo la sicurezza della rete sottostante. ",
@@ -261,5 +258,7 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "Abbiamo in programma di integrare presto questa rete per offrire un'opzione di pagamento flessibile a basso contenuto di fee con insediamenti veloci. ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "Questo libro mastro decentralizzato è progettato per pagamenti transfrontalieri rapidi ed efficienti con conferme di transazione in pochi secondi. ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "La piattaforma consente inoltre agli utenti di creare e trasferire token personalizzati, abilitando prodotti finanziari versatili. ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "Forniamo soluzioni di pagamento blockchain senza soluzione di continuità con tasse basse e transazioni veloci. "
+    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "Forniamo soluzioni di pagamento blockchain senza soluzione di continuità con tasse basse e transazioni veloci. ",
+    "Base": "Base",
+    "You are viewing an auto-translated version of the original English content": "Stai visualizzando una versione tradotta automatica del contenuto inglese originale"
 }

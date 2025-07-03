@@ -18,7 +18,6 @@
     "Community Portal": "सामुदायिक पोर्टल",
     "Submitted.": "सबमिट किया गया।",
     "Quick Links": "त्वरित सम्पक",
-    "Home": "घर",
     "About Us": "हमारे बारे में",
     "Pricing": "मूल्य निर्धारण",
     "FAQ": "उपवास",
@@ -208,8 +207,6 @@
     "We plan to integrate this solution into our ecosystem soon to provide faster, more cost-effective transactions. Its growing utility and advanced network capabilities make it a valuable addition to our roadmap.": "हम तेजी से, अधिक लागत प्रभावी लेनदेन प्रदान करने के लिए जल्द ही अपने पारिस्थितिकी तंत्र में इस समाधान को एकीकृत करने की योजना बनाते हैं। ",
     "This fast, cost-efficient environment is built to support scalable decentralized applications with ease. Designed for secure and low-cost transactions, it enables smooth experiences for developers, users, and businesses alike, especially in areas like payments, finance, and digital services.": "यह तेज, लागत-कुशल वातावरण आसानी से स्केलेबल विकेन्द्रीकृत अनुप्रयोगों का समर्थन करने के लिए बनाया गया है। ",
     "We’ve integrated this network as the first supported layer-2 solution in our ecosystem, and it’s now available for sending and receiving payments. Its speed, low fees, and seamless onboarding make it ideal for webshops and real-time transactions.": "हमने अपने पारिस्थितिकी तंत्र में पहले समर्थित लेयर -2 समाधान के रूप में इस नेटवर्क को एकीकृत किया है, और यह अब भुगतान भेजने और प्राप्त करने के लिए उपलब्ध है। ",
-    "Notice": "सूचना",
-    "You are viewing an auto-translated version of the original English content": "आप मूल अंग्रेजी सामग्री का एक ऑटो-ट्रांसलेट संस्करण देख रहे हैं",
     "crypto": "तिहाई",
     "payments": "भुगतान",
     "monocurrency": "मोनोक्यूरेंसी",
@@ -261,5 +258,7 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "हम तेजी से बस्तियों के साथ एक लचीला, कम-शुल्क भुगतान विकल्प प्रदान करने के लिए जल्द ही इस नेटवर्क को एकीकृत करने की योजना बनाते हैं। ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "यह विकेंद्रीकृत खाता बही सेकंड में लेनदेन की पुष्टि के साथ तेज, कुशल सीमा पार भुगतान के लिए डिज़ाइन किया गया है। ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "प्लेटफ़ॉर्म उपयोगकर्ताओं को बहुमुखी वित्तीय उत्पादों को सक्षम करने के लिए कस्टम टोकन बनाने और स्थानांतरित करने की अनुमति देता है। ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "हम कम शुल्क और तेजी से लेनदेन के साथ सीमलेस ब्लॉकचेन भुगतान समाधान प्रदान करते हैं। "
+    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "हम कम शुल्क और तेजी से लेनदेन के साथ सीमलेस ब्लॉकचेन भुगतान समाधान प्रदान करते हैं। ",
+    "You are viewing an auto-translated version of the original English content": "आप मूल अंग्रेजी सामग्री का एक ऑटो-ट्रांसलेट संस्करण देख रहे हैं",
+    "Base": "आधार"
 }

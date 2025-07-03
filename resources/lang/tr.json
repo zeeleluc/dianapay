@@ -20,7 +20,6 @@
     "This content is only available exclusively in English.": "Bu içerik yalnızca İngilizce olarak mevcuttur.",
     "Submitted.": "Gönderildi.",
     "Quick Links": "Hızlı Bağlantılar",
-    "Home": "Ev",
     "About Us": "Hakkımızda",
     "Pricing": "Fiyatlandırma",
     "FAQ": "SSS",
@@ -200,7 +199,6 @@
     "You must select at least one cryptocurrency.": "En az bir kripto para seçmelisiniz.",
     "The cryptocurrency selection must be an array.": "Kripto para seçimi bir dizi olmalıdır.",
     "Payment request created successfully!": "Ödeme talebi başarıyla yaratıldı!",
-    "Notice": "Fark etme",
     "This decentralized network is designed for speed, low fees, and security, offering instant finality and support for everything from simple payments to advanced smart contracts. Its efficient architecture allows for thousands of transactions per second, making it suitable for both individuals and enterprises.": "Bu merkezi olmayan ağ, hız, düşük ücretler ve güvenlik için tasarlanmıştır, basit ödemelerden gelişmiş akıllı sözleşmelere kadar her şey için anında kesinlik ve destek sunar. ",
     "We’re actively working to integrate this technology into our ecosystem to support future transactions. Its performance, accessibility, and innovative design make it a strong candidate for expanding our supported payment options.": "Gelecekteki işlemleri desteklemek için bu teknolojiyi ekosistemimize entegre etmek için aktif olarak çalışıyoruz. ",
     "This technology enhances transaction speed and lowers costs by processing data more efficiently while maintaining the security of the underlying network. It’s designed to support high-volume activity, making it ideal for applications that require fast, low-fee transactions at scale.": "Bu teknoloji, temel ağın güvenliğini korurken verileri daha verimli bir şekilde işleyerek işlem hızını artırır ve maliyetleri düşürür. ",
@@ -209,7 +207,6 @@
     "We plan to integrate this solution into our ecosystem soon to provide faster, more cost-effective transactions. Its growing utility and advanced network capabilities make it a valuable addition to our roadmap.": "Daha hızlı, daha uygun maliyetli işlemler sağlamak için bu çözümü yakında ekosistemimize entegre etmeyi planlıyoruz. ",
     "This fast, cost-efficient environment is built to support scalable decentralized applications with ease. Designed for secure and low-cost transactions, it enables smooth experiences for developers, users, and businesses alike, especially in areas like payments, finance, and digital services.": "Bu hızlı, düşük maliyetli ortam, ölçeklenebilir merkezi olmayan uygulamaları kolaylıkla desteklemek için inşa edilmiştir. ",
     "We’ve integrated this network as the first supported layer-2 solution in our ecosystem, and it’s now available for sending and receiving payments. Its speed, low fees, and seamless onboarding make it ideal for webshops and real-time transactions.": "Bu ağı ekosistemimizde ilk desteklenen Katman-2 çözümü olarak entegre ettik ve şimdi ödeme göndermek ve almak için kullanılabilir. ",
-    "You are viewing an auto-translated version of the original English content": "Orijinal İngilizce içeriğinin otomatik olarak translasyonlu bir sürümünü görüntülüyorsunuz",
     "crypto": "kripto",
     "payments": "ödemeler",
     "monocurrency": "monok para birimi",
@@ -261,5 +258,6 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "Hızlı yerleşimlerle esnek, düşük ücretli bir ödeme seçeneği sunmak için bu ağı yakında entegre etmeyi planlıyoruz. ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "Bu merkezi olmayan defter, saniyeler içinde işlem onaylarıyla hızlı, verimli sınır ötesi ödemeler için tasarlanmıştır. ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "Platform ayrıca kullanıcıların özel jetonlar oluşturmasına ve aktarmasına olanak tanır ve çok yönlü finansal ürünler sağlar. ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "Düşük ücretler ve hızlı işlemlerle sorunsuz blockchain ödeme çözümleri sunuyoruz. "
+    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "Düşük ücretler ve hızlı işlemlerle sorunsuz blockchain ödeme çözümleri sunuyoruz. ",
+    "You are viewing an auto-translated version of the original English content": "Orijinal İngilizce içeriğinin otomatik olarak translasyonlu bir sürümünü görüntülüyorsunuz"
 }

@@ -20,7 +20,6 @@
     "This content is only available exclusively in English.": "Detta innehåll är endast tillgängligt exklusivt på engelska.",
     "Submitted.": "Inlämnat.",
     "Quick Links": "Snabblänkar",
-    "Home": "Hem",
     "About Us": "Om oss",
     "Pricing": "Prissättning",
     "FAQ": "Vanliga frågor",
@@ -208,8 +207,6 @@
     "We plan to integrate this solution into our ecosystem soon to provide faster, more cost-effective transactions. Its growing utility and advanced network capabilities make it a valuable addition to our roadmap.": "Vi planerar att integrera denna lösning i vårt ekosystem snart för att ge snabbare och mer kostnadseffektiva transaktioner. ",
     "This fast, cost-efficient environment is built to support scalable decentralized applications with ease. Designed for secure and low-cost transactions, it enables smooth experiences for developers, users, and businesses alike, especially in areas like payments, finance, and digital services.": "Denna snabba, kostnadseffektiva miljö är byggd för att stödja skalbara decentraliserade applikationer med lätthet. ",
     "We’ve integrated this network as the first supported layer-2 solution in our ecosystem, and it’s now available for sending and receiving payments. Its speed, low fees, and seamless onboarding make it ideal for webshops and real-time transactions.": "Vi har integrerat det här nätverket som den första stödet Layer-2-lösningen i vårt ekosystem, och det är nu tillgängligt för att skicka och ta emot betalningar. ",
-    "Notice": "Varsel",
-    "You are viewing an auto-translated version of the original English content": "Du tittar på en auto-översatt version av det ursprungliga engelska innehållet",
     "crypto": "krypto",
     "payments": "betalningar",
     "monocurrency": "monokurren",
@@ -261,5 +258,6 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "Vi planerar att integrera detta nätverk snart för att erbjuda ett flexibelt betalningsalternativ med låg avgift med snabba bosättningar. ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "Denna decentraliserade huvudbok är utformad för snabba, effektiva gränsöverskridande betalningar med transaktionsbekräftelser på några sekunder. ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "Plattformen gör det också möjligt för användare att skapa och överföra anpassade tokens, vilket möjliggör mångsidiga finansiella produkter. ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "Vi tillhandahåller sömlösa blockchainbetalningslösningar med låga avgifter och snabba transaktioner. "
+    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "Vi tillhandahåller sömlösa blockchainbetalningslösningar med låga avgifter och snabba transaktioner. ",
+    "You are viewing an auto-translated version of the original English content": "Du tittar på en auto-översatt version av det ursprungliga engelska innehållet"
 }

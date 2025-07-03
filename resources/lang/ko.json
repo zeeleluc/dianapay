@@ -20,7 +20,6 @@
     "This content is only available exclusively in English.": "이 콘텐츠는 영어로만 구입할 수 있습니다.",
     "Submitted.": "제출된.",
     "Quick Links": "빠른 링크",
-    "Home": "집",
     "About Us": "우리에 대해",
     "Pricing": "가격",
     "FAQ": "FAQ",
@@ -208,8 +207,6 @@
     "We plan to integrate this solution into our ecosystem soon to provide faster, more cost-effective transactions. Its growing utility and advanced network capabilities make it a valuable addition to our roadmap.": "우리는이 솔루션을 곧 생태계에 통합하여 더 빠르고 비용 효율적인 거래를 제공 할 계획입니다. ",
     "This fast, cost-efficient environment is built to support scalable decentralized applications with ease. Designed for secure and low-cost transactions, it enables smooth experiences for developers, users, and businesses alike, especially in areas like payments, finance, and digital services.": "이 빠르고 비용 효율적인 환경은 확장 가능한 분산 응용 프로그램을 쉽게 지원하기 위해 구축되었습니다. ",
     "We’ve integrated this network as the first supported layer-2 solution in our ecosystem, and it’s now available for sending and receiving payments. Its speed, low fees, and seamless onboarding make it ideal for webshops and real-time transactions.": "우리는이 네트워크를 생태계에서 최초의 지원되는 계층 -2 솔루션으로 통합했으며 이제 지불 및 수신을받을 수 있습니다. ",
-    "Notice": "알아채다",
-    "You are viewing an auto-translated version of the original English content": "원래 영어 콘텐츠의 자동 변환 버전을보고 있습니다.",
     "crypto": "크립토",
     "payments": "지불",
     "monocurrency": "단일 화성",
@@ -261,5 +258,6 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "우리는이 네트워크를 곧 통합하여 빠른 결제와 함께 유연하고 저급 지불 옵션을 제공 할 계획입니다. ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "이 분산 원장은 거래 확인이 몇 초 만에 빠르고 효율적인 국경 간 지불을 위해 설계되었습니다. ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "이 플랫폼을 통해 사용자는 사용자 정의 토큰을 생성하고 전송할 수있어 다양한 금융 상품을 가능하게합니다. ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "우리는 낮은 수수료와 빠른 거래로 원활한 블록 체인 결제 솔루션을 제공합니다. "
+    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "우리는 낮은 수수료와 빠른 거래로 원활한 블록 체인 결제 솔루션을 제공합니다. ",
+    "You are viewing an auto-translated version of the original English content": "원래 영어 콘텐츠의 자동 변환 버전을보고 있습니다."
 }

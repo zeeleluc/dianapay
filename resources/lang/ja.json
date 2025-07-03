@@ -20,7 +20,6 @@
     "This content is only available exclusively in English.": "このコンテンツは、英語のみでのみ利用できます。",
     "Submitted.": "提出。",
     "Quick Links": "クイックリンク",
-    "Home": "家",
     "About Us": "私たちについて",
     "Pricing": "価格設定",
     "FAQ": "よくある質問",
@@ -208,8 +207,6 @@
     "We plan to integrate this solution into our ecosystem soon to provide faster, more cost-effective transactions. Its growing utility and advanced network capabilities make it a valuable addition to our roadmap.": "このソリューションをエコシステムに間もなく統合して、より速く、より費用対効果の高いトランザクションを提供する予定です。",
     "This fast, cost-efficient environment is built to support scalable decentralized applications with ease. Designed for secure and low-cost transactions, it enables smooth experiences for developers, users, and businesses alike, especially in areas like payments, finance, and digital services.": "この高速で費用効率の高い環境は、スケーラブルな分散型アプリケーションを簡単にサポートするために構築されています。",
     "We’ve integrated this network as the first supported layer-2 solution in our ecosystem, and it’s now available for sending and receiving payments. Its speed, low fees, and seamless onboarding make it ideal for webshops and real-time transactions.": "このネットワークをエコシステムで最初にサポートされたレイヤー2ソリューションとして統合しましたが、現在、支払いを送信および受信できるようになりました。",
-    "Notice": "知らせ",
-    "You are viewing an auto-translated version of the original English content": "オリジナルの英語コンテンツの自動翻訳バージョンを表示しています",
     "crypto": "暗号資産",
     "payments": "支払い",
     "monocurrency": "モノカレンシー",
@@ -261,5 +258,6 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "このネットワークをすぐに統合して、柔軟で低料金の支払いオプションを迅速に和解する予定です。",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "この分散型台帳は、数秒でトランザクション確認を伴う高速で効率的な国境を越えた支払いのために設計されています。",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "また、このプラットフォームを使用すると、ユーザーはカスタムトークンを作成および転送し、多目的な金融商品を可能にします。",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "低料金と迅速な取引を備えたシームレスなブロックチェーン支払いソリューションを提供しています。"
+    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "低料金と迅速な取引を備えたシームレスなブロックチェーン支払いソリューションを提供しています。",
+    "You are viewing an auto-translated version of the original English content": "オリジナルの英語コンテンツの自動翻訳バージョンを表示しています"
 }

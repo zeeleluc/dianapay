@@ -20,7 +20,6 @@
     "This content is only available exclusively in English.": "Ta treść jest dostępna wyłącznie w języku angielskim.",
     "Submitted.": "Złożony.",
     "Quick Links": "Szybkie linki",
-    "Home": "Dom",
     "About Us": "O nas",
     "Pricing": "Wycena",
     "FAQ": "FAQ",
@@ -208,8 +207,6 @@
     "We plan to integrate this solution into our ecosystem soon to provide faster, more cost-effective transactions. Its growing utility and advanced network capabilities make it a valuable addition to our roadmap.": "Planujemy zintegrować to rozwiązanie z naszym ekosystemem, aby zapewnić szybsze, bardziej opłacalne transakcje. ",
     "This fast, cost-efficient environment is built to support scalable decentralized applications with ease. Designed for secure and low-cost transactions, it enables smooth experiences for developers, users, and businesses alike, especially in areas like payments, finance, and digital services.": "To szybkie, opłacalne środowisko jest zbudowane w celu z łatwością obsługi skalowalnych zdecentralizowanych aplikacji. ",
     "We’ve integrated this network as the first supported layer-2 solution in our ecosystem, and it’s now available for sending and receiving payments. Its speed, low fees, and seamless onboarding make it ideal for webshops and real-time transactions.": "Zintegrowaliśmy tę sieć jako pierwsze obsługiwane rozwiązanie warstwy 2 w naszym ekosystemie, a teraz jest dostępna do wysyłania i odbierania płatności. ",
-    "Notice": "Ogłoszenie",
-    "You are viewing an auto-translated version of the original English content": "Przeglądasz automatyczną wersję oryginalnej treści angielskiej",
     "crypto": "Krypto",
     "payments": "płatności",
     "monocurrency": "MONAMURENCJA",
@@ -261,5 +258,6 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "Planujemy zintegrować tę sieć wkrótce, aby zaoferować elastyczną opcję płatności o niskiej zawartości fe z szybkimi rozliczeniami. ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "Ta zdecentralizowana księga została zaprojektowana do szybkich, wydajnych płatności transgranicznych z potwierdzeniami transakcji w ciągu kilku sekund. ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "Platforma pozwala również użytkownikom tworzyć i przesyłać niestandardowe tokeny, umożliwiając wszechstronne produkty finansowe. ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "Zapewniamy bezproblemowe rozwiązania płatności blockchain o niskich opłatach i szybkich transakcjach. "
+    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "Zapewniamy bezproblemowe rozwiązania płatności blockchain o niskich opłatach i szybkich transakcjach. ",
+    "You are viewing an auto-translated version of the original English content": "Przeglądasz automatyczną wersję oryginalnej treści angielskiej"
 }

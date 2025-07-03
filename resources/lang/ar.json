@@ -18,7 +18,6 @@
     "Community Portal": "بوابة المجتمع",
     "Submitted.": "مُقَدَّم.",
     "Quick Links": "روابط سريعة",
-    "Home": "بيت",
     "About Us": "معلومات عنا",
     "Pricing": "التسعير",
     "FAQ": "التعليمات",
@@ -200,7 +199,6 @@
     "This content is only available exclusively in English.": "هذا المحتوى متاح فقط حصريًا باللغة الإنجليزية.",
     "Hit that blue button and get ready for crypto magic!": "اضغط على هذا الزر الأزرق واستعد لـ كrikipto magic!",
     "Our Products": "منتجاتنا",
-    "Notice": "يلاحظ",
     "This decentralized network is designed for speed, low fees, and security, offering instant finality and support for everything from simple payments to advanced smart contracts. Its efficient architecture allows for thousands of transactions per second, making it suitable for both individuals and enterprises.": "تم تصميم هذه الشبكة اللامركزية للسرعة والرسوم المنخفضة والأمان ، مما يوفر نهائيًا فوريًا ودعمًا لكل شيء من المدفوعات البسيطة إلى العقود الذكية المتقدمة. ",
     "We’re actively working to integrate this technology into our ecosystem to support future transactions. Its performance, accessibility, and innovative design make it a strong candidate for expanding our supported payment options.": "نحن نعمل بنشاط على دمج هذه التكنولوجيا في نظامنا البيئي لدعم المعاملات المستقبلية. ",
     "This technology enhances transaction speed and lowers costs by processing data more efficiently while maintaining the security of the underlying network. It’s designed to support high-volume activity, making it ideal for applications that require fast, low-fee transactions at scale.": "تعزز هذه التكنولوجيا سرعة المعاملة وتقلل التكاليف عن طريق معالجة البيانات بشكل أكثر كفاءة مع الحفاظ على أمان الشبكة الأساسية. ",
@@ -209,7 +207,6 @@
     "We plan to integrate this solution into our ecosystem soon to provide faster, more cost-effective transactions. Its growing utility and advanced network capabilities make it a valuable addition to our roadmap.": "نخطط لدمج هذا الحل في نظامنا البيئي قريبًا لتوفير معاملات أسرع وأكثر فعالية من حيث التكلفة. ",
     "This fast, cost-efficient environment is built to support scalable decentralized applications with ease. Designed for secure and low-cost transactions, it enables smooth experiences for developers, users, and businesses alike, especially in areas like payments, finance, and digital services.": "تم تصميم هذه البيئة السريعة والفعالة من حيث التكلفة لدعم التطبيقات اللامركزية القابلة للتطوير بسهولة. ",
     "We’ve integrated this network as the first supported layer-2 solution in our ecosystem, and it’s now available for sending and receiving payments. Its speed, low fees, and seamless onboarding make it ideal for webshops and real-time transactions.": "لقد قمنا بدمج هذه الشبكة كحل أول طبقة مدعومة في نظامنا البيئي ، وهي متاحة الآن لإرسال واستلام المدفوعات. ",
-    "You are viewing an auto-translated version of the original English content": "أنت تشاهد إصدارًا مرجلاً تلقائيًا من المحتوى الإنجليزي الأصلي",
     "crypto": "شريفتو",
     "payments": "المدفوعات",
     "monocurrency": "الأحادي",
@@ -261,5 +258,6 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "نخطط لدمج هذه الشبكة قريبًا لتقديم خيار دفع مرن منخفض المعلومات مع تسوية سريعة. ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "تم تصميم دفتر الأستاذ اللامركزي هذا للمدفوعات عبر الحدود بسرعة وفعالة مع تأكيدات المعاملات في ثوان. ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "يتيح النظام الأساسي أيضًا للمستخدمين إنشاء ونقل الرموز المخصصة ، مما يتيح المنتجات المالية متعددة الاستخدامات. ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "نحن نقدم حلول دفع blockchain سلسة مع رسوم منخفضة ومعاملات سريعة. "
+    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "نحن نقدم حلول دفع blockchain سلسة مع رسوم منخفضة ومعاملات سريعة. ",
+    "You are viewing an auto-translated version of the original English content": "أنت تشاهد إصدارًا مرجلاً تلقائيًا من المحتوى الإنجليزي الأصلي"
 }

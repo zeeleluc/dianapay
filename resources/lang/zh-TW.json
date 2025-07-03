@@ -18,7 +18,6 @@
     "Community Portal": "社區門戶",
     "Submitted.": "提交。",
     "Quick Links": "快速鏈接",
-    "Home": "家",
     "About Us": "關於我們",
     "Pricing": "定價",
     "FAQ": "常問問題",
@@ -208,8 +207,6 @@
     "We plan to integrate this solution into our ecosystem soon to provide faster, more cost-effective transactions. Its growing utility and advanced network capabilities make it a valuable addition to our roadmap.": "我們計劃很快將該解決方案集成到我們的生態系統中，以提供更快，更具成本效益的交易。它不斷增長的公用事業和高級網絡功能使其成為我們路線圖的寶貴補充。",
     "This fast, cost-efficient environment is built to support scalable decentralized applications with ease. Designed for secure and low-cost transactions, it enables smooth experiences for developers, users, and businesses alike, especially in areas like payments, finance, and digital services.": "這種快速，成本效益的環境旨在輕鬆地支持可擴展的分散應用程序。它專為安全和低成本的交易而設計，可為開發人員，用戶和企業提供平穩的體驗，尤其是在付款，金融和數字服務等領域。",
     "We’ve integrated this network as the first supported layer-2 solution in our ecosystem, and it’s now available for sending and receiving payments. Its speed, low fees, and seamless onboarding make it ideal for webshops and real-time transactions.": "我們將該網絡集成為生態系統中第一個支持的第2層解決方案，現在可以發送和接收付款。它的速度，低費用和無縫入門使其非常適合網絡商店和實時交易。",
-    "Notice": "注意",
-    "You are viewing an auto-translated version of the original English content": "您正在查看原始英語內容的自動翻譯版本",
     "crypto": "加密貨幣",
     "payments": "付款",
     "monocurrency": "單電流",
@@ -261,5 +258,10 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "我們計劃很快將該網絡集成，以便為快速定居點提供靈活的低收費付款選項。它的強大治理和可靠的績效將使尋求穩定且創新的支付解決方案的個人用戶和企業受益。",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "該分散的分類帳是為快速，高效的跨境支付而設計的，並在幾秒鐘內通過交易確認。其獨特的共識協議支持交易的高吞吐量，同時保持安全性和低能利用，使其非常適合全球金融轉移。",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "該平台還允許用戶創建和傳輸自定義令牌，從而實現多功能金融產品。我們計劃盡快集成該網絡，以擴大我們的付款方式，提供快速，低成本的交易，使個人用戶和商人受益。",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "我們提供低費用和快速交易的無縫區塊鏈支付解決方案。加入全球成千上萬的快樂客戶。"
+    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "我們提供低費用和快速交易的無縫區塊鏈支付解決方案。加入全球成千上萬的快樂客戶。",
+    "Base": "根據",
+    "You are viewing an auto-translated version of the original English content": "您正在查看原始英語內容的自動翻譯版本",
+    "About": "關於",
+    "Privacy": "隱私",
+    "Our platform supports a growing list of the most popular blockchains and cryptocurrencies, all tightly integrated to ensure speed, usability, and developer-friendliness. Whether you're an individual, startup, or established business, we're here to help you leverage the full power of Web3 payments—without compromise.": "我們的平台支持越來越多的最受歡迎的區塊鍊和加密貨幣的列表，這些列表緊密整合，以確保速度，可用性和開發人員友好。無論您是個人，啟動還是已建立的業務，我們都在這裡幫助您利用Web3付款的全部功能，而無需妥協。"
 }

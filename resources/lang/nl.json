@@ -21,7 +21,6 @@
     "will be added soon": "zal binnenkort worden toegevoegd",
     "Seamless monocurrency payments with just 0.4% fee, direct crypto-to-crypto transactions. No swapping, no bridging.": "Naadloze monocurrency-betalingen met slechts 0,4% vergoeding, directe crypto-to-crypto-transacties. ",
     "Quick Links": "Snelle links",
-    "Home": "Thuis",
     "About Us": "Over ons",
     "Pricing": "Prijzen",
     "FAQ": "FAQ",
@@ -202,7 +201,6 @@
     "You must select at least one cryptocurrency.": "Je moet minstens één cryptomunt selecteren.",
     "The cryptocurrency selection must be an array.": "De selectie van de cryptomunt moet een array zijn.",
     "Payment request created successfully!": "Betalingsverzoek met succes gemaakt!",
-    "Notice": "Kennisgeving",
     "This decentralized network is designed for speed, low fees, and security, offering instant finality and support for everything from simple payments to advanced smart contracts. Its efficient architecture allows for thousands of transactions per second, making it suitable for both individuals and enterprises.": "Dit gedecentraliseerde netwerk is ontworpen voor snelheid, lage kosten en beveiliging en biedt onmiddellijke finaliteit en ondersteuning voor alles, van eenvoudige betalingen tot geavanceerde slimme contracten. ",
     "We’re actively working to integrate this technology into our ecosystem to support future transactions. Its performance, accessibility, and innovative design make it a strong candidate for expanding our supported payment options.": "We werken actief om deze technologie in ons ecosysteem te integreren om toekomstige transacties te ondersteunen. ",
     "This technology enhances transaction speed and lowers costs by processing data more efficiently while maintaining the security of the underlying network. It’s designed to support high-volume activity, making it ideal for applications that require fast, low-fee transactions at scale.": "Deze technologie verhoogt de transactiesnelheid en verlaagt de kosten door gegevens efficiënter te verwerken met behoud van de beveiliging van het onderliggende netwerk. ",
@@ -211,7 +209,6 @@
     "We plan to integrate this solution into our ecosystem soon to provide faster, more cost-effective transactions. Its growing utility and advanced network capabilities make it a valuable addition to our roadmap.": "We zijn van plan om deze oplossing binnenkort in ons ecosysteem te integreren om snellere, kosteneffectievere transacties te bieden. ",
     "This fast, cost-efficient environment is built to support scalable decentralized applications with ease. Designed for secure and low-cost transactions, it enables smooth experiences for developers, users, and businesses alike, especially in areas like payments, finance, and digital services.": "Deze snelle, kostenefficiënte omgeving is gebouwd om schaalbare gedecentraliseerde toepassingen gemakkelijk te ondersteunen. ",
     "We’ve integrated this network as the first supported layer-2 solution in our ecosystem, and it’s now available for sending and receiving payments. Its speed, low fees, and seamless onboarding make it ideal for webshops and real-time transactions.": "We hebben dit netwerk geïntegreerd als de eerste ondersteunde Layer-2-oplossing in ons ecosysteem, en het is nu beschikbaar voor het verzenden en ontvangen van betalingen. ",
-    "You are viewing an auto-translated version of the original English content": "U bekijkt een automatisch vertaalde versie van de originele Engelse inhoud",
     "crypto": "crypto",
     "payments": "betalingen",
     "monocurrency": "monocurrency",
@@ -263,5 +260,10 @@
     "We plan to integrate this network soon to offer a flexible, low-fee payment option with fast settlements. Its strong governance and reliable performance will benefit both individual users and businesses looking for a stable and innovative payment solution.": "We zijn van plan dit netwerk binnenkort te integreren om een ​​flexibele, lage betalingsoptie te bieden met snelle nederzettingen. ",
     "This decentralized ledger is designed for fast, efficient cross-border payments with transaction confirmations in seconds. Its unique consensus protocol supports a high throughput of transactions while maintaining security and low energy use, making it ideal for global financial transfers.": "Dit gedecentraliseerde grootboek is ontworpen voor snelle, efficiënte grensoverschrijdende betalingen met transactiebevestigingen in seconden. ",
     "The platform also allows users to create and transfer custom tokens, enabling versatile financial products. We plan to integrate this network soon to expand our payment options, offering fast, low-cost transactions that benefit both individual users and merchants.": "Het platform stelt gebruikers ook in staat om aangepaste tokens te maken en over te dragen, waardoor veelzijdige financiële producten mogelijk zijn. ",
-    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "We bieden naadloze blockchain -betalingsoplossingen met lage kosten en snelle transacties. "
+    "We provide seamless blockchain payment solutions with low fees and fast transactions. Join thousands of happy customers worldwide.": "We bieden naadloze blockchain -betalingsoplossingen met lage kosten en snelle transacties. ",
+    "You are viewing an auto-translated version of the original English content": "U bekijkt een automatisch vertaalde versie van de originele Engelse inhoud",
+    "Base": "Baseren",
+    "Our platform supports a growing list of the most popular blockchains and cryptocurrencies, all tightly integrated to ensure speed, usability, and developer-friendliness. Whether you're an individual, startup, or established business, we're here to help you leverage the full power of Web3 payments—without compromise.": "Ons platform ondersteunt een groeiende lijst van de meest populaire blockchains en cryptocurrencies, allemaal strak geïntegreerd om snelheid, bruikbaarheid en ontwikkelaarvriendelijkheid te garanderen. ",
+    "About": "Over",
+    "Privacy": "Privacy"
 }
