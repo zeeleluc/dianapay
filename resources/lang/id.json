@@ -16,8 +16,6 @@
     "Blog": "Blog",
     "Community": "Masyarakat",
     "Community Portal": "Portal Komunitas",
-    "This content is currently available exclusively in English.": "Konten ini saat ini tersedia secara eksklusif dalam bahasa Inggris.",
-    "This content is only available exclusively in English.": "Konten ini hanya tersedia secara eksklusif dalam bahasa Inggris.",
     "Submitted.": "Dikirimkan.",
     "Quick Links": "Tautan cepat",
     "About Us": "Tentang kami",
@@ -257,5 +255,6 @@
     "anonymous": "anonim",
     "key": "kunci",
     "We provide seamless blockchain payment solutions with low fees and fast transactions.": "Kami memberikan solusi pembayaran blockchain yang mulus dengan biaya rendah dan transaksi cepat.",
-    "Simplify Crypto Payments": "Sederhanakan pembayaran Kripto"
+    "Simplify Crypto Payments": "Sederhanakan pembayaran Kripto",
+    "This content is currently only available in English.": "Konten ini saat ini hanya tersedia dalam bahasa Inggris."
 }

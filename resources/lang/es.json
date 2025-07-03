@@ -192,8 +192,6 @@
     "You must select at least one cryptocurrency.": "Debe seleccionar al menos un Criptomoneda.",
     "The cryptocurrency selection must be an array.": "La selección de Criptomoneda debe ser una matriz.",
     "Payment request created successfully!": "¡Solicitud de pago creada con éxito!",
-    "This content is currently available exclusively in English.": "Este contenido está actualmente disponible exclusivamente en inglés.",
-    "This content is only available exclusively in English.": "Este contenido solo está disponible exclusivamente en inglés.",
     "Hit that blue button and get ready for crypto magic!": "¡Presione ese botón azul y prepárese para Cripto Magic!",
     "This decentralized network is designed for speed, low fees, and security, offering instant finality and support for everything from simple payments to advanced smart contracts. Its efficient architecture allows for thousands of transactions per second, making it suitable for both individuals and enterprises.": "Esta red descentralizada está diseñada para la velocidad, las tarifas bajas y la seguridad, ofreciendo finalidad instantánea y soporte para todo, desde pagos simples hasta contratos inteligentes avanzados. ",
     "We’re actively working to integrate this technology into our ecosystem to support future transactions. Its performance, accessibility, and innovative design make it a strong candidate for expanding our supported payment options.": "Estamos trabajando activamente para integrar esta tecnología en nuestro ecosistema para apoyar las transacciones futuras. ",
@@ -257,5 +255,6 @@
     "anonymous": "anónimo",
     "key": "llave",
     "We provide seamless blockchain payment solutions with low fees and fast transactions.": "Proporcionamos soluciones de pago de cadena de bloques sin problemas con tarifas bajas y transacciones rápidas.",
-    "Simplify Crypto Payments": "Simplificar los pagos de Cripto"
+    "Simplify Crypto Payments": "Simplificar los pagos de Cripto",
+    "This content is currently only available in English.": "Este contenido actualmente solo está disponible en inglés."
 }

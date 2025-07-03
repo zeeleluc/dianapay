@@ -42,8 +42,6 @@
     "Blockchain": "Блокчейн",
     "Rates": "Ставки",
     "Create Your Anonymous Cryptocurrency Payment Request": "Создайте свой анонимный запрос на оплату Криптовала",
-    "This content is currently available exclusively in English.": "Этот контент в настоящее время доступен исключительно на английском языке.",
-    "This content is only available exclusively in English.": "Этот контент доступен только на английском языке.",
     "Submit anonymous payment request": "Отправить анонимный запрос на оплату",
     "Share payment with the payee": "Платеж поделиться с получателем получателя",
     "Payee pays you in the cryptocurrency you want": "Получающий платит вам в Криптовалте, ты хочешь",
@@ -257,5 +255,6 @@
     "anonymous": "анонимный",
     "key": "ключ",
     "We provide seamless blockchain payment solutions with low fees and fast transactions.": "Мы предоставляем бесшовные решения для платежей блокчейна с низкими сборами и быстрыми транзакциями.",
-    "Simplify Crypto Payments": "Упростите крипто платежи"
+    "Simplify Crypto Payments": "Упростите крипто платежи",
+    "This content is currently only available in English.": "Этот контент в настоящее время доступен только на английском языке."
 }

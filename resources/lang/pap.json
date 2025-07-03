@@ -16,8 +16,6 @@
     "Blog": "Blog",
     "Community": "Komunidat",
     "Community Portal": "Portal di Komunidat",
-    "This content is currently available exclusively in English.": "E kontenido aki ta disponibel aktualmente eksklusivamente na ingles.",
-    "This content is only available exclusively in English.": "E kontenido aki ta solamente disponibel eksklusivamente na ingles.",
     "Submitted.": "Entrega.",
     "Quick Links": "Linknan lihé",
     "About Us": "Tokante Nos",
@@ -259,5 +257,9 @@
     "key": "yabi",
     "This tool facilitates crypto payments between users. No fiat currency exchange takes place. The amounts shown in fiat are for value indication purposes only. We do not hold any funds and do not operate as a financial service provider.": "E herment aki ta facilita pagonan di kripto entre usuarionan. ",
     "We provide seamless blockchain payment solutions with low fees and fast transactions.": "Nos ta proveé ​​solushonnan di pago di blockchain sin kostura ku tarifanan abou i transakshonnan rápido.",
-    "Simplify Crypto Payments": "Simplifiká Pagonan di Kripto"
+    "Simplify Crypto Payments": "Simplifiká Pagonan di Kripto",
+    "This content is currently only available in English.": "E contenido aki actualmente ta solamente disponibel na Ingles.",
+    "About": "Tokante",
+    "Terms": "Términonan",
+    "Privacy": "Privasidat"
 }
