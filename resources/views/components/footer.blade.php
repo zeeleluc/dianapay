@@ -40,7 +40,7 @@
                     @endphp
                     <li>
                         <a href="{{ $chainUrl }}" class="hover:text-white transition">
-                            {{ translate($chainName) }}
+                            {{ $chainName }}
                         </a>
                     </li>
                 @endforeach

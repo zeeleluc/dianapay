@@ -10,7 +10,7 @@ class SyncTranslations extends Command
 {
     protected $signature = 'translations:sync';
 
-    protected $description = 'Scan Blade files for translate() calls, remove unused translations, and sync translations for all languages';
+    protected $description = 'Scan Blade and PHP files for translate() calls, remove unused translations (except protected), and sync translations for all locales';
 
     public function handle()
     {
@@ -20,10 +20,10 @@ class SyncTranslations extends Command
         $this->info('Scanning PHP files in /app for translate() calls...');
         $phpFiles = File::allFiles(app_path());
 
-        // This will store: ['text to translate' => [ 'paramKey' => 'exampleValue', ... ], ...]
+        // Collect all translation keys found in code with their params
         $translations = [];
 
-        // Regex to match translate('some string', ['param' => 'value'])
+        // Regex to find translate('key', [...])
         $pattern = '/translate\(\s*[\'"]([^\'"]+)[\'"]\s*(?:,\s*(\[[^\]]*\]))?\s*\)/';
 
         foreach (array_merge($bladeFiles, $phpFiles) as $file) {
@@ -45,10 +45,10 @@ class SyncTranslations extends Command
 
         $this->info('Found ' . count($translations) . ' unique translation strings.');
 
-        // Clean up unused translations using en-GB as the source
+        // Clean unused translations except protected keys
         $this->cleanUnusedTranslations(array_keys($translations));
 
-        // Get all locales from config
+        // Supported locales from config
         $locales = config('locales.allowed', []);
 
         if (empty($locales)) {
@@ -74,41 +74,53 @@ class SyncTranslations extends Command
     }
 
     /**
-     * Remove unused translations from all language JSON files
+     * Remove unused translations from all locale JSON files,
+     * but keep keys defined in $dontRemove.
      *
-     * @param array $usedKeys Array of translation keys currently in use
+     * @param array $usedKeys Keys currently used in code
      * @return void
      */
     protected function cleanUnusedTranslations(array $usedKeys): void
     {
+        $dontRemove = [
+            'crypto',
+            'payments',
+            'monocurrency',
+            'cryptocurrency',
+            'cryptocurrencies',
+            'anonymous',
+        ];
+
         $this->info('Checking for unused translations...');
 
-        // Path to translation files
         $langPath = resource_path('lang');
-
-        // Get en-GB translations as the source
         $sourceFile = "{$langPath}/en-GB.json";
+
         if (!File::exists($sourceFile)) {
-            $this->warn('Source translation file (en-GB.json) not found. Skipping unused translation cleanup.');
+            $this->warn('Source translation file (en-GB.json) not found. Skipping cleanup.');
             return;
         }
 
         $sourceTranslations = json_decode(File::get($sourceFile), true);
         if (!is_array($sourceTranslations)) {
-            $this->error('Failed to parse en-GB.json. Ensure it contains valid JSON.');
+            $this->error('Failed to parse en-GB.json. Ensure valid JSON.');
             return;
         }
 
+        // Keys present in source but NOT used in code
         $unusedKeys = array_diff(array_keys($sourceTranslations), $usedKeys);
 
+        // Remove keys that must never be removed
+        $unusedKeys = array_diff($unusedKeys, $dontRemove);
+
         if (empty($unusedKeys)) {
-            $this->info('No unused translations found.');
+            $this->info('No unused translations found to remove.');
             return;
         }
 
         $this->info('Found ' . count($unusedKeys) . ' unused translation keys.');
 
-        // Get all language files
+        // Clean unused keys from all locale files
         $langFiles = File::glob("{$langPath}/*.json");
 
         foreach ($langFiles as $file) {
@@ -116,9 +128,8 @@ class SyncTranslations extends Command
             $this->info("Cleaning translations for locale: {$locale}");
 
             $translations = json_decode(File::get($file), true) ?? [];
-
-            // Remove unused keys
             $modified = false;
+
             foreach ($unusedKeys as $key) {
                 if (isset($translations[$key])) {
                     unset($translations[$key]);
@@ -127,7 +138,6 @@ class SyncTranslations extends Command
                 }
             }
 
-            // Save updated translations only if changes were made
             if ($modified) {
                 File::put($file, json_encode($translations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
                 $this->line("  Updated translation file for {$locale}");
@@ -140,7 +150,7 @@ class SyncTranslations extends Command
     }
 
     /**
-     * Parses a PHP-style array string into an associative array safely.
+     * Safely parse PHP array string to assoc array for params extraction.
      *
      * @param string $arrayString
      * @return array
