@@ -21,10 +21,10 @@
             <h3 class="text-white font-semibold mb-4">{{ translate('Quick Links') }}</h3>
             <ul class="space-y-2 text-sm">
                 <li><a href="{{ url('/') }}" class="hover:text-white transition">{{ translate('Main Page') }}</a></li>
-                <li><a href="{{ url('/about') }}" class="hover:text-white transition">{{ translate('About Us') }}</a></li>
-                <li><a href="{{ url('/pricing') }}" class="hover:text-white transition">{{ translate('Pricing') }}</a></li>
-                <li><a href="{{ url('/faq') }}" class="hover:text-white transition">{{ translate('FAQ') }}</a></li>
-                <li><a href="{{ url('/contact') }}" class="hover:text-white transition">{{ translate('Contact') }}</a></li>
+                <li><a href="{{ url(get_locale() . '/about') }}" class="hover:text-white transition">{{ translate('About Us') }}</a></li>
+                <li><a href="{{ url(get_locale() . '/pricing') }}" class="hover:text-white transition">{{ translate('Pricing') }}</a></li>
+                <li><a href="{{ url(get_locale() . '/faq') }}" class="hover:text-white transition">{{ translate('FAQ') }}</a></li>
+                <li><a href="{{ url(get_locale() . '/contact') }}" class="hover:text-white transition">{{ translate('Contact') }}</a></li>
             </ul>
         </div>
 
@@ -60,7 +60,7 @@
 
     <div class="mt-12 border-t border-gray-800 pt-6 text-center text-gray-500 text-sm">
         &copy; {{ date('Y') }} {{ config('app.name') }}. {{ translate('All rights reserved.') }} |
-        <a href="{{ url('/terms') }}" class="hover:text-white">{{ translate('Terms') }}</a> |
-        <a href="{{ url('/privacy') }}" class="hover:text-white">{{ translate('Privacy Policy') }}</a>
+        <a href="{{ url(get_locale() . '/terms') }}" class="hover:text-white">{{ translate('Terms') }}</a> |
+        <a href="{{ url(get_locale() . '/privacy') }}" class="hover:text-white">{{ translate('Privacy Policy') }}</a>
     </div>
 </footer>

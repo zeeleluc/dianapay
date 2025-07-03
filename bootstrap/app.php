@@ -10,6 +10,7 @@ use Illuminate\Foundation\Http\Middleware\TrimStrings;
 use Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\ValidatePath;
 use Illuminate\Foundation\Configuration\Exceptions;
 
 return \Illuminate\Foundation\Application::configure(basePath: dirname(__DIR__))
@@ -28,6 +29,7 @@ return \Illuminate\Foundation\Application::configure(basePath: dirname(__DIR__))
             AddQueuedCookiesToResponse::class,
             VerifyCsrfToken::class,
             SubstituteBindings::class,
+            ValidatePath::class,
             SetLocale::class, // Use the class directly to avoid alias issues
         ]);
 
