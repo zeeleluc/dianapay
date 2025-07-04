@@ -8,3 +8,9 @@ $schedule = app(Schedule::class);
 if (app()->environment('prod')) {
     $schedule->command('crypto:fetch-rates')->everyTwoMinutes();
 }
+
+// ========== Production-Only Schedule ==========
+if (app()->environment('prod')) {
+    $schedule->command('tweet:post "GM Crypto Degens 🪙"')->dailyAt(cur_to_utc('6:00'));
+
+}
