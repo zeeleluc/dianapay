@@ -25,13 +25,73 @@
         </div>
     </div>
 
-    <section class="pt-24 bg-darker text-white">
+    <section class="bg-darker text-gray-200 py-20 px-6 sm:px-12">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-6">
+                {!! translate('Project Status & Roadmap') !!}
+            </h2>
+
+            <p class="text-lg sm:text-xl text-gray-400 mb-8">
+                {!! translate("This project is currently in development. While the website is online, registration is disabled and all features are inactive. We're actively working on secure KYC/AML integration to ensure compliance and a safe user experience before full launch.") !!}
+            </p>
+
+            <div class="text-left max-w-3xl mx-auto">
+                <h3 class="text-2xl font-semibold text-white mb-4">{!! translate('Feature Rollout Plan') !!}</h3>
+
+                <ul class="list-disc list-inside space-y-2 text-gray-300">
+                    <li>
+                        {!! translate('Phase 1 – Enable single crypto payments per blockchain (in order):') !!}
+                        <ul class="ml-6 mt-2 list-[circle] space-y-1 text-sm">
+                            <li>Base (already live)</li>
+                            <li>Ethereum Mainnet</li>
+                            <li>Polygon</li>
+                            <li>Arbitrum One</li>
+                            <li>Optimism</li>
+                            <li>Binance Smart Chain</li>
+                            <li>Avalanche C-Chain</li>
+                            <li>Fantom Opera</li>
+                            <li>Linea zkEVM</li>
+                            <li>Bitcoin</li>
+                            <li>XRPL</li>
+                            <li>Solana</li>
+                            <li>Cardano</li>
+                            <li>Algorand</li>
+                            <li>Stellar Lumens</li>
+                            <li>Tezos</li>
+                        </ul>
+                    </li>
+
+                    <li class="mt-4">
+                        {!! translate('Phase 2 – Add features for all blockchains:') !!}
+                        <ul class="ml-6 mt-2 list-[circle] space-y-1 text-sm">
+                            <li>Custom crypto payment buttons</li>
+                            <li>WooCommerce & Shopify plugin integrations</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3 class="text-xl font-semibold mt-8 mb-2 text-white">{!! translate('Pricing') !!}</h3>
+                <p class="text-gray-400 text-sm leading-relaxed mb-6">
+                    {!! translate('A small registration fee applies. First payments are free (0% fee). After that, all transactions are charged a flat 0.4% — monocurrency only, no bridging or swapping involved.') !!}
+                </p>
+
+                <p class="text-gray-400 text-sm leading-relaxed">
+                    {!! translate('To follow our development or get in touch, reach us at') !!}
+                    <a href="mailto:support@cryptmeup.com" class="text-yellow-400 hover:underline">support@cryptmeup.com</a>
+                    {!! translate(' or on Twitter at') !!}
+                    <a href="https://twitter.com/getcryptmeup" target="_blank" class="text-yellow-400 hover:underline">@getcryptmeup</a>.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 bg-dark text-white">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
             <h2 class="text-5xl font-bold mb-14 text-center">{{ translate('Our Products') }}</h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                 <!-- Feature Card 1 -->
-                <div class="bg-dark rounded-lg shadow-md p-6 flex flex-col justify-between">
+                <div class="bg-darker rounded-lg shadow-md p-6 flex flex-col justify-between opacity-70 cursor-not-allowed">
                     <h3 class="text-xl font-semibold mb-3">{!! translate('Anonymous Crypto Payments') !!}</h3>
                     <p class="text-gray-400 mb-6">
                     {!! translate('Quickly create a simple crypto payment request anyone can pay — no account needed.')  !!}
@@ -43,13 +103,13 @@
                         <li>{!! translate('Monocurrency payments') !!}</li>
                     </ul>
 
-                    <x-button href="{{ route('payment.anonymous.create', get_locale()) }}" variant="secondary" class="text-base sm:text-lg py-3 px-5">
-                        {{ translate('Create Payment') }}
+                    <x-button disabled class="text-base sm:text-lg py-3 px-5 cursor-not-allowed" variant="secondary">
+                        {{ translate('Coming Soon') }}
                     </x-button>
                 </div>
 
                 <!-- Feature Card 2 -->
-                <div class="bg-dark rounded-lg shadow-md p-6 flex flex-col justify-between opacity-70 cursor-not-allowed">
+                <div class="bg-darker rounded-lg shadow-md p-6 flex flex-col justify-between opacity-70 cursor-not-allowed">
                     <h3 class="text-xl font-semibold mb-3">{!! translate('Custom Payment Buttons') !!}</h3>
                     <p class="text-gray-400 mb-6">
                         {!! translate('Prepare payments on our platform for various products, then embed payment buttons or links on your website.') !!}
@@ -67,7 +127,7 @@
                 </div>
 
                 <!-- Feature Card 3 -->
-                <div class="bg-dark rounded-lg shadow-md p-6 flex flex-col justify-between opacity-70 cursor-not-allowed">
+                <div class="bg-darker rounded-lg shadow-md p-6 flex flex-col justify-between opacity-70 cursor-not-allowed">
                     <h3 class="text-xl font-semibold mb-3">{!! translate('E-Commerce Plugin Integrations') !!}</h3>
                     <p class="text-gray-400 mb-6">
                         {!! translate('Seamless integration with major webshop platforms like WooCommerce and Shopify, for smooth crypto payments.') !!}
@@ -87,16 +147,12 @@
         </div>
     </section>
 
+    <x-wavy-section>
+        {!! translate('The Future of Crypto Payments') !!}
+    </x-wavy-section>
 
-    <div class="bg-darker text-white py-10 px-4 sm:px-6 shadow-xl">
-        <div class="w-full lg:max-w-screen-lg mx-auto text-gray-100 my-20">
-            <h1 class="text-4xl sm:text-5xl font-extrabold mb-6 text-center">
-                {!! translate('The Future of') !!}
-                <span class="text-yellow-300">
-                    {!! translate('Crypto Payments') !!}
-                </span>
-            </h1>
-
+    <div class="bg-dark text-white py-0 m-0 px-4 sm:px-6 shadow-xl">
+        <div class="w-full lg:max-w-screen-lg mx-auto text-gray-100 my-10">
             <p class="max-w-4xl mx-auto text-xl sm:text-3xl text-gray-300 leading-relaxed mb-8 text-center">
                 {!! translate('We are pioneering the next generation of cryptocurrency payment solutions, designed with simplicity, security, and scalability in mind. Our mission is to empower businesses and individuals to accept crypto payments seamlessly, without the hassle of complicated setups or costly intermediaries.') !!}
             </p>
@@ -111,7 +167,7 @@
         </div>
     </div>
 
-    <section class="bg-dark bg-opacity-95 text-gray-100 py-16 px-6 sm:px-12 border-t border-gray-900 shadow-inner flex flex-col items-center">
+    <section class="bg-darker bg-opacity-95 text-gray-100 py-16 px-6 sm:px-12 border-t border-gray-900 shadow-inner flex flex-col items-center">
         <div class="max-w-5xl w-full text-center">
             <h2 class="text-3xl sm:text-4xl font-bold mb-6">
                 {!! translate('Supported Blockchains & Cryptocurrencies') !!}
@@ -129,7 +185,7 @@
                         $chainUrl = route('articles.show', ['locale' => get_locale(), 'slug1' => 'blockchain', 'slug2' => $key]);
                     @endphp
 
-                    <div class="rounded-xl p-6 bg-darker text-center space-y-4">
+                    <div class="rounded-xl p-6 bg-dark text-center space-y-4">
                         <a href="{{ $chainUrl }}" class="inline-block px-3 py-1 rounded-full text-2xl font-semibold text-white hover:opacity-90"
                            style="background: {{ $chain['color_primary'] }}">
                             {{ strtoupper($chain['short_name']) }}
@@ -180,7 +236,7 @@
                         @endphp
 
                         <a href="{{ $chainUrl }}"
-                           class="rounded-lg bg-darker px-4 pb-5 pt-7 text-center flex flex-col items-center space-y-2 hover:bg-dark transition">
+                           class="rounded-lg bg-dark px-4 pb-5 pt-7 text-center flex flex-col items-center space-y-2 hover:bg-dark transition">
                             <div class="inline-block px-3 py-1 rounded-full text-sm font-semibold text-white"
                                  style="background: {{ $chain['color_primary'] }}">
                                 {{ strtoupper($chain['short_name']) }}

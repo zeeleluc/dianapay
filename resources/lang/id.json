@@ -77,7 +77,6 @@
     "0.4% transaction fee": "Biaya transaksi 0,4%",
     "No bridging, crypto-to-crypto payments": "Tidak ada pembayaran, Kripto-to-Kripto Payments",
     "Monocurrency payments": "Pembayaran monokurrensi",
-    "Create Payment": "Buat pembayaran",
     "Custom Payment Buttons": "Tombol pembayaran khusus",
     "Prepare payments on our platform for various products, then embed payment buttons or links on your website.": "Siapkan pembayaran di platform kami untuk berbagai produk, lalu embed tombol pembayaran atau tautan di situs web Anda.",
     "Create and customize payment links": "Membuat dan menyesuaikan tautan pembayaran",
@@ -87,8 +86,6 @@
     "Seamless integration with major webshop platforms like WooCommerce and Shopify, for smooth crypto payments.": "Integrasi mulus dengan platform webshop utama seperti WooCommerce dan Shopify, untuk pembayaran kripto yang lancar.",
     "Supports WooCommerce, Shopify, and more": "Mendukung WooCommerce, Shopify, dan banyak lagi",
     "Easy setup and management": "Pengaturan dan manajemen yang mudah",
-    "The Future of": "Masa depan",
-    "Crypto Payments": "Pembayaran Kripto",
     "We are pioneering the next generation of cryptocurrency payment solutions, designed with simplicity, security, and scalability in mind. Our mission is to empower businesses and individuals to accept crypto payments seamlessly, without the hassle of complicated setups or costly intermediaries.": "Kami memelopori generasi berikutnya dari solusi pembayaran Mata Uang Kripto, dirancang dengan kesederhanaan, keamanan, dan skalabilitas dalam pikiran. ",
     "We have successfully launched an anonymous payment solution — enabling instant, secure transactions with a low fee of only 0.4%. Currently supporting a select range of cryptocurrencies on the Base blockchain, our platform operates without swapping or bridging, ensuring your funds move directly from crypto to crypto every time.": "Kami telah berhasil meluncurkan solusi pembayaran anonim - memungkinkan transaksi instan dan aman dengan biaya rendah hanya 0,4%. ",
     "This is just the beginning. Soon, we will offer account-based features, allowing you to integrate effortlessly with popular platforms like WooCommerce and Shopify. You’ll also gain access to detailed analytics right from your dashboard, helping you track your sales, revenue, and customer behavior — all in one place.": "Ini baru permulaan. ",
@@ -256,5 +253,13 @@
     "key": "kunci",
     "We provide seamless blockchain payment solutions with low fees and fast transactions.": "Kami memberikan solusi pembayaran blockchain yang mulus dengan biaya rendah dan transaksi cepat.",
     "Simplify Crypto Payments": "Sederhanakan pembayaran Kripto",
-    "This content is currently only available in English.": "Konten ini saat ini hanya tersedia dalam bahasa Inggris."
+    "This content is currently only available in English.": "Konten ini saat ini hanya tersedia dalam bahasa Inggris.",
+    "Project Status & Roadmap": "Status Proyek & Peta Jalan",
+    "Feature Rollout Plan": "Rencana peluncuran fitur",
+    "Phase 1 – Enable single crypto payments per blockchain (in order):": "Fase 1 - Aktifkan pembayaran kripto tunggal per blockchain (secara berurutan):",
+    "Phase 2 – Add features for all blockchains:": "Fase 2 - Tambahkan fitur untuk semua blockchain:",
+    "A small registration fee applies. First payments are free (0% fee). After that, all transactions are charged a flat 0.4% — monocurrency only, no bridging or swapping involved.": "Biaya pendaftaran kecil berlaku. ",
+    "To follow our development or get in touch, reach us at": "Untuk mengikuti perkembangan kami atau menghubungi kami, hubungi kami",
+    " or on Twitter at": "atau di twitter di",
+    "The Future of Crypto Payments": "Masa depan pembayaran Kripto"
 }

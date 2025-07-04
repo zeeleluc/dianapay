@@ -76,7 +76,6 @@
     "0.4% transaction fee": "Tarifa de transacción de 0.4%",
     "No bridging, crypto-to-crypto payments": "Sin puestos de puente, Cripto a los pagos",
     "Monocurrency payments": "Pagos de monocurrencias",
-    "Create Payment": "Crear pago",
     "Custom Payment Buttons": "Botones de pago personalizados",
     "Prepare payments on our platform for various products, then embed payment buttons or links on your website.": "Prepare los pagos en nuestra plataforma para varios productos, luego incruste los botones de pago o los enlaces en su sitio web.",
     "Create and customize payment links": "Crear y personalizar enlaces de pago",
@@ -86,8 +85,6 @@
     "Seamless integration with major webshop platforms like WooCommerce and Shopify, for smooth crypto payments.": "Integración perfecta con las principales plataformas de tallas web como WooCommerce y Shopify, para pagos suaves de Cripto.",
     "Supports WooCommerce, Shopify, and more": "Admite WooCommerce, Shopify y más",
     "Easy setup and management": "Fácil configuración y gestión",
-    "The Future of": "El futuro de",
-    "Crypto Payments": "Pagos de Cripto",
     "We are pioneering the next generation of cryptocurrency payment solutions, designed with simplicity, security, and scalability in mind. Our mission is to empower businesses and individuals to accept crypto payments seamlessly, without the hassle of complicated setups or costly intermediaries.": "Estamos pioneros en la próxima generación de soluciones de pago de Criptomoneda, diseñadas con simplicidad, seguridad y escalabilidad en mente. ",
     "We have successfully launched an anonymous payment solution — enabling instant, secure transactions with a low fee of only 0.4%. Currently supporting a select range of cryptocurrencies on the Base blockchain, our platform operates without swapping or bridging, ensuring your funds move directly from crypto to crypto every time.": "Hemos lanzado con éxito una solución de pago anónimo, que permite transacciones instantáneas y seguras con una tarifa baja de solo 0.4%. ",
     "This is just the beginning. Soon, we will offer account-based features, allowing you to integrate effortlessly with popular platforms like WooCommerce and Shopify. You’ll also gain access to detailed analytics right from your dashboard, helping you track your sales, revenue, and customer behavior — all in one place.": "Este es solo el comienzo. ",
@@ -256,5 +253,13 @@
     "key": "llave",
     "We provide seamless blockchain payment solutions with low fees and fast transactions.": "Proporcionamos soluciones de pago de cadena de bloques sin problemas con tarifas bajas y transacciones rápidas.",
     "Simplify Crypto Payments": "Simplificar los pagos de Cripto",
-    "This content is currently only available in English.": "Este contenido actualmente solo está disponible en inglés."
+    "This content is currently only available in English.": "Este contenido actualmente solo está disponible en inglés.",
+    "Project Status & Roadmap": "Estado del proyecto y hoja de ruta",
+    "Feature Rollout Plan": "Plan de implementación de funciones",
+    "Phase 1 – Enable single crypto payments per blockchain (in order):": "Fase 1: habilite pagos de Cripto único por blockchain (en orden):",
+    "Phase 2 – Add features for all blockchains:": "Fase 2: agregue características para todas las cadenas de bloques:",
+    "A small registration fee applies. First payments are free (0% fee). After that, all transactions are charged a flat 0.4% — monocurrency only, no bridging or swapping involved.": "Se aplica una pequeña tarifa de registro. ",
+    "To follow our development or get in touch, reach us at": "Para seguir nuestro desarrollo o ponerse en contacto, comuníquese con nosotros en",
+    " or on Twitter at": "o en Twitter en",
+    "The Future of Crypto Payments": "El futuro de los pagos de Cripto"
 }

@@ -77,7 +77,6 @@
     "0.4% transaction fee": "% 0,4 işlem ücreti",
     "No bridging, crypto-to-crypto payments": "Köprü yok, Kripto-Kripto ödemeleri",
     "Monocurrency payments": "Monok para ödemeleri",
-    "Create Payment": "Ödeme Oluştur",
     "Custom Payment Buttons": "Özel Ödeme Düğmeleri",
     "Prepare payments on our platform for various products, then embed payment buttons or links on your website.": "Platformumuzda çeşitli ürünler için ödeme hazırlayın, ardından web sitenize ödeme düğmeleri veya bağlantılar yerleştirin.",
     "Create and customize payment links": "Ödeme bağlantıları oluşturun ve özelleştirin",
@@ -87,8 +86,6 @@
     "Seamless integration with major webshop platforms like WooCommerce and Shopify, for smooth crypto payments.": "Pürüzsüz kripto ödemeleri için WooCommerce ve Shopify gibi büyük web mağazası platformlarıyla sorunsuz entegrasyon.",
     "Supports WooCommerce, Shopify, and more": "WooCommerce, Shopify ve daha fazlasını destekler",
     "Easy setup and management": "Kolay Kurulum ve Yönetim",
-    "The Future of": "Geleceği",
-    "Crypto Payments": "Kripto ödemeleri",
     "We are pioneering the next generation of cryptocurrency payment solutions, designed with simplicity, security, and scalability in mind. Our mission is to empower businesses and individuals to accept crypto payments seamlessly, without the hassle of complicated setups or costly intermediaries.": "Basitlik, güvenlik ve ölçeklenebilirlik göz önünde bulundurularak tasarlanan yeni nesil KRIPTO para ödeme çözümlerine öncülük ediyoruz. ",
     "We have successfully launched an anonymous payment solution — enabling instant, secure transactions with a low fee of only 0.4%. Currently supporting a select range of cryptocurrencies on the Base blockchain, our platform operates without swapping or bridging, ensuring your funds move directly from crypto to crypto every time.": "Anonim bir ödeme çözümü başarıyla başlattık - sadece%0,4'lük düşük bir ücretle anında, güvenli işlemleri sağlıyor. ",
     "This is just the beginning. Soon, we will offer account-based features, allowing you to integrate effortlessly with popular platforms like WooCommerce and Shopify. You’ll also gain access to detailed analytics right from your dashboard, helping you track your sales, revenue, and customer behavior — all in one place.": "Bu sadece başlangıç. ",
@@ -257,5 +254,13 @@
     "This tool facilitates crypto payments between users. No fiat currency exchange takes place. The amounts shown in fiat are for value indication purposes only. We do not hold any funds and do not operate as a financial service provider.": "Bu araç, kullanıcılar arasındaki kripto ödemelerini kolaylaştırır. ",
     "We provide seamless blockchain payment solutions with low fees and fast transactions.": "Düşük ücretler ve hızlı işlemlerle sorunsuz blockchain ödeme çözümleri sunuyoruz.",
     "Simplify Crypto Payments": "Kripto ödemelerini basitleştirin",
-    "This content is currently only available in English.": "Bu içerik şu anda yalnızca İngilizce olarak mevcuttur."
+    "This content is currently only available in English.": "Bu içerik şu anda yalnızca İngilizce olarak mevcuttur.",
+    "Project Status & Roadmap": "Proje Durumu ve Yol Haritası",
+    "Feature Rollout Plan": "Özellik sunumu planı",
+    "Phase 1 – Enable single crypto payments per blockchain (in order):": "Aşama 1 - Blockchain başına tek KRIPTO ödemelerini etkinleştirin (sırayla):",
+    "Phase 2 – Add features for all blockchains:": "Aşama 2 - Tüm blok zincirleri için özellikler ekleyin:",
+    "A small registration fee applies. First payments are free (0% fee). After that, all transactions are charged a flat 0.4% — monocurrency only, no bridging or swapping involved.": "Küçük bir kayıt ücreti uygulanır. ",
+    "To follow our development or get in touch, reach us at": "Gelişimimizi takip etmek veya iletişim kurmak için bize ulaşın",
+    " or on Twitter at": "veya Twitter'da",
+    "The Future of Crypto Payments": "Kripto ödemelerinin geleceği"
 }

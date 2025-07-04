@@ -77,7 +77,6 @@
     "0.4% transaction fee": "0,4% плата за транзакцию",
     "No bridging, crypto-to-crypto payments": "Без мочи",
     "Monocurrency payments": "Монокулютные платежи",
-    "Create Payment": "Создать оплату",
     "Custom Payment Buttons": "Пользовательские кнопки оплаты",
     "Prepare payments on our platform for various products, then embed payment buttons or links on your website.": "Подготовьте платежи на нашей платформе для различных продуктов, а затем встройте кнопки оплаты или ссылки на ваш сайт.",
     "Create and customize payment links": "Создать и настраивать ссылки на оплату",
@@ -87,8 +86,6 @@
     "Seamless integration with major webshop platforms like WooCommerce and Shopify, for smooth crypto payments.": "Бесплатная интеграция с крупными платформами веб -магазина, такими как WooCommerce и Shopify, для плавных платежей крипто.",
     "Supports WooCommerce, Shopify, and more": "Поддерживает Woocommerce, Shopify и многое другое",
     "Easy setup and management": "Легкая настройка и управление",
-    "The Future of": "Будущее",
-    "Crypto Payments": "Крипто платежи",
     "We are pioneering the next generation of cryptocurrency payment solutions, designed with simplicity, security, and scalability in mind. Our mission is to empower businesses and individuals to accept crypto payments seamlessly, without the hassle of complicated setups or costly intermediaries.": "Мы пионеруем следующим поколением платежных решений Криптовала, разработанных с учетом простоты, безопасности и масштабируемости. ",
     "We have successfully launched an anonymous payment solution — enabling instant, secure transactions with a low fee of only 0.4%. Currently supporting a select range of cryptocurrencies on the Base blockchain, our platform operates without swapping or bridging, ensuring your funds move directly from crypto to crypto every time.": "Мы успешно запустили анонимное платежное решение - обеспечение мгновенных, безопасных транзакций с низкой платой всего 0,4%. ",
     "This is just the beginning. Soon, we will offer account-based features, allowing you to integrate effortlessly with popular platforms like WooCommerce and Shopify. You’ll also gain access to detailed analytics right from your dashboard, helping you track your sales, revenue, and customer behavior — all in one place.": "Это только начало. ",
@@ -256,5 +253,13 @@
     "key": "ключ",
     "We provide seamless blockchain payment solutions with low fees and fast transactions.": "Мы предоставляем бесшовные решения для платежей блокчейна с низкими сборами и быстрыми транзакциями.",
     "Simplify Crypto Payments": "Упростите крипто платежи",
-    "This content is currently only available in English.": "Этот контент в настоящее время доступен только на английском языке."
+    "This content is currently only available in English.": "Этот контент в настоящее время доступен только на английском языке.",
+    "Project Status & Roadmap": "Статус проекта и дорожная карта",
+    "Feature Rollout Plan": "Функция плана развертывания",
+    "Phase 1 – Enable single crypto payments per blockchain (in order):": "Фаза 1 - Включите единые платежи на блокчейн (по порядку):",
+    "Phase 2 – Add features for all blockchains:": "Фаза 2 - добавьте функции для всех блокчейнов:",
+    "A small registration fee applies. First payments are free (0% fee). After that, all transactions are charged a flat 0.4% — monocurrency only, no bridging or swapping involved.": "Применяется небольшой регистрационный взнос. ",
+    "To follow our development or get in touch, reach us at": "Чтобы следовать нашему развитию или связаться, связаться с нами по",
+    " or on Twitter at": "или в Твиттере в",
+    "The Future of Crypto Payments": "Будущее Крипто Платежи"
 }
