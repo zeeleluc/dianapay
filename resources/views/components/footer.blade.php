@@ -67,7 +67,6 @@
 
     <div class="max-w-5xl mx-auto md:grid-cols-4 text-center text-base mt-5">
         This tool facilitates crypto payments between users. No fiat currency exchange takes place. The amounts shown in fiat are for value indication purposes only. We do not hold any funds and do not operate as a financial service provider.
-        <strong>Crypt Me Up</strong> is a product of Zeelebosch Curaçao B.V., a company registered in Curaçao.
     </div>
 
     <div class="mt-2 pt-2 text-center text-gray-500 text-sm">

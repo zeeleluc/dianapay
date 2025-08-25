@@ -10,7 +10,7 @@
 <p class="text-base text-gray-300 mb-4">Last updated: July 2, 2025</p>
 
 <p class="text-lg text-white mb-4">
-    This Privacy Policy explains how <strong>Crypt Me Up</strong>, a product of Zeelebosch Curaçao B.V. ("we", "our", or "us"), collects, uses, and protects your personal information when you use our website (<a href="https://cryptmeup.com" class="text-blue-500 underline">cryptmeup.com</a>) and services. By using our Services, you agree to this Privacy Policy.
+    This Privacy Policy explains how <strong>Crypt Me Up</strong>, a product of .. ("we", "our", or "us"), collects, uses, and protects your personal information when you use our website (<a href="https://cryptmeup.com" class="text-blue-500 underline">cryptmeup.com</a>) and services. By using our Services, you agree to this Privacy Policy.
 </p>
 
 <p class="text-lg text-white mb-6">
