@@ -38,7 +38,7 @@ class TelegramMessageHandler extends EventHandler
         $text = $update['message']['message'] ?? '';
 
         // --- Send Slack message for every incoming message (testing) ---
-        SlackNotifier::info("Incoming Telegram message: " . substr($text, 0, 500)); // limit to 500 chars
+//        SlackNotifier::info("Incoming Telegram message: " . substr($text, 0, 500)); // limit to 500 chars
         SlackNotifier::info('Test');
 
         // Only process if it matches Solana call phrase
