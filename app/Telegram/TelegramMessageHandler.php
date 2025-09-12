@@ -39,16 +39,16 @@ class TelegramMessageHandler extends EventHandler
 
         // --- Send Slack message for every incoming message (testing) ---
         SlackNotifier::info("Incoming Telegram message: " . substr($text, 0, 500)); // limit to 500 chars
-        SlackNotifier::error('Test');
+        SlackNotifier::info('Test');
 
         // Only process if it matches Solana call phrase
         if (stripos($text, self::SOLANA_CALL_PHRASE) === false) {
-            SlackNotifier::error('No memecoin call message');
+            SlackNotifier::info('No memecoin call message');
             return;
         }
 
         $this->logger("🚀 IMMEDIATE SOLANA CALL DETECTED: Parsing...");
-        SlackNotifier::success('🚀 IMMEDIATE SOLANA CALL DETECTED: Parsing...');
+        SlackNotifier::info('🚀 IMMEDIATE SOLANA CALL DETECTED: Parsing...');
 
         try {
             // Parse and save
