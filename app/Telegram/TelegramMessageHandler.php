@@ -12,7 +12,7 @@ use Throwable;
 
 class TelegramMessageHandler extends EventHandler
 {
-    private const SOLANA_CALL_PHRASE = '🔥 First Call 🚀 SOLANA100XCALL • Premium Signals @';
+    private const SOLANA_CALL_PHRASE = 'SOLANA100XCALL • Premium Signals';
 
     /**
      * Handle new messages in private chats/small groups (legacy v8 signature).
@@ -36,10 +36,6 @@ class TelegramMessageHandler extends EventHandler
     private function processMessage(array $update): void
     {
         $text = $update['message']['message'] ?? '';
-
-        // --- Send Slack message for every incoming message (testing) ---
-//        SlackNotifier::info("Incoming Telegram message: " . substr($text, 0, 500)); // limit to 500 chars
-        SlackNotifier::info('Test');
 
         // Only process if it matches Solana call phrase
         if (stripos($text, self::SOLANA_CALL_PHRASE) === false) {
