@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Telegram;
 
 use App\Services\SolanaCallParser;
+use App\Helpers\SlackNotifier;
 use Symfony\Component\Process\Process;
 use danog\MadelineProto\EventHandler;
 use Throwable;
@@ -35,8 +36,13 @@ class TelegramMessageHandler extends EventHandler
     private function processMessage(array $update): void
     {
         $text = $update['message']['message'] ?? '';
+
+        // --- Send Slack message for every incoming message (testing) ---
+        SlackNotifier::info("Incoming Telegram message: " . substr($text, 0, 500)); // limit to 500 chars
+
+        // Only process if it matches Solana call phrase
         if (stripos($text, self::SOLANA_CALL_PHRASE) === false) {
-            return;  // Ignore if not a Solana call
+            return;
         }
 
         $this->logger("🚀 IMMEDIATE SOLANA CALL DETECTED: Parsing...");
@@ -47,6 +53,7 @@ class TelegramMessageHandler extends EventHandler
             $call = $parser->parseAndSave($text);
             if (!$call) {
                 $this->logger("❌ Failed to parse SolanaCall from message.");
+                SlackNotifier::warning("Failed to parse SolanaCall from message.");
                 return;
             }
 
@@ -54,6 +61,7 @@ class TelegramMessageHandler extends EventHandler
             $usdFormatted = number_format((float) ($call->usd_price ?? 0), 6);
 
             $this->logger("✅ Parsed and saved SolanaCall ID: {$call->id} - Token: {$call->token_name} ({$call->token_address}) - USD: $" . $usdFormatted);
+            SlackNotifier::success("Parsed SolanaCall ID: {$call->id} - Token: {$call->token_name} - USD: $" . $usdFormatted);
 
             // Run the snipe command asynchronously
             $process = new Process([
@@ -66,9 +74,11 @@ class TelegramMessageHandler extends EventHandler
             $process->start();
 
             $this->logger("🔥 Started snipe process for SolanaCall ID: {$call->id} (PID: " . $process->getPid() . ")");
+            SlackNotifier::info("Started snipe process for SolanaCall ID: {$call->id} (PID: " . $process->getPid() . ")");
 
         } catch (Throwable $e) {
             $this->logger("❌ Error processing SolanaCall: " . $e->getMessage());
+            SlackNotifier::error("Error processing SolanaCall: " . $e->getMessage());
         }
     }
 }
