@@ -1,0 +1,20 @@
+{
+    "name": "solana-sniper",
+    "version": "1.0.0",
+    "type": "module",
+    "main": "solana-snipe.js",
+    "scripts": {
+        "snipe": "node solana-snipe.js"
+    },
+    "dependencies": {
+        "@coral-xyz/anchor": "^0.31.1",
+        "@raydium-io/raydium-sdk": "^1.3.1-beta.58",
+        "@solana/spl-token": "^0.4.14",
+        "@solana/web3.js": "^1.98.4",
+        "bip39": "^3.1.0",
+        "bn.js": "^5.2.2",
+        "dotenv": "^16.6.1",
+        "ed25519-hd-key": "^1.3.0",
+        "node-fetch": "^3.3.2"
+    }
+}

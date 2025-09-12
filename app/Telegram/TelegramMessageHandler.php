@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Telegram;
 
 use App\Services\SolanaCallParser;
+use Symfony\Component\Process\Process;
 use danog\MadelineProto\EventHandler;
+use Throwable;
 
 class TelegramMessageHandler extends EventHandler
 {
@@ -37,22 +39,36 @@ class TelegramMessageHandler extends EventHandler
             return;  // Ignore if not a Solana call
         }
 
-        var_dump($text);
+        $this->logger("🚀 IMMEDIATE SOLANA CALL DETECTED: Parsing...");
 
-        $chatId = $this->getId($update['message']['peer_id']);  // Resolve peer to ID
-        $this->logger("🚀 IMMEDIATE SOLANA CALL DETECTED in chat {$chatId}: Parsing...");
+        try {
+            // Parse and save
+            $parser = new SolanaCallParser();
+            $call = $parser->parseAndSave($text);
+            if (!$call) {
+                $this->logger("❌ Failed to parse SolanaCall from message.");
+                return;
+            }
 
-        // Parse and save
-        $parser = new SolanaCallParser();
-        $call = $parser->parseAndSave($text);
-        if ($call) {
-            // Fix: Cast to float before number_format to handle string decimals from model casts
+            // Format USD price
             $usdFormatted = number_format((float) ($call->usd_price ?? 0), 6);
-            $this->logger("✅ Parsed and saved SolanaCall: {$call->token_name} ({$call->token_address}) - USD: $" . $usdFormatted);
-        } else {
-            $this->logger("❌ Failed to parse SolanaCall from message.");
-        }
 
-        // Your other logic (e.g., notifications)
+            $this->logger("✅ Parsed and saved SolanaCall ID: {$call->id} - Token: {$call->token_name} ({$call->token_address}) - USD: $" . $usdFormatted);
+
+            // Run the snipe command asynchronously
+            $process = new Process([
+                'php',
+                'artisan',
+                'handle-solana-call',
+                '--id=' . $call->id,
+            ]);
+            $process->setTimeout(360);  // 6 mins timeout
+            $process->start();
+
+            $this->logger("🔥 Started snipe process for SolanaCall ID: {$call->id} (PID: " . $process->getPid() . ")");
+
+        } catch (Throwable $e) {
+            $this->logger("❌ Error processing SolanaCall: " . $e->getMessage());
+        }
     }
 }
