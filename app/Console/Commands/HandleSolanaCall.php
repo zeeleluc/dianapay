@@ -9,6 +9,7 @@ use App\Models\SolanaCall;
 use Symfony\Component\Process\Process;
 use Throwable;
 use Illuminate\Support\Facades\Http;
+use App\Helpers\SlackNotifier;
 
 class HandleSolanaCall extends Command
 {
@@ -21,14 +22,18 @@ class HandleSolanaCall extends Command
         $id = $this->option('id');
 
         if (!$id || !is_numeric($id)) {
-            $this->error('Invalid or missing --id option. Usage: php artisan handle-solana-call --id=1');
+            $msg = 'Invalid or missing --id option. Usage: php artisan handle-solana-call --id=1';
+            $this->error($msg);
+            SlackNotifier::error($msg);
             return self::FAILURE;
         }
 
         $call = SolanaCall::find($id);
 
         if (!$call) {
-            $this->error("SolanaCall with ID {$id} not found.");
+            $msg = "SolanaCall with ID {$id} not found.";
+            $this->error($msg);
+            SlackNotifier::error($msg);
             return self::FAILURE;
         }
 
@@ -46,8 +51,11 @@ class HandleSolanaCall extends Command
             $liquidityUsd = $pairs[0]['liquidity']['usd'] ?? 0;
 
             if ($marketCap < $minMarketCap || $liquidityUsd < $minLiquidity) {
-                $this->warn("Skipping token due to low metrics. Market Cap: {$marketCap} USD, Liquidity: {$liquidityUsd} USD");
+                $msg = "Skipping token due to low metrics. Market Cap: {$marketCap} USD, Liquidity: {$liquidityUsd} USD";
+                $this->warn($msg);
                 \Log::warning("SolanaCall ID {$id} skipped: Market Cap {$marketCap}, Liquidity {$liquidityUsd}");
+                SlackNotifier::warning("Skipped SolanaCall {$id} ({$call->token_name}) — MC: {$marketCap}, LP: {$liquidityUsd}");
+
                 $call->update([
                     'status' => 'skipped',
                     'output' => "Skipped due to low Market Cap or LP. Market Cap: {$marketCap}, LP: {$liquidityUsd}"
@@ -61,7 +69,6 @@ class HandleSolanaCall extends Command
             // --- Determine buy amount based on metrics ---
             $buyAmount = 0.001; // default
 
-            // Simple tiering example
             if ($marketCap >= 100_000 && $liquidityUsd >= 50_000) {
                 $buyAmount = 0.005;
             } elseif ($marketCap >= 50_000 && $liquidityUsd >= 20_000) {
@@ -70,7 +77,7 @@ class HandleSolanaCall extends Command
                 $buyAmount = 0.003;
             } elseif ($marketCap >= 10_000 && $liquidityUsd >= 10_000) {
                 $buyAmount = 0.002;
-            } // otherwise keep 0.001
+            }
 
             $process = new Process([
                 'node',
@@ -88,8 +95,10 @@ class HandleSolanaCall extends Command
             $errorOutput = $process->getErrorOutput();
 
             if (!$process->isSuccessful()) {
-                $this->error("Script failed: " . $errorOutput);
+                $msg = "Script failed for SolanaCall {$id}: " . $errorOutput;
+                $this->error($msg);
                 \Log::error("Solana snipe ID {$id} error: " . $errorOutput . "\nOutput: " . $output);
+                SlackNotifier::error($msg);
                 return self::FAILURE;
             }
 
@@ -98,11 +107,17 @@ class HandleSolanaCall extends Command
 
             $call->update(['status' => 'sniped', 'output' => $output]);
 
-            $this->info("SolanaCall {$id} sniped successfully!");
+            $msg = "✅ SolanaCall {$id} SNIPED successfully! ({$call->token_name}) @ {$buyAmount} SOL";
+            $this->info($msg);
+            SlackNotifier::success($msg);
+
             return self::SUCCESS;
 
         } catch (Throwable $e) {
-            $this->error("Error handling SolanaCall {$id}: " . $e->getMessage());
+            $msg = "Error handling SolanaCall {$id}: " . $e->getMessage();
+            $this->error($msg);
+            \Log::error($msg);
+            SlackNotifier::error($msg);
             return self::FAILURE;
         }
     }

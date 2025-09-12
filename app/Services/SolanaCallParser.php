@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\SlackNotifier;
 use App\Models\SolanaCall;
 
 class SolanaCallParser
@@ -16,76 +17,82 @@ class SolanaCallParser
      */
     public static function parseAndSave(string $message): ?SolanaCall
     {
-        // Check if it contains Solana call phrase
-        if (stripos($message, self::SOLANA_CALL_PHRASE) === false) {
+        try {
+            if (stripos($message, self::SOLANA_CALL_PHRASE) === false) {
+                return null;
+            }
+
+            $lines = array_map('trim', preg_split('/\r?\n/', $message));
+            $data = [];
+
+            // ---- Token header ----
+            $headerText = implode("\n", array_slice($lines, 0, 5));
+
+            if (preg_match(
+                '/^\s*.+?\s*(.+?)\s*\n├\s*([A-Za-z0-9]+)\s*(?:\n└.*🌱(\d+)([sm]))?/u',
+                $headerText,
+                $matches
+            )) {
+                $data['token_name'] = trim($matches[1]);
+                $data['token_address'] = $matches[2];
+
+                if (!empty($matches[3]) && !empty($matches[4])) {
+                    $age = (int) $matches[3];
+                    $unit = strtolower($matches[4]);
+                    $data['age_minutes'] = $unit === 's' ? ceil($age / 60) : $age;
+                }
+            }
+
+            // ---- Stats section ----
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (preg_match('/^├\s*MC\s*\$(.+)/', $line, $m)) {
+                    $data['market_cap'] = self::parseNumber($m[1]);
+                } elseif (preg_match('/^├\s*Vol\s*\$(.+)/', $line, $m)) {
+                    $data['volume_24h'] = self::parseNumber($m[1]);
+                } elseif (preg_match('/^├\s*LP\s*\$(.+)/', $line, $m)) {
+                    $data['liquidity_pool'] = self::parseNumber($m[1]);
+                } elseif (preg_match('/^└\s*ATH\s*\$(.+)/', $line, $m)) {
+                    $data['all_time_high'] = self::parseNumber($m[1]);
+                }
+            }
+
+            // ---- Top 10 holders ----
+            foreach ($lines as $line) {
+                if (preg_match('/├\s*Top 10\s*(\d+)%/', $line, $m)) {
+                    $data['top_10_holders_percent'] = (float) $m[1];
+                }
+            }
+
+            // ---- Dev Sold ----
+            foreach ($lines as $line) {
+                if (preg_match('/├\s*Dev Sold\s*(🟢|🔴)/', $line, $m)) {
+                    $data['dev_sold'] = $m[1] === '🟢';
+                }
+            }
+
+            // ---- DEX Paid ----
+            foreach ($lines as $line) {
+                if (preg_match('/└\s*DEX Paid\s*(🟢|🔴)/', $line, $m)) {
+                    $data['dev_paid_status'] = $m[1] === '🟢';
+                }
+            }
+
+            // ---- Save if token address exists ----
+            if (!empty($data['token_address'])) {
+                $call = SolanaCall::createFromParsed($data);
+
+                SlackNotifier::success("Parsed Solana call: {$call->token_name} ({$call->token_address})");
+                return $call;
+            }
+
+            SlackNotifier::warning("Failed to extract token address from message:\n" . mb_strimwidth($message, 0, 300, '...'));
+            return null;
+
+        } catch (Throwable $e) {
+            SlackNotifier::error("Parser exception: {$e->getMessage()}");
             return null;
         }
-
-        // Normalize newlines and trim
-        $lines = array_map('trim', preg_split('/\r?\n/', $message));
-        $data = [];
-
-        // ---- Token header ----
-        $headerText = implode("\n", array_slice($lines, 0, 5));
-
-        // Match: token name (any characters, possibly with $TICKER),
-        // then address on next line, then optionally an age line with 🌱
-        if (preg_match(
-            '/^\s*.+?\s*(.+?)\s*\n├\s*([A-Za-z0-9]+)\s*(?:\n└.*🌱(\d+)([sm]))?/u',
-            $headerText,
-            $matches
-        )) {
-            $data['token_name'] = trim($matches[1]);
-            $data['token_address'] = $matches[2];
-
-            if (!empty($matches[3]) && !empty($matches[4])) {
-                $age = (int) $matches[3];
-                $unit = strtolower($matches[4]);
-                $data['age_minutes'] = $unit === 's' ? ceil($age / 60) : $age;
-            }
-        }
-        
-        // ---- Stats section ----
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (preg_match('/^├\s*MC\s*\$(.+)/', $line, $m)) {
-                $data['market_cap'] = self::parseNumber($m[1]);
-            } elseif (preg_match('/^├\s*Vol\s*\$(.+)/', $line, $m)) {
-                $data['volume_24h'] = self::parseNumber($m[1]);
-            } elseif (preg_match('/^├\s*LP\s*\$(.+)/', $line, $m)) {
-                $data['liquidity_pool'] = self::parseNumber($m[1]);
-            } elseif (preg_match('/^└\s*ATH\s*\$(.+)/', $line, $m)) {
-                $data['all_time_high'] = self::parseNumber($m[1]);
-            }
-        }
-
-        // ---- Top 10 holders ----
-        foreach ($lines as $line) {
-            if (preg_match('/├\s*Top 10\s*(\d+)%/', $line, $m)) {
-                $data['top_10_holders_percent'] = (float) $m[1];
-            }
-        }
-
-        // ---- Dev Sold ----
-        foreach ($lines as $line) {
-            if (preg_match('/├\s*Dev Sold\s*(🟢|🔴)/', $line, $m)) {
-                $data['dev_sold'] = $m[1] === '🟢';
-            }
-        }
-
-        // ---- DEX Paid ----
-        foreach ($lines as $line) {
-            if (preg_match('/└\s*DEX Paid\s*(🟢|🔴)/', $line, $m)) {
-                $data['dev_paid_status'] = $m[1] === '🟢';
-            }
-        }
-
-        // ---- Save if token address exists ----
-        if (!empty($data['token_address'])) {
-            return SolanaCall::createFromParsed($data);
-        }
-
-        return null;
     }
 
     /**
