@@ -38,4 +38,9 @@ class SolanaCall extends Model
     {
         return self::create($data);  // Inserts nulls for missing fields
     }
+
+    public function orders()
+    {
+        return $this->hasMany(SolanaCallOrder::class);
+    }
 }

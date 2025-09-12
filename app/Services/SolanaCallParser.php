@@ -12,60 +12,66 @@ class SolanaCallParser
      * Parse the message into simplified data and save to DB.
      *
      * @param string $message The raw message string
-     * @return SolanaCall|null The saved model or null if not a valid Solana call
+     * @return SolanaCall|null
      */
     public static function parseAndSave(string $message): ?SolanaCall
     {
+        // Check if it contains Solana call phrase
         if (stripos($message, self::SOLANA_CALL_PHRASE) === false) {
-            return null;  // Not a Solana call
+            return null;
         }
 
-        $lines = explode("\n", trim($message));
+        // Normalize newlines and trim
+        $lines = array_map('trim', preg_split('/\r?\n/', $message));
         $data = [];
 
-        // Token Name, Address, Age (first lines)
-        $headerPattern = '/­💊\s*(.+?)\s*\n\s*├\s*([A-Za-z0-9]+)\s*\n\s*└\s*#SOL\s*\|\s*🌱(\d+)s?/';
-        if (preg_match($headerPattern, implode("\n", array_slice($lines, 0, 3)), $matches)) {
+        // ---- Token header ----
+        $headerText = implode("\n", array_slice($lines, 0, 5));
+        // Match token name, address, age (seconds or minutes)
+        if (preg_match('/💊\s*(.+?)\s*\n├\s*([A-Za-z0-9]+)\s*\n└.*🌱(\d+)([sm])/', $headerText, $matches)) {
             $data['token_name'] = trim($matches[1]);
             $data['token_address'] = $matches[2];
-            $data['age_minutes'] = (int) $matches[3];  // e.g., 29 from "29s"
+            $age = (int) $matches[3];
+            $unit = strtolower($matches[4]);
+            $data['age_minutes'] = $unit === 's' ? ceil($age / 60) : $age;
         }
 
-        // Market Cap, Volume 24h, Liquidity Pool, All Time High (Stats section)
+        // ---- Stats section ----
         foreach ($lines as $line) {
-            if (preg_match('/├ MC\s*\$(.+)/', $line, $m)) {
+            $line = trim($line);
+            if (preg_match('/^├\s*MC\s*\$(.+)/', $line, $m)) {
                 $data['market_cap'] = self::parseNumber($m[1]);
-            } elseif (preg_match('/├ Vol\s*\$(.+)/', $line, $m)) {
+            } elseif (preg_match('/^├\s*Vol\s*\$(.+)/', $line, $m)) {
                 $data['volume_24h'] = self::parseNumber($m[1]);
-            } elseif (preg_match('/├ LP\s*\$(.+)/', $line, $m)) {
+            } elseif (preg_match('/^├\s*LP\s*\$(.+)/', $line, $m)) {
                 $data['liquidity_pool'] = self::parseNumber($m[1]);
-            } elseif (preg_match('/└ ATH\s*\$(.+)/', $line, $m)) {
+            } elseif (preg_match('/^└\s*ATH\s*\$(.+)/', $line, $m)) {
                 $data['all_time_high'] = self::parseNumber($m[1]);
             }
         }
 
-        // Top 10 Holders %
+        // ---- Top 10 holders ----
         foreach ($lines as $line) {
-            if (preg_match('/├ Top 10\s*(\d+)%/', $line, $m)) {
+            if (preg_match('/├\s*Top 10\s*(\d+)%/', $line, $m)) {
                 $data['top_10_holders_percent'] = (float) $m[1];
             }
         }
 
-        // Dev Sold (🟢 = true, else false)
+        // ---- Dev Sold ----
         foreach ($lines as $line) {
-            if (preg_match('/├ Dev Sold\s*(🟢|🔴|\?|\w+)/', $line, $m)) {
-                $data['dev_sold'] = trim($m[1]) === '🟢';
+            if (preg_match('/├\s*Dev Sold\s*(🟢|🔴)/', $line, $m)) {
+                $data['dev_sold'] = $m[1] === '🟢';
             }
         }
 
-        // DEX Paid Status (🟢 = true, else false)
+        // ---- DEX Paid ----
         foreach ($lines as $line) {
-            if (preg_match('/└ DEX Paid\s*(🟢|🔴)/', $line, $m)) {
-                $data['dev_paid_status'] = trim($m[1]) === '🟢';
+            if (preg_match('/└\s*DEX Paid\s*(🟢|🔴)/', $line, $m)) {
+                $data['dev_paid_status'] = $m[1] === '🟢';
             }
         }
 
-        // Save to DB if token_address is present
+        // ---- Save if token address exists ----
         if (!empty($data['token_address'])) {
             return SolanaCall::createFromParsed($data);
         }
@@ -74,32 +80,33 @@ class SolanaCallParser
     }
 
     /**
-     * Parse numbers like "83.9K", "102.4K", "18.9K", "0.0₄8390".
+     * Parse numbers with suffixes or subscript notation.
+     * e.g., "83.9K", "102.4M", "0.0₄4084" → float
      */
     private static function parseNumber(string $str): ?float
     {
-        $originalStr = $str;  // For fallback
+        $str = trim($str);
 
-        // Handle K/M suffix (e.g., "83.9K" → 83900)
-        if (preg_match('/^([\d.]+)([kKmM])$/i', trim($str), $suffixMatch)) {
-            $num = (float) $suffixMatch[1];
-            $suffix = strtoupper($suffixMatch[2]);
-            if ($suffix === 'K') return $num * 1000;
-            if ($suffix === 'M') return $num * 1000000;
+        // Handle K/M suffix
+        if (preg_match('/^([\d,.]+)\s*([kKmM])$/', $str, $match)) {
+            $num = (float) str_replace(',', '', $match[1]);
+            $suffix = strtoupper($match[2]);
+            return $suffix === 'K' ? $num * 1_000 : $num * 1_000_000;
         }
 
-        // Handle subscript for USD (e.g., "0.0₄8390" → 0.00008390)
-        if (preg_match('/0\.0([₀-₉])(\d+)/', $str, $subMatch)) {
-            $subDigit = ['₀' => 0, '₁' => 1, '₂' => 2, '₃' => 3, '₄' => 4, '₅' => 5, '₆' => 6, '₇' => 7, '₈' => 8, '₉' => 9][$subMatch[1]] ?? 0;
-            $remainingDigits = $subMatch[2];
-            $decimalPart = str_pad((string) $subDigit . $remainingDigits, 6, '0', STR_PAD_RIGHT);
-            $str = '0.' . $decimalPart;
+        // Handle subscript digits (₀-₉)
+        if (preg_match_all('/[₀-₉]/u', $str, $subMatches)) {
+            $subMap = ['₀'=>0,'₁'=>1,'₂'=>2,'₃'=>3,'₄'=>4,'₅'=>5,'₆'=>6,'₇'=>7,'₈'=>8,'₉'=>9];
+            foreach ($subMatches[0] as $subChar) {
+                $str = str_replace($subChar, (string)$subMap[$subChar], $str);
+            }
         }
 
-        // Clean and convert (remove $, %, (, ) etc.)
+        // Remove any non-digit, non-dot characters
         $str = preg_replace('/[^\d.]/', '', $str);
 
-        $num = (float) $str;
-        return $num > 0 ? $num : null;  // Return null for 0 or invalid
+        if ($str === '') return null;
+
+        return (float) $str;
     }
 }
