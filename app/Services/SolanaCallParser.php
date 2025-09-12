@@ -27,15 +27,24 @@ class SolanaCallParser
 
         // ---- Token header ----
         $headerText = implode("\n", array_slice($lines, 0, 5));
-        // Match token name, address, age (seconds or minutes)
-        if (preg_match('/💊\s*(.+?)\s*\n├\s*([A-Za-z0-9]+)\s*\n└.*🌱(\d+)([sm])/', $headerText, $matches)) {
+
+        // Match: token name (any characters, possibly with $TICKER),
+        // then address on next line, then optionally an age line with 🌱
+        if (preg_match(
+            '/^\s*.+?\s*(.+?)\s*\n├\s*([A-Za-z0-9]+)\s*(?:\n└.*🌱(\d+)([sm]))?/u',
+            $headerText,
+            $matches
+        )) {
             $data['token_name'] = trim($matches[1]);
             $data['token_address'] = $matches[2];
-            $age = (int) $matches[3];
-            $unit = strtolower($matches[4]);
-            $data['age_minutes'] = $unit === 's' ? ceil($age / 60) : $age;
-        }
 
+            if (!empty($matches[3]) && !empty($matches[4])) {
+                $age = (int) $matches[3];
+                $unit = strtolower($matches[4]);
+                $data['age_minutes'] = $unit === 's' ? ceil($age / 60) : $age;
+            }
+        }
+        
         // ---- Stats section ----
         foreach ($lines as $line) {
             $line = trim($line);
