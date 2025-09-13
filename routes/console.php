@@ -12,5 +12,10 @@ if (app()->environment('prod')) {
 // ========== Production-Only Schedule ==========
 if (app()->environment('prod')) {
     $schedule->command('tweet:post "GM Crypto Degens 🪙"')->dailyAt(cur_to_utc('6:00'));
+}
 
+// ========== Testing/High-Frequency Poll ==========
+if (app()->environment('prod')) {
+    // Run every 30 seconds in testing mode
+    $schedule->command('poll-solana-tokens --testing=1')->everyThirtySeconds();
 }
