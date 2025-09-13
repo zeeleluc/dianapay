@@ -107,6 +107,7 @@ class PollSolanaTokens extends Command
                 elseif ($marketCap >= 100_000 && $liquidityUsd >= 50_000 && !$devSold) $seconds = 60;
 
                 $strategy = $seconds . '-SEC-SELL';
+                $strategy = 'TAKE-PROFITS-OR-SMALL-LOSE';
 
                 // Enhanced Slack: More details on discovery
                 SlackNotifier::success("Found a memecoin directly via Dexscreener: {$tokenName} (MC: \${$marketCap}, Liq: \${$liquidityUsd}, Age: {$ageMinutes}m, Strategy: {$strategy})");
