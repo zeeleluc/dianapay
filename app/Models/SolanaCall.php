@@ -64,4 +64,28 @@ class SolanaCall extends Model
         // Format with 8 decimals, no scientific notation
         return number_format($profit, 8, '.', '');
     }
+
+    public function profitPercentage(): string
+    {
+        $totalBought = 0.0;
+        $totalSold   = 0.0;
+
+        foreach ($this->orders as $order) {
+            $type = strtolower($order->type);
+            if ($type === 'buy') {
+                $totalBought += $order->amount_sol;
+            } elseif ($type === 'sell') {
+                $totalSold += $order->amount_sol;
+            }
+        }
+
+        if ($totalBought == 0) {
+            return '0.00'; // avoid division by zero
+        }
+
+        $percentage = (($totalSold - $totalBought) / $totalBought) * 100;
+
+        // Format to 2 decimals, no scientific notation
+        return number_format($percentage, 2, '.', '');
+    }
 }

@@ -3,10 +3,12 @@
 
     @foreach($solanaCalls as $call)
         <div class="mb-6 p-4 bg-gray-900 rounded shadow">
-            <h2 class="font-semibold text-lg">{{ $call->token_name }} ({{ $call->token_address }})</h2>
-            <p>Market Cap: {{ $call->market_cap }}</p>
-            <p>Volume 24h: {{ $call->volume_24h }}</p>
-            <p>Profit (SOL): {{ $call->profit() }}</p>
+            <h2 class="font-semibold text-lg">{{ $call->token_name }}</h2>
+            <h3 class="font-semibold text-lg">{{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}</h3>
+            <p>Market Cap: {{ number_format($call->market_cap, 0)}}</p>
+            <p>Volume 24h: {{ number_format($call->volume_24h, 0) }}</p>
+            <p>Profit (SOL): {{ number_format($call->profit(), 6) }}</p>
+            <p>Profit (%): {{ $call->profitPercentage() }}%</p>
 
             @if($call->orders->count() > 0)
                 <table class="w-full mt-4 border-collapse border border-gray-700 text-white">
@@ -23,10 +25,12 @@
                     @foreach($call->orders as $order)
                         <tr>
                             <td class="border border-gray-700 px-2 py-1">{{ $order->type }}</td>
-                            <td class="border border-gray-700 px-2 py-1">{{ $order->amount_foreign }}</td>
-                            <td class="border border-gray-700 px-2 py-1">{{ $order->amount_sol }}</td>
+                            <td class="border border-gray-700 px-2 py-1">{{ number_format($order->amount_foreign, 0) }}</td>
+                            <td class="border border-gray-700 px-2 py-1">{{ number_format($order->amount_sol, 6) }}</td>
                             <td class="border border-gray-700 px-2 py-1">{{ $order->dex_used }}</td>
-                            <td class="border border-gray-700 px-2 py-1">{{ $order->tx_signature }}</td>
+                            <td class="border border-gray-700 px-2 py-1">
+                                {{ \Illuminate\Support\Str::limit($order->tx_signature, 10, '…') }}
+                            </td>
                         </tr>
                     @endforeach
                     </tbody>
