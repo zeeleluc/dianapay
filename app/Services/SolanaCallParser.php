@@ -83,7 +83,22 @@ class SolanaCallParser
             }
         }
 
-        $data['strategy'] = '10-SEC-SELL';
+        // Determine sell timing
+        $seconds = 10; // default
+
+        if (($data['dev_sold'] ?? false)) {
+            $seconds = 5;
+        } elseif (($data['market_cap'] ?? 0) < 10_000 || ($data['liquidity_pool'] ?? 0) < 10_000) {
+            $seconds = 7;
+        } elseif (($data['market_cap'] ?? 0) >= 20_000 || ($data['liquidity_pool'] ?? 0) >= 15_000) {
+            $seconds = 20;
+        } elseif (($data['market_cap'] ?? 0) >= 50_000 || ($data['liquidity_pool'] ?? 0) >= 30_000) {
+            $seconds = 30;
+        } elseif (($data['market_cap'] ?? 0) >= 100_000 && ($data['liquidity_pool'] ?? 0) >= 50_000 && !($data['dev_sold'] ?? false)) {
+            $seconds = 60;
+        }
+
+        $data['strategy'] = $seconds . '-SEC-SELL';
 
         // ---- Save if token address exists ----
         if (!empty($data['token_address'])) {
