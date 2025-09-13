@@ -13,13 +13,16 @@ use App\Helpers\SlackNotifier;
 
 class HandleSolanaCall extends Command
 {
-    protected $signature = 'handle-solana-call {--id= : The ID of the SolanaCall to handle}';
+    protected $signature = 'handle-solana-call
+                        {--id= : The ID of the SolanaCall to handle}
+                        {--strategy= : The trading strategy to use}';
 
     protected $description = 'Handle a specific SolanaCall by ID (snipes token via JS script)';
 
     public function handle(): int
     {
         $id = $this->option('id');
+        $strategy = $this->option('strategy') ?? 'default';
 
         if (!$id || !is_numeric($id)) {
             $msg = 'Invalid or missing --id option. Usage: php artisan handle-solana-call --id=1';
@@ -85,7 +88,7 @@ class HandleSolanaCall extends Command
                 '--identifier=' . $call->id,
                 '--token=' . $call->token_address,
                 '--amount=' . $buyAmount,
-                '--poll'
+                '--strategy=' . $strategy,
             ]);
 
             $process->setTimeout(360);  // 6 mins
