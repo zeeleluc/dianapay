@@ -94,7 +94,7 @@ class PollSolanaTokens extends Command
                 $strategy = $seconds . '-SEC-SELL';
 
                 SlackNotifier::success("Found a memecoin directly via Dexscreener: {$tokenName}");
-                
+
                 // Save record in SolanaCall
                 $call = SolanaCall::create([
                     'token_name' => $tokenName,

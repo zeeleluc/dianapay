@@ -110,11 +110,11 @@ class HandleSolanaCall extends Command
                 SolanaCallOrder::create([
                     'solana_call_id' => $call->id,
                     'type'           => 'failed',
-                    'tx_signature'   => null,
                     'dex_used'       => null,
                     'amount_sol'     => null,
                     'amount_foreign' => null,
-                    'error'          => trim($errorOutput ?: 'Unknown error'),
+                    'tx_signature'   => null,
+                    'error'          => mb_substr($errorOutput, 0, 60000), // limit to 60k chars
                 ]);
 
                 return self::FAILURE;
