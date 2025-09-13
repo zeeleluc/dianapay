@@ -1,5 +1,11 @@
 <x-guest-layout>
-    <h1 class="text-2xl font-bold mb-4">Solana Calls</h1>
+    <h1 class="text-2xl font-bold mb-4 text-center">Solana Calls</h1>
+
+    <!-- Total profits summary -->
+    <div class="mb-6 p-4 bg-gray-800 rounded shadow text-white text-center">
+        <p class="text-2xl font-semibold">Total Profit (SOL): {{ \App\Models\SolanaCall::totalProfitSol() }}</p>
+        <p class="text-2xl font-semibold">Total Profit (%): {{ \App\Models\SolanaCall::totalProfitPercentage() }}%</p>
+    </div>
 
     @foreach($solanaCalls as $call)
         <div class="mb-6 p-4 bg-gray-900 rounded shadow">
@@ -22,11 +28,11 @@
                 <table class="w-full mt-4 border-collapse border border-gray-700 text-white">
                     <thead>
                     <tr>
-                        <th class="border border-gray-700 px-2 py-1">Type</th>
-                        <th class="border border-gray-700 px-2 py-1">Amount (Foreign)</th>
-                        <th class="border border-gray-700 px-2 py-1">Amount (SOL)</th>
-                        <th class="border border-gray-700 px-2 py-1">DEX Used</th>
-                        <th class="border border-gray-700 px-2 py-1">TX Signature</th>
+                        <th class="border border-gray-700 px-2 py-1 text-left">Type</th>
+                        <th class="border border-gray-700 px-2 py-1 text-left">Amount (Foreign)</th>
+                        <th class="border border-gray-700 px-2 py-1 text-left">Amount (SOL)</th>
+                        <th class="border border-gray-700 px-2 py-1 text-left">DEX Used</th>
+                        <th class="border border-gray-700 px-2 py-1 text-left">TX Signature</th>
                     </tr>
                     </thead>
                     <tbody>

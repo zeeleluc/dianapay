@@ -89,4 +89,64 @@ class SolanaCall extends Model
         // Format to 2 decimals, no scientific notation
         return number_format($percentage, 2, '.', '');
     }
+
+    /**
+     * Get total profit of all SolanaCalls in SOL.
+     *
+     * @return string
+     */
+    public static function totalProfitSol(): string
+    {
+        $totalProfit = 0.0;
+
+        $calls = self::with('orders')->get();
+
+        foreach ($calls as $call) {
+            foreach ($call->orders as $order) {
+                $type = strtolower($order->type);
+                if ($type === 'buy') {
+                    $totalProfit -= $order->amount_sol ?? 0.0;
+                } elseif ($type === 'sell') {
+                    $totalProfit += $order->amount_sol ?? 0.0;
+                }
+            }
+        }
+
+        // Format with 8 decimals, no scientific notation
+        return number_format($totalProfit, 8, '.', '');
+    }
+
+    /**
+     * Get total profit of all SolanaCalls in percentage.
+     *
+     * @return string
+     */
+    public static function totalProfitPercentage(): string
+    {
+        $totalBought = 0.0;
+        $totalSold = 0.0;
+
+        $calls = self::with('orders')->get();
+
+        foreach ($calls as $call) {
+            foreach ($call->orders as $order) {
+                $type = strtolower($order->type);
+                if ($type === 'buy') {
+                    $totalBought += $order->amount_sol ?? 0.0;
+                } elseif ($type === 'sell') {
+                    $totalSold += $order->amount_sol ?? 0.0;
+                }
+            }
+        }
+
+        if ($totalBought == 0.0) {
+            return '0.00';
+        }
+
+        $percentage = (($totalSold - $totalBought) / $totalBought) * 100;
+
+        // Format with 2 decimals, no scientific notation
+        return number_format($percentage, 2, '.', '');
+    }
+
 }
