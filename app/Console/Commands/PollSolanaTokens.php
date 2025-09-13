@@ -214,6 +214,18 @@ class PollSolanaTokens extends Command
                 $matchesFound++;
             }
 
+
+            // CHANGE: Uncommented and enhanced summary for better tracking (add to cron logs)
+            if (!empty($skippedTokens)) {
+                $skipsMsg = "Skipped " . count($skippedTokens) . " tokens: " . implode('; ', array_slice($skippedTokens, 0, 5)) . (count($skippedTokens) > 5 ? '...' : '');
+                SlackNotifier::warning($skipsMsg);
+            }
+            if (!empty($failedSnipes)) {
+                $failsMsg = "Failed snipes: " . implode('; ', array_slice($failedSnipes, 0, 3)) . (count($failedSnipes) > 3 ? '...' : '');
+                SlackNotifier::error($failsMsg);
+            }
+
+
             $summary = "Poll complete: Processed {$matchesFound} tokens.";
             $this->info($summary);
 
