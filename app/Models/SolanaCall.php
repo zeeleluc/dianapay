@@ -18,11 +18,10 @@ class SolanaCall extends Model
         'liquidity_pool',
         'all_time_high',
         'top_10_holders_percent',
-        'dev_sold',  // Boolean: true if 🟢
-        'dex_paid_status',  // Boolean: true if 🟢
+        'dev_sold',
+        'dex_paid_status',
     ];
 
-    // Casts: Decimals and booleans handle nulls gracefully
     protected $casts = [
         'market_cap' => 'decimal:2',
         'volume_24h' => 'decimal:2',
@@ -33,14 +32,28 @@ class SolanaCall extends Model
         'dex_paid_status' => 'boolean',
     ];
 
-    // Helper method to save parsed data
-    public static function createFromParsed(array $data): self
-    {
-        return self::create($data);  // Inserts nulls for missing fields
-    }
-
     public function orders()
     {
         return $this->hasMany(SolanaCallOrder::class);
+    }
+
+    /**
+     * Calculate profit based on SOL.
+     *
+     * Profit = total SOL sold - total SOL bought
+     *
+     * @return float
+     */
+    public function profit(): float
+    {
+        $totalBuy = $this->orders
+            ->where('type', 'buy')
+            ->sum('amount_sol');
+
+        $totalSell = $this->orders
+            ->where('type', 'sell')
+            ->sum('amount_sol');
+
+        return $totalSell - $totalBuy;
     }
 }

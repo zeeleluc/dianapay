@@ -7,8 +7,33 @@ use App\Livewire\Home;
 use App\Livewire\AnonymousPayment;
 use App\Livewire\Forms\AnonymousPaymentRequestForm;
 use App\Http\Controllers\PublicAnonymousPaymentController;
+use App\Http\Controllers\SniperController;
 
 Route::middleware('web')->group(function () {
+
+    // Show pincode form
+    Route::get('/pincode', function () {
+        return view('pincode');
+    })->name('pincode.form');
+
+    // Handle form submission
+    Route::post('/pincode', function (\Illuminate\Http\Request $request) {
+        if ($request->input('pincode') == config('pincode.code')) {
+            Session::put('pincode_validated', true);
+            return redirect()->intended('/sniper');
+        }
+
+        return back()->withErrors(['pincode' => 'Invalid pincode']);
+    })->name('pincode.check');
+
+    // Example protected route
+//    Route::get('/sniper', function () {
+//        return "This is protected by a pincode!";
+//    })->middleware('pincode')->name('sniper');
+    Route::get('sniper', [SniperController::class, 'index'])
+        ->name('sniper')
+        ->middleware('pincode');
+
     // Language switcher
     Route::get('/lang/{locale}', function ($locale) {
         $allowedLocales = config('locales.allowed', ['en']);
@@ -32,7 +57,7 @@ Route::middleware('web')->group(function () {
 
     // Main routes with locale prefix and middleware
     Route::prefix('{locale}')
-        ->middleware(\App\Http\Middleware\SetLocale::class)
+        ->middleware('setLocale')
         ->group(function () {
 
             Route::get('/', Home::class)->name('home');
@@ -56,14 +81,16 @@ Route::middleware('web')->group(function () {
         });
 
     // Redirect requests without locale prefix to default locale,
-    // but allow Livewire requests to bypass and avoid 419 errors
-    Route::get('/{path}', function ($path) {
-        if (str_starts_with($path, 'livewire/')) {
-            // Let Livewire handle this; do not redirect or abort here
-            abort(404);
+    // but allow specific routes to bypass
+    $excluded = ['pincode', 'sniper'];
+
+    Route::get('/{path}', function ($path) use ($excluded) {
+        $locale = Session::get('locale', config('app.locale'));
+
+        if (in_array($path, $excluded) || str_starts_with($path, 'livewire/')) {
+            abort(404); // or just return $next if you want
         }
 
-        $locale = Session::get('locale', config('app.locale'));
         return Redirect::to("/{$locale}/{$path}", 301);
     })->where('path', '.*')->name('locale.redirect');
 });

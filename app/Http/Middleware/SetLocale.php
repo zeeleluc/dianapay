@@ -14,59 +14,32 @@ class SetLocale
 {
     public function handle(Request $request, Closure $next)
     {
-        Log::info('SetLocale middleware', ['path' => $request->path(), 'locale' => $request->route('locale')]);
-
-        // Bypass locale handling for Livewire requests to prevent 419 errors
-        if ($request->is('livewire/*')) {
-            return $next($request);
-        }
-
         $allowedLocales = config('locales.allowed', ['en']);
         $locale = $request->route('locale');
 
-        // If locale present but invalid, try to fix or abort
-        if ($locale && !in_array($locale, $allowedLocales)) {
-            $locale = Session::get('locale', config('app.locale'));
-            if (!in_array($locale, $allowedLocales)) {
-                $browserLocale = substr($request->getPreferredLanguage($allowedLocales), 0, 5);
-                $locale = in_array($browserLocale, $allowedLocales) ? $browserLocale : config('app.locale');
-            }
-            $path = preg_replace('/^[^\/]+\//', '', $request->path()) ?: '';
-            $newPath = "/{$locale}/{$path}";
-
-            $testRequest = $request->duplicate(null, null, null, null, null, ['REQUEST_URI' => $newPath]);
-            try {
-                $route = app('router')->getRoutes()->match($testRequest);
-                if ($route && !$route->isFallback) {
-                    return Redirect::to($newPath, 301);
-                }
-            } catch (NotFoundHttpException $e) {
-                abort(404);
-            }
+        // Bypass Livewire, pincode, sniper
+        if ($request->is('livewire/*') || $request->is('pincode') || $request->is('sniper')) {
+            return $next($request);
         }
 
-        // If no locale present, redirect to a locale prefixed URL
+        // Invalid locale in route -> redirect
+        if ($locale && !in_array($locale, $allowedLocales)) {
+            $locale = Session::get('locale', config('app.locale'));
+        }
+
+        // No locale -> redirect to default
         if (!$locale) {
             $locale = Session::get('locale', config('app.locale'));
             if (!in_array($locale, $allowedLocales)) {
                 $browserLocale = substr($request->getPreferredLanguage($allowedLocales), 0, 5);
                 $locale = in_array($browserLocale, $allowedLocales) ? $browserLocale : config('app.locale');
             }
-            $path = $request->path() === '/' ? '' : $request->path();
-            $newPath = "/{$locale}/{$path}";
 
-            $testRequest = $request->duplicate(null, null, null, null, null, ['REQUEST_URI' => $newPath]);
-            try {
-                $route = app('router')->getRoutes()->match($testRequest);
-                if ($route && !$route->isFallback) {
-                    return Redirect::to($newPath, 301);
-                }
-            } catch (NotFoundHttpException $e) {
-                abort(404);
-            }
+            $path = $request->path() === '/' ? '' : $request->path();
+            return Redirect::to("/{$locale}/{$path}", 301);
         }
 
-        // Set locale in session and app
+        // Set locale
         Session::put('locale', $locale);
         App::setLocale($locale);
 

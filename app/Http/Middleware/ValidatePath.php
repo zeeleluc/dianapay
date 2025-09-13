@@ -11,6 +11,16 @@ class ValidatePath
     public function handle(Request $request, Closure $next)
     {
         $path = trim($request->path(), '/'); // e.g. "", "en", "en/about"
+
+        // ✅ Bypass list: routes that should not be validated
+        $bypass = ['pincode', 'sniper'];
+
+        foreach ($bypass as $ignore) {
+            if ($request->is($ignore) || $request->is("{$ignore}/*")) {
+                return $next($request);
+            }
+        }
+
         $segments = $path === '' ? [] : explode('/', $path);
         $allowedLocales = config('locales.allowed', ['en']);
 

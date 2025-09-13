@@ -36,6 +36,7 @@ return \Illuminate\Foundation\Application::configure(basePath: dirname(__DIR__))
 
         // Explicitly register the alias (optional, for clarity)
         $middleware->alias([
+            'pincode' => \App\Http\Middleware\PincodeMiddleware::class,
             'setLocale' => \App\Http\Middleware\SetLocale::class,
         ]);
     })
