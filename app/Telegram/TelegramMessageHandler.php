@@ -39,7 +39,6 @@ class TelegramMessageHandler extends EventHandler
 
         // Only process if it matches Solana call phrase
         if (stripos($text, self::SOLANA_CALL_PHRASE) === false) {
-            SlackNotifier::info('No memecoin call message');
             return;
         }
 
