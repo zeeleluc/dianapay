@@ -346,16 +346,13 @@ async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId){
 
 
 // ---- Main Snipe with error fallback ----
-async function snipeToken(tokenAddress, buyAmountSol, solanaCallId) {
+async function snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy = '5-SEC-SELL') {
     const keyString = process.env.SOLANA_PRIVATE_KEY?.trim();
     if (!keyString) throw new Error('Missing SOLANA_PRIVATE_KEY');
 
     let wallet;
     try {
-        // If the key is a 64-byte array or base58 string
-        const secretKey = typeof keyString === 'string' && keyString.length > 50
-            ? bs58.decode(keyString)           // base58-encoded full secret key
-            : Uint8Array.from(JSON.parse(keyString)); // fallback for JSON array
+        const secretKey = keyString.length > 50 ? bs58.decode(keyString) : Uint8Array.from(JSON.parse(keyString));
         wallet = Keypair.fromSecretKey(secretKey);
     } catch (e) {
         throw new Error('Invalid SOLANA_PRIVATE_KEY format: ' + e.message);
@@ -363,58 +360,85 @@ async function snipeToken(tokenAddress, buyAmountSol, solanaCallId) {
 
     const rpc = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
     const connection = new Connection(rpc, 'confirmed');
-
     const mint = new PublicKey(tokenAddress);
+
     logToLaravel('info', `Sniping ${buyAmountSol} SOL for ${tokenAddress} with wallet ${wallet.publicKey.toString()}`);
 
     const balance = await connection.getBalance(wallet.publicKey);
-    const required = Math.floor((buyAmountSol + 0.005) * LAMPORTS_PER_SOL);
-    if (balance < required) {
+    const requiredLamports = Math.floor((buyAmountSol + 0.005) * LAMPORTS_PER_SOL);
+    if (balance < requiredLamports) {
         const errMsg = `Insufficient balance: ${balance / LAMPORTS_PER_SOL} SOL`;
         await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errMsg });
         throw new Error(errMsg);
     }
 
-    let buySig, sellSig = null;
+    let buySig = null;
+    let tokenBalanceBN = new BN(0);
+    let dexUsed = 'unknown';
+
+    // --- Execute Buy Safely ---
     try {
-        ({ txSig: buySig } = await executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId));
+        ({ txSig: buySig, dexUsed } = await executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId));
+        try {
+            const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
+            const acc = await getAccount(connection, userATA);
+            tokenBalanceBN = toBN(acc.amount);
+        } catch (e) {
+            logToLaravel('warn', `Failed to fetch token balance: ${e.message}`);
+            tokenBalanceBN = new BN(0);
+        }
     } catch (e) {
         const errMsg = e.message || String(e);
-        await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errMsg });
+        logToLaravel('error', 'Buy failed: ' + errMsg);
+        await createSolanaCallOrder({
+            solana_call_id: solanaCallId,
+            type: 'buy',
+            amount_sol: buyAmountSol,
+            amount_foreign: 0,
+            dex_used: dexUsed,
+            tx_signature: buySig,
+            error: errMsg
+        });
         throw new Error('Buy failed: ' + errMsg);
     }
 
-    // Parse strategy, default 5 seconds
+    // Ensure buy record always exists
+    try {
+        await createSolanaCallOrder({
+            solana_call_id: solanaCallId,
+            type: 'buy',
+            amount_sol: buyAmountSol,
+            amount_foreign: bnToNumberSafe(tokenBalanceBN),
+            dex_used: dexUsed,
+            tx_signature: buySig
+        });
+    } catch (e) {
+        logToLaravel('error', 'Failed to create buy record: ' + e.message);
+    }
+
+    // --- Handle Sell ---
+    let sellSig = null;
     let waitSeconds = 5;
     const match = /^(\d+)-SEC-SELL$/i.exec(strategy);
-    if (match) {
-        waitSeconds = parseInt(match[1], 10);
-    }
+    if (match) waitSeconds = parseInt(match[1], 10);
 
     logToLaravel('info', `⏳ Waiting ${waitSeconds} seconds before selling (strategy: ${strategy})`);
-
     await new Promise(r => setTimeout(r, waitSeconds * 1000));
 
-
-
-
-    const userATA = await getAssociatedTokenAddress(mint,wallet.publicKey);
-    let tokenBalanceBN;
-    try{
-        const acc = await getAccount(connection,userATA);
-        tokenBalanceBN = toBN(acc.amount);
-    } catch(e){ tokenBalanceBN = new BN(0); }
-
-    if(tokenBalanceBN.isZero()){
-        logToLaravel('warn','Token balance is zero, skipping sell.');
-        return {buySig,sellSig:null};
+    if (!tokenBalanceBN.isZero()) {
+        try {
+            ({ txSig: sellSig } = await executeSell(connection, wallet, mint, tokenBalanceBN, solanaCallId));
+        } catch (e) {
+            const errMsg = e.message || String(e);
+            logToLaravel('error', 'Sell failed: ' + errMsg);
+            await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errMsg });
+        }
+    } else {
+        logToLaravel('warn', 'Token balance is zero, skipping sell.');
     }
 
-    // Attempt sell
-    ({txSig:sellSig} = await executeSell(connection,wallet,mint,tokenBalanceBN,solanaCallId));
-
-    logToLaravel('info','Snipe complete! Wallet: https://solscan.io/account/'+wallet.publicKey.toString());
-    return {buySig,sellSig};
+    logToLaravel('info', 'Snipe complete! Wallet: https://solscan.io/account/' + wallet.publicKey.toString());
+    return { buySig, sellSig };
 }
 
 // ---- CLI ----
