@@ -67,10 +67,21 @@ class TelegramMessageHandler extends EventHandler
                 'artisan',
                 'handle-solana-call',
                 '--id=' . $call->id,
-                '--strategy' . $call->strategy,
+                '--strategy=' . $call->strategy,
             ]);
             $process->setTimeout(360);  // 6 mins timeout
             $process->start();
+
+            $process->waitUntil(function ($type, $buffer) use ($call) {
+                if ($type === Process::ERR) {
+                    \Log::error("SolanaCall {$call->id} STDERR: " . $buffer);
+                    SlackNotifier::error("SolanaCall {$call->id} STDERR: " . $buffer);
+                } else {
+                    \Log::info("SolanaCall {$call->id} STDOUT: " . $buffer);
+                    SlackNotifier::info("SolanaCall {$call->id} STDOUT: " . $buffer);
+                }
+                return false; // keep streaming until finished
+            });
 
             $this->logger("🔥 Started snipe process for SolanaCall ID: {$call->id} (PID: " . $process->getPid() . ")");
             SlackNotifier::info("Started snipe process for SolanaCall ID: {$call->id} (PID: " . $process->getPid() . ")");
