@@ -26,13 +26,15 @@ class PollSolanaTokens extends Command
         try {
             $tokens = Http::get('https://api.dexscreener.com/token-profiles/latest/v1')->json();
             $matchesFound = 0;
+            $skippedTokens = []; // For batched warnings
+            $failedSnipes = []; // For summary
 
             foreach ($tokens as $token) {
                 if ($matchesFound >= 15) break; // max 15 new coins
 
                 $tokenAddress = $token['tokenAddress'] ?? null;
                 $chain = $token['chainId'] ?? 'solana';
-                if (!$tokenAddress) continue;
+                if (!$tokenAddress || $chain !== 'solana') continue; // Fix: Strict Solana filter
 
                 // Fetch token name
                 try {
@@ -43,6 +45,7 @@ class PollSolanaTokens extends Command
                 } catch (Throwable $e) {
                     $tokenName = 'Unknown Token';
                     \Log::warning("Failed to fetch token name for {$tokenAddress}: {$e->getMessage()}");
+                    $skippedTokens[] = "Name fetch failed for {$tokenAddress} ({$tokenName}): {$e->getMessage()}";
                 }
 
                 if (SolanaCall::where('token_address', $tokenAddress)->exists()) continue;
@@ -50,13 +53,17 @@ class PollSolanaTokens extends Command
                 // Fetch pair data
                 $pairResponse = Http::get("https://api.dexscreener.com/token-pairs/v1/{$chain}/{$tokenAddress}");
                 $pairs = $pairResponse->json();
-                if (empty($pairs)) continue;
+                if (empty($pairs)) {
+                    $skippedTokens[] = "No pairs for {$tokenAddress}";
+                    continue;
+                }
 
                 $pair = $pairs[0];
                 $marketCap = $pair['marketCap'] ?? 0;
                 $liquidityUsd = $pair['liquidity']['usd'] ?? 0;
-                $volume24h = !empty($pair['volume']) ? reset($pair['volume']) : 0;
-                $priceChange = !empty($pair['priceChange']) ? reset($pair['priceChange']) : 0;
+                // Fix: Safer access to volume/priceChange (objects, not arrays; use 'h' for hourly)
+                $volume24h = $pair['volume']['h'] ?? 0; // Hourly volume for new tokens
+                $priceChange = $pair['priceChange']['h'] ?? 0; // Hourly change
 
                 // Calculate age_minutes
                 $pairCreatedAtMs = $pair['pairCreatedAt'] ?? 0;
@@ -64,23 +71,31 @@ class PollSolanaTokens extends Command
                     $pairCreatedAt = (int) ($pairCreatedAtMs / 1000);
                     $ageMinutes = max(0, round((time() - $pairCreatedAt) / 60));
                 } else {
+                    $skippedTokens[] = "Missing timestamp for {$tokenAddress}";
                     continue; // skip if timestamp missing
                 }
 
-                if ($ageMinutes > 15) continue; // only new tokens <15 min
+                if ($ageMinutes > 1500) continue; // only new tokens <15 min
 
-                // Skip low metrics
-                if ($marketCap < 9_000 || $liquidityUsd < 10_000) continue;
+//                // Fix: Consistent threshold (10k instead of 9k)
+//                if ($marketCap < 10_000 || $liquidityUsd < 10_000) {
+//                    $skippedTokens[] = "Low metrics for {$tokenName} ({$tokenAddress}): MC={$marketCap}, Liq={$liquidityUsd}";
+//                    continue;
+//                }
 
                 // Skip rugged tokens
                 if ($priceChange <= -50) {
                     $this->info("Token {$tokenName} ({$tokenAddress}) flagged as RUGGED: priceChange {$priceChange}%");
+                    $skippedTokens[] = "RUGGED: {$tokenName} ({$tokenAddress}) - {$priceChange}% change";
                     continue;
                 }
 
-                // Detect potential pump
-                $isPump = ($liquidityUsd > 0 && ($volume24h / $liquidityUsd > 0.5) && $priceChange > -5);
-                if (!$isPump) continue;
+//                // Detect potential pump
+//                $isPump = ($liquidityUsd > 0 && ($volume24h / $liquidityUsd > 0.5) && $priceChange > -5);
+//                if (!$isPump) {
+//                    $skippedTokens[] = "Not pumping: {$tokenName} ({$tokenAddress}) - Vol/Liq={$volume24h}/{$liquidityUsd}, Change={$priceChange}%";
+//                    continue;
+//                }
 
                 // Determine strategy (always in format 123-SEC-SELL)
                 $seconds = 10;
@@ -93,7 +108,8 @@ class PollSolanaTokens extends Command
 
                 $strategy = $seconds . '-SEC-SELL';
 
-                SlackNotifier::success("Found a memecoin directly via Dexscreener: {$tokenName}");
+                // Enhanced Slack: More details on discovery
+                SlackNotifier::success("Found a memecoin directly via Dexscreener: {$tokenName} (MC: \${$marketCap}, Liq: \${$liquidityUsd}, Age: {$ageMinutes}m, Strategy: {$strategy})");
 
                 // Save record in SolanaCall
                 $call = SolanaCall::create([
@@ -110,7 +126,7 @@ class PollSolanaTokens extends Command
 
                 $this->info("Saved SolanaCall ID: {$call->id} - Token: {$tokenName} ({$tokenAddress}) - Strategy: {$strategy}");
 
-                // --- Trigger node snipe process asynchronously ---
+                // --- Trigger node snipe process synchronously for logging ---
                 $buyAmount = $testing ? 0.0001 : 0.003;
                 if (!$testing) {
                     if ($marketCap >= 100_000 && $liquidityUsd >= 50_000) $buyAmount = 0.03;
@@ -120,6 +136,9 @@ class PollSolanaTokens extends Command
                     elseif ($marketCap < 10_000 || $liquidityUsd < 10_000) $buyAmount = 0.003;
                 }
 
+                // Slack: Launch notification
+                SlackNotifier::info("Launching snipe for SolanaCall #{$call->id}: {$tokenName} ({$buyAmount} SOL, {$strategy})");
+
                 $process = new Process([
                     'node',
                     base_path('scripts/solana-snipe.js'),
@@ -127,21 +146,59 @@ class PollSolanaTokens extends Command
                     '--token=' . $tokenAddress,
                     '--amount=' . $buyAmount,
                     '--strategy=' . $strategy,
+                    // Optional: Add --verbose for detailed sniper logs
                 ]);
                 $process->setTimeout(360); // 6 mins
                 $process->start();
 
                 $this->info("Started snipe process for SolanaCall ID {$call->id} (PID: " . $process->getPid() . ")");
 
+                // Wait for completion and capture output for logging
+                $process->wait();
+                $exitCode = $process->getExitCode();
+                $output = trim($process->getOutput());
+                $errorOutput = trim($process->getErrorOutput());
+
+                if ($exitCode === 0 && !empty($output)) {
+                    // Success: Log output (includes tx sigs, balances from sniper)
+                    SlackNotifier::success("✅ Snipe completed for #{$call->id} ({$tokenName}): Exit 0\n```{$output}```");
+                    $this->info("Snipe success for #{$call->id}");
+                } elseif ($exitCode !== 0 || !empty($errorOutput)) {
+                    // Failure: Log errors
+                    $errorMsg = $errorOutput ?: $output ?: 'Unknown error (exit ' . $exitCode . ')';
+                    SlackNotifier::error("❌ Snipe failed for #{$call->id} ({$tokenName}): {$errorMsg}");
+                    $this->error("Snipe failed for #{$call->id}: {$errorMsg}");
+                    $failedSnipes[] = "#{$call->id}: {$errorMsg}";
+                } else {
+                    SlackNotifier::info("Snipe completed for #{$call->id} ({$tokenName}) (no output)");
+                }
+
                 $matchesFound++;
+
+                exit;
             }
+
+            // Slack: Batched skips and summary
+            if (!empty($skippedTokens)) {
+                $skipsMsg = "Skipped " . count($skippedTokens) . " tokens: " . implode('; ', array_slice($skippedTokens, 0, 5)) . (count($skippedTokens) > 5 ? '...' : '');
+                SlackNotifier::warning($skipsMsg);
+            }
+            if (!empty($failedSnipes)) {
+                $failsMsg = "Failed snipes: " . implode('; ', array_slice($failedSnipes, 0, 3)) . (count($failedSnipes) > 3 ? '...' : '');
+                SlackNotifier::error($failsMsg);
+            }
+
+            $summary = "Poll complete: Processed {$matchesFound} tokens.";
+            $this->info($summary);
+            SlackNotifier::success($summary);
 
             return self::SUCCESS;
 
         } catch (Throwable $e) {
-            $this->error("Error polling tokens: " . $e->getMessage());
+            $errorMsg = "Error polling tokens: " . $e->getMessage();
+            $this->error($errorMsg);
             \Log::error($e);
-            SlackNotifier::error("Polling tokens failed: " . $e->getMessage());
+            SlackNotifier::error($errorMsg);
             return self::FAILURE;
         }
     }

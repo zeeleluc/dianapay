@@ -7,11 +7,12 @@
  * - Automatic Jupiter fallback if bonding curve is uninitialized or complete
  * - Creates buy/sell records via Laravel API using --identifier
  * - Clear logging to Laravel log path
+ * Updates: Enhanced API retries/logging, verbose mode, env validation, broader Jupiter fallback.
  *
  * Ensure .env contains:
- *  SOLANA_PRIVATE_KEY=<mnemonic>
+ *  SOLANA_PRIVATE_KEY=<mnemonic or bs58>
  *  SOLANA_RPC_URL=<rpc url>
- *  LARAVEL_API_URL=<url to api>
+ *  APP_URL=<url to api>
  */
 
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, VersionedTransaction, ComputeBudgetProgram, SystemProgram, TransactionInstruction, TransactionMessage } from '@solana/web3.js';
@@ -39,7 +40,7 @@ const ASSOCIATED_BONDING_CURVE_SEED = Buffer.from('associated-bonding-curve');
 const BUY_DISCRIMINATOR = Buffer.from([0x66,0x06,0x3d,0x12,0x01,0xda,0xeb,0xea]);
 const SELL_DISCRIMINATOR = Buffer.from([0x33,0xe6,0x85,0xa4,0x01,0x7f,0x83,0xad]);
 
-async function logToLaravel(level, message) {
+async function logToLaravel(level, message, verbose = false) {
     const timestamp = new Date().toISOString();
     const line = `[${timestamp}] ${level.toUpperCase()}: ${message}\n`;
 
@@ -48,33 +49,76 @@ async function logToLaravel(level, message) {
     console.log(line.trim());
 
     // Send to Laravel API (which forwards to Slack)
-    try {
-        await fetch(`${process.env.APP_URL}/api/logs`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ level, message }),
-        });
-    } catch (e) {
-        console.error(`Failed to send log to API: ${e.message}`);
+    if (process.env.APP_URL) {
+        try {
+            const res = await fetch(`${process.env.APP_URL}/api/logs`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ level, message }),
+            });
+            if (verbose) {
+                const respBody = await res.text();
+                console.log(`[VERBOSE] Log API Response: ${res.status} - ${respBody}`);
+            }
+            if (!res.ok) throw new Error(`API responded ${res.status}: ${await res.text()}`);
+        } catch (e) {
+            console.error(`Failed to send log to API: ${e.message}`);
+            if (verbose) logToLaravel('error', `Log API detailed error: ${e.stack}`, false);
+        }
+    } else {
+        console.warn('[WARN] APP_URL not set, skipping API logs (no Slack).');
     }
 }
 
-const MAX_ERROR_LENGTH = 1024; // max characters to store for errors
+const MAX_ERROR_LENGTH = 200; // Reduced for VARCHAR(255) columns; increase post-DB migration
+const API_RETRIES = 3;
 
-async function createSolanaCallOrder({ solana_call_id, type, tx_signature=null, dex_used=null, amount_sol=null, amount_foreign=null, error=null }){
+async function createSolanaCallOrder({ solana_call_id, type, tx_signature=null, dex_used=null, amount_sol=null, amount_foreign=null, error=null }, verbose = false){
+    if (!process.env.APP_URL) {
+        logToLaravel('error', 'APP_URL not set - cannot create SolanaCallOrder record!', verbose);
+        throw new Error('Missing APP_URL');
+    }
+
     try {
         if(error && error.length > MAX_ERROR_LENGTH){
             error = error.slice(0, MAX_ERROR_LENGTH) + '...'; // truncate long errors
         }
 
+        // Detect potential truncation loops and force short error
+        if (error && (error.includes('SQLSTATE[22001]') || error.includes('Data too long'))) {
+            error = 'DB truncation error (logs too long for column)';
+            logToLaravel('warn', `Shortened error for DB: ${error}`, verbose);
+        }
+
         const body = { solana_call_id, type, tx_signature, dex_used, amount_sol, amount_foreign, error };
-        await fetch(`${process.env.APP_URL}/api/solana-call-orders`, {
-            method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify(body)
-        });
+        let lastErr;
+        for (let retry = 1; retry <= API_RETRIES; retry++) {
+            try {
+                const res = await fetch(`${process.env.APP_URL}/api/solana-call-orders`, {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(body)
+                });
+                if (verbose) {
+                    const respBody = await res.text();
+                    logToLaravel('info', `Record API Response (attempt ${retry}): ${res.status} - ${respBody}`, false);
+                }
+                if (res.ok) {
+                    logToLaravel('info', `Created ${type} record for ${solana_call_id}`, verbose);
+                    return; // Success
+                }
+                lastErr = new Error(`API responded ${res.status}: ${await res.text()}`);
+                if (retry < API_RETRIES) await new Promise(r => setTimeout(r, 1000 * retry));
+            } catch (e) {
+                lastErr = e;
+                if (retry < API_RETRIES) await new Promise(r => setTimeout(r, 1000 * retry));
+            }
+        }
+        throw lastErr || new Error('Unknown API failure after retries');
     } catch(e){
-        logToLaravel('error','Failed to create SolanaCallOrder record: '+(e.message||e));
+        const errMsg = `Failed to create ${type} SolanaCallOrder record for ${solana_call_id}: ${e.message}`;
+        logToLaravel('error', errMsg, verbose);
+        throw new Error(errMsg); // Propagate to caller
     }
 }
 
@@ -184,13 +228,16 @@ async function jupiterSwap(connection,wallet,inputMint,outputMint,amount,slippag
     await connection.confirmTransaction(sig,'finalized');
     return sig;
 }
-// ---- Execute Buy ----
-async function executeBuy(connection,wallet,mint,buyAmountSol,solanaCallId){
+
+// ---- Execute Buy (with broader fallback) ----
+async function executeBuy(connection,wallet,mint,buyAmountSol,solanaCallId, verbose = false){
     const inLamportsBN = new BN(Math.floor(buyAmountSol*LAMPORTS_PER_SOL));
     const bc = deriveBondingCurve(mint);
     const abc = deriveAssociatedBondingCurve(bc,mint);
     const userATA = await getAssociatedTokenAddress(mint,wallet.publicKey);
     const state = await getBondingCurveState(connection,bc);
+
+    logToLaravel('info', `Bonding curve state for ${mint.toString()}: ${state ? `complete=${state.complete}, reserves=${state.realSolReserves.toString()}` : 'null/uninitialized'}`, verbose);
 
     let txSig, dexUsed;
     try{
@@ -200,8 +247,8 @@ async function executeBuy(connection,wallet,mint,buyAmountSol,solanaCallId){
                 txSig = await jupiterSwap(connection,wallet,SOL_MINT,mint,inLamportsBN.toString());
             } catch(e) {
                 const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
-                logToLaravel('error','Buy failed (Jupiter swap): '+errorMsg);
-                await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:errorMsg });
+                logToLaravel('error','Buy failed (Jupiter swap): '+errorMsg, verbose);
+                await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:errorMsg }, verbose);
                 throw new Error('Buy failed: '+errorMsg);
             }
         } else {
@@ -223,23 +270,24 @@ async function executeBuy(connection,wallet,mint,buyAmountSol,solanaCallId){
                 dexUsed = 'bonding-curve';
             } catch(e) {
                 const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
-                logToLaravel('error','Buy failed (Bonding curve tx): '+errorMsg);
-                await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:errorMsg });
-                throw new Error('Buy failed: '+errorMsg);
+                logToLaravel('error','Buy failed (Bonding curve tx): '+errorMsg, verbose);
+                await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:errorMsg }, verbose);
+                throw new Error('Buy failed: '+errorMsg); // Broader throw for fallback
             }
         }
     }catch(e){
-        if(e.message.includes('AccountNotInitialized')){
-            dexUsed = 'jupiter';
-            try {
-                txSig = await jupiterSwap(connection,wallet,SOL_MINT,mint,inLamportsBN.toString());
-            } catch(e2) {
-                const errorMsg = e2.logs ? e2.logs.join('\n') : e2.message || String(e2);
-                logToLaravel('error','Buy failed (fallback Jupiter swap): '+errorMsg);
-                await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:errorMsg });
-                throw new Error('Buy failed: '+errorMsg);
-            }
-        } else throw e;
+        // Fix: Broader fallback - any buy error triggers Jupiter retry
+        const errorMsg = e.message || String(e);
+        logToLaravel('warn', `Buy error, falling back to Jupiter: ${errorMsg.substring(0, 200)}`, verbose);
+        dexUsed = 'jupiter';
+        try {
+            txSig = await jupiterSwap(connection,wallet,SOL_MINT,mint,inLamportsBN.toString());
+        } catch(e2) {
+            const fallbackError = e2.logs ? e2.logs.join('\n') : e2.message || String(e2);
+            logToLaravel('error','Buy failed (fallback Jupiter swap): '+fallbackError, verbose);
+            await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:fallbackError }, verbose);
+            throw new Error('Buy failed: '+fallbackError);
+        }
     }
 
     let tokenBalanceBN;
@@ -247,11 +295,13 @@ async function executeBuy(connection,wallet,mint,buyAmountSol,solanaCallId){
         const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
         const acc = await getAccount(connection, userATA);
         tokenBalanceBN = toBN(acc.amount);
+        logToLaravel('info', `Post-buy token balance: ${bnToNumberSafe(tokenBalanceBN)}`, verbose);
     } catch(e) {
         tokenBalanceBN = new BN(0);
+        logToLaravel('warn', `Failed to fetch post-buy balance: ${e.message}`, verbose);
     }
 
-    // Create Laravel buy record
+    // Create Laravel buy record - now throws on failure
     await createSolanaCallOrder({
         solana_call_id: solanaCallId,
         type: 'buy',
@@ -259,19 +309,20 @@ async function executeBuy(connection,wallet,mint,buyAmountSol,solanaCallId){
         amount_foreign: bnToNumberSafe(tokenBalanceBN),
         dex_used: dexUsed,
         tx_signature: txSig
-    });
+    }, verbose);
 
     return {txSig,dexUsed};
 }
 
 // ---- Execute Sell with enhanced error logging ----
-async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId){
+async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId, verbose = false){
     try {
+        logToLaravel('info', `Attempting sell: ${bnToNumberSafe(tokenAmountBN)} tokens`, verbose);
         const dexInfo = await getDexStatus(mint.toString());
         if(!dexInfo || !dexInfo.liquidity || dexInfo.liquidity <= 0){
             const errorMsg = 'No liquidity detected for selling';
-            logToLaravel('warn', errorMsg);
-            await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errorMsg });
+            logToLaravel('warn', errorMsg, verbose);
+            await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errorMsg }, verbose);
             return { txSig: null, dexUsed: null };
         }
 
@@ -290,8 +341,8 @@ async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId){
                 txSig = await jupiterSwap(connection,wallet,mint,SOL_MINT,tokenAmountBN.toString());
             } catch(e) {
                 const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
-                logToLaravel('error','Sell failed (Jupiter swap): '+errorMsg);
-                await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:errorMsg });
+                logToLaravel('error','Sell failed (Jupiter swap): '+errorMsg, verbose);
+                await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:errorMsg }, verbose);
                 return { txSig:null, dexUsed:null };
             }
         } else {
@@ -316,8 +367,8 @@ async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId){
                 dexUsed = 'bonding-curve';
             } catch(e) {
                 const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
-                logToLaravel('error','Sell failed (Bonding curve tx): '+errorMsg);
-                await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:errorMsg });
+                logToLaravel('error','Sell failed (Bonding curve tx): '+errorMsg, verbose);
+                await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:errorMsg }, verbose);
                 return { txSig:null, dexUsed:null };
             }
         }
@@ -332,21 +383,26 @@ async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId){
             amount_sol: amountSolReceived,
             dex_used: dexUsed,
             tx_signature: txSig
-        });
+        }, verbose);
 
         return {txSig,dexUsed};
 
     } catch(e) {
         const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
-        logToLaravel('error','Sell failed: '+errorMsg);
-        await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errorMsg });
+        logToLaravel('error','Sell failed: '+errorMsg, verbose);
+        await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errorMsg }, verbose);
         return {txSig:null,dexUsed:null};
     }
 }
 
 
 // ---- Main Snipe with error fallback ----
-async function snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy = '5-SEC-SELL') {
+async function snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy = '5-SEC-SELL', verbose = false) {
+    if (!process.env.APP_URL) {
+        throw new Error('Missing APP_URL in .env - required for records/Slack');
+    }
+    logToLaravel('info', `Using APP_URL: ${process.env.APP_URL} (verbose: ${verbose})`, verbose);
+
     const keyString = process.env.SOLANA_PRIVATE_KEY?.trim();
     if (!keyString) throw new Error('Missing SOLANA_PRIVATE_KEY');
 
@@ -362,13 +418,13 @@ async function snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy = '
     const connection = new Connection(rpc, 'confirmed');
     const mint = new PublicKey(tokenAddress);
 
-    logToLaravel('info', `Sniping ${buyAmountSol} SOL for ${tokenAddress} with wallet ${wallet.publicKey.toString()}`);
+    logToLaravel('info', `Sniping ${buyAmountSol} SOL for ${tokenAddress} with wallet ${wallet.publicKey.toString()}`, verbose);
 
     const balance = await connection.getBalance(wallet.publicKey);
     const requiredLamports = Math.floor((buyAmountSol + 0.005) * LAMPORTS_PER_SOL);
     if (balance < requiredLamports) {
         const errMsg = `Insufficient balance: ${balance / LAMPORTS_PER_SOL} SOL`;
-        await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errMsg });
+        await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errMsg }, verbose);
         throw new Error(errMsg);
     }
 
@@ -378,18 +434,18 @@ async function snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy = '
 
     // --- Execute Buy Safely ---
     try {
-        ({ txSig: buySig, dexUsed } = await executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId));
+        ({ txSig: buySig, dexUsed } = await executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId, verbose));
         try {
             const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
             const acc = await getAccount(connection, userATA);
             tokenBalanceBN = toBN(acc.amount);
         } catch (e) {
-            logToLaravel('warn', `Failed to fetch token balance: ${e.message}`);
+            logToLaravel('warn', `Failed to fetch token balance: ${e.message}`, verbose);
             tokenBalanceBN = new BN(0);
         }
     } catch (e) {
         const errMsg = e.message || String(e);
-        logToLaravel('error', 'Buy failed: ' + errMsg);
+        logToLaravel('error', 'Buy failed: ' + errMsg, verbose);
         await createSolanaCallOrder({
             solana_call_id: solanaCallId,
             type: 'buy',
@@ -398,22 +454,8 @@ async function snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy = '
             dex_used: dexUsed,
             tx_signature: buySig,
             error: errMsg
-        });
+        }, verbose);
         throw new Error('Buy failed: ' + errMsg);
-    }
-
-    // Ensure buy record always exists
-    try {
-        await createSolanaCallOrder({
-            solana_call_id: solanaCallId,
-            type: 'buy',
-            amount_sol: buyAmountSol,
-            amount_foreign: bnToNumberSafe(tokenBalanceBN),
-            dex_used: dexUsed,
-            tx_signature: buySig
-        });
-    } catch (e) {
-        logToLaravel('error', 'Failed to create buy record: ' + e.message);
     }
 
     // --- Handle Sell ---
@@ -422,22 +464,22 @@ async function snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy = '
     const match = /^(\d+)-SEC-SELL$/i.exec(strategy);
     if (match) waitSeconds = parseInt(match[1], 10);
 
-    logToLaravel('info', `⏳ Waiting ${waitSeconds} seconds before selling (strategy: ${strategy})`);
+    logToLaravel('info', `⏳ Waiting ${waitSeconds} seconds before selling (strategy: ${strategy})`, verbose);
     await new Promise(r => setTimeout(r, waitSeconds * 1000));
 
     if (!tokenBalanceBN.isZero()) {
         try {
-            ({ txSig: sellSig } = await executeSell(connection, wallet, mint, tokenBalanceBN, solanaCallId));
+            ({ txSig: sellSig } = await executeSell(connection, wallet, mint, tokenBalanceBN, solanaCallId, verbose));
         } catch (e) {
             const errMsg = e.message || String(e);
-            logToLaravel('error', 'Sell failed: ' + errMsg);
-            await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errMsg });
+            logToLaravel('error', 'Sell failed: ' + errMsg, verbose);
+            await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errMsg }, verbose);
         }
     } else {
-        logToLaravel('warn', 'Token balance is zero, skipping sell.');
+        logToLaravel('warn', 'Token balance is zero, skipping sell.', verbose);
     }
 
-    logToLaravel('info', 'Snipe complete! Wallet: https://solscan.io/account/' + wallet.publicKey.toString());
+    logToLaravel('info', 'Snipe complete! Wallet: https://solscan.io/account/' + wallet.publicKey.toString(), verbose);
     return { buySig, sellSig };
 }
 
@@ -450,14 +492,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
             const buyAmountSol = parseFloat(args.find(a => a.startsWith('--amount='))?.replace('--amount=', '0.001')) || 0.001;
             const solanaCallId = args.find(a => a.startsWith('--identifier='))?.replace('--identifier=', '');
             const strategy = args.find(a => a.startsWith('--strategy='))?.replace('--strategy=', '') || '5-SEC-SELL';
+            const verbose = args.includes('--verbose');
 
             if (!tokenAddress || !solanaCallId) {
-                logToLaravel('error', 'Usage: node solana-snipe.js --identifier=ID --token=ADDRESS --amount=0.001 --strategy=10-SEC-SELL');
+                logToLaravel('error', 'Usage: node solana-snipe.js --identifier=ID --token=ADDRESS --amount=0.001 --strategy=10-SEC-SELL [--verbose]');
                 process.exit(1);
             }
 
-            const res = await snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy);
-            logToLaravel('info', 'Result: ' + JSON.stringify(res));
+            const res = await snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy, verbose);
+            logToLaravel('info', 'Result: ' + JSON.stringify(res), verbose);
             process.exit(0);
         } catch (e) {
             logToLaravel('error', 'Snipe failed: ' + (e.message || e));
