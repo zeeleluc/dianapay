@@ -75,13 +75,13 @@ class PollSolanaTokens extends Command
                     continue; // skip if timestamp missing
                 }
 
-                if ($ageMinutes > 1500) continue; // only new tokens <15 min
+                if ($ageMinutes > 15) continue; // only new tokens <15 min
 
-//                // Fix: Consistent threshold (10k instead of 9k)
-//                if ($marketCap < 10_000 || $liquidityUsd < 10_000) {
-//                    $skippedTokens[] = "Low metrics for {$tokenName} ({$tokenAddress}): MC={$marketCap}, Liq={$liquidityUsd}";
-//                    continue;
-//                }
+                // Fix: Consistent threshold (10k instead of 9k)
+                if ($marketCap < 10_000 || $liquidityUsd < 10_000) {
+                    $skippedTokens[] = "Low metrics for {$tokenName} ({$tokenAddress}): MC={$marketCap}, Liq={$liquidityUsd}";
+                    continue;
+                }
 
                 // Skip rugged tokens
                 if ($priceChange <= -50) {
@@ -90,12 +90,12 @@ class PollSolanaTokens extends Command
                     continue;
                 }
 
-//                // Detect potential pump
-//                $isPump = ($liquidityUsd > 0 && ($volume24h / $liquidityUsd > 0.5) && $priceChange > -5);
-//                if (!$isPump) {
-//                    $skippedTokens[] = "Not pumping: {$tokenName} ({$tokenAddress}) - Vol/Liq={$volume24h}/{$liquidityUsd}, Change={$priceChange}%";
-//                    continue;
-//                }
+                // Detect potential pump
+                $isPump = ($liquidityUsd > 0 && ($volume24h / $liquidityUsd > 0.5) && $priceChange > -5);
+                if (!$isPump) {
+                    $skippedTokens[] = "Not pumping: {$tokenName} ({$tokenAddress}) - Vol/Liq={$volume24h}/{$liquidityUsd}, Change={$priceChange}%";
+                    continue;
+                }
 
                 // Determine strategy (always in format 123-SEC-SELL)
                 $seconds = 10;
