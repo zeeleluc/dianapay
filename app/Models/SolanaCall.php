@@ -32,6 +32,11 @@ class SolanaCall extends Model
         'dex_paid_status' => 'boolean',
     ];
 
+    public static function createFromParsed(array $data): self
+    {
+        return self::create($data);  // Inserts nulls for missing fields
+    }
+    
     public function orders()
     {
         return $this->hasMany(SolanaCallOrder::class);

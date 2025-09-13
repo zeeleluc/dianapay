@@ -94,6 +94,9 @@ class SolanaCallParser
     /**
      * Normalize subscript digits and parse numbers like "0.0₄1293" or "12.3K" to float.
      */
+    /**
+     * Normalize subscript digits and parse numbers like "0.0₄1293" or "12.3K" to float.
+     */
     private static function parseNumber(string $str): ?float
     {
         $str = trim($str);
