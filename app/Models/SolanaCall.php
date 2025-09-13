@@ -20,6 +20,7 @@ class SolanaCall extends Model
         'top_10_holders_percent',
         'dev_sold',
         'dex_paid_status',
+        'strategy',
     ];
 
     protected $casts = [

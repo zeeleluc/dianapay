@@ -9,10 +9,14 @@
                     {{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}
                 </a>
             </h3>
+
             <p>Market Cap: {{ number_format($call->market_cap, 0)}}</p>
             <p>Volume 24h: {{ number_format($call->volume_24h, 0) }}</p>
             <p>Profit (SOL): {{ number_format($call->profit(), 6) }}</p>
             <p>Profit (%): {{ $call->profitPercentage() }}%</p>
+            <p>Dev Sold: {{ $call->dev_sold ? 'Y' : 'N' }}</p>
+            <p>Dex Paid: {{ $call->dex_paid ? 'Y' : 'N' }}</p>
+            <p>Strategy: {{ $call->strategy ?: '-' }}</p>
 
             @if($call->orders->count() > 0)
                 <table class="w-full mt-4 border-collapse border border-gray-700 text-white">

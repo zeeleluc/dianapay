@@ -83,6 +83,8 @@ class SolanaCallParser
             }
         }
 
+        $data['strategy'] = '10-SEC-SELL';
+
         // ---- Save if token address exists ----
         if (!empty($data['token_address'])) {
             return SolanaCall::createFromParsed($data);

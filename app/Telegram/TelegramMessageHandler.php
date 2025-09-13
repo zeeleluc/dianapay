@@ -67,6 +67,7 @@ class TelegramMessageHandler extends EventHandler
                 'artisan',
                 'handle-solana-call',
                 '--id=' . $call->id,
+                '--strategy' . $call->strategy,
             ]);
             $process->setTimeout(360);  // 6 mins timeout
             $process->start();

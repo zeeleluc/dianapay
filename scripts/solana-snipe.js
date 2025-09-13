@@ -39,11 +39,24 @@ const ASSOCIATED_BONDING_CURVE_SEED = Buffer.from('associated-bonding-curve');
 const BUY_DISCRIMINATOR = Buffer.from([0x66,0x06,0x3d,0x12,0x01,0xda,0xeb,0xea]);
 const SELL_DISCRIMINATOR = Buffer.from([0x33,0xe6,0x85,0xa4,0x01,0x7f,0x83,0xad]);
 
-function logToLaravel(level,message){
+async function logToLaravel(level, message) {
     const timestamp = new Date().toISOString();
     const line = `[${timestamp}] ${level.toUpperCase()}: ${message}\n`;
-    try{ fs.appendFileSync(LARAVEL_LOG_PATH,line); } catch(_) {}
+
+    // Still write to Laravel log file for local debugging
+    try { fs.appendFileSync(LARAVEL_LOG_PATH, line); } catch (_) {}
     console.log(line.trim());
+
+    // Send to Laravel API (which forwards to Slack)
+    try {
+        await fetch(`${process.env.APP_URL}/api/logs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ level, message }),
+        });
+    } catch (e) {
+        console.error(`Failed to send log to API: ${e.message}`);
+    }
 }
 
 const MAX_ERROR_LENGTH = 1024; // max characters to store for errors
@@ -371,9 +384,20 @@ async function snipeToken(tokenAddress, buyAmountSol, solanaCallId) {
         throw new Error('Buy failed: ' + errMsg);
     }
 
+    // Parse strategy, default 5 seconds
+    let waitSeconds = 5;
+    const match = /^(\d+)-SEC-SELL$/i.exec(strategy);
+    if (match) {
+        waitSeconds = parseInt(match[1], 10);
+    }
 
-    // Wait for token to arrive
-    await new Promise(r=>setTimeout(r,5000));
+    logToLaravel('info', `⏳ Waiting ${waitSeconds} seconds before selling (strategy: ${strategy})`);
+
+    await new Promise(r => setTimeout(r, waitSeconds * 1000));
+
+
+
+
     const userATA = await getAssociatedTokenAddress(mint,wallet.publicKey);
     let tokenBalanceBN;
     try{
@@ -393,24 +417,28 @@ async function snipeToken(tokenAddress, buyAmountSol, solanaCallId) {
     return {buySig,sellSig};
 }
 
-
 // ---- CLI ----
-if(import.meta.url===`file://${process.argv[1]}`){
-    (async()=>{
-        try{
+if (import.meta.url === `file://${process.argv[1]}`) {
+    (async () => {
+        try {
             const args = process.argv.slice(2);
-            const tokenAddress = args.find(a=>a.startsWith('--token='))?.replace('--token=','');
-            const buyAmountSol = parseFloat(args.find(a=>a.startsWith('--amount='))?.replace('--amount=','0.001'))||0.001;
-            const solanaCallId = args.find(a=>a.startsWith('--identifier='))?.replace('--identifier=','');
-            if(!tokenAddress||!solanaCallId){
-                logToLaravel('error','Usage: node solana-snipe.js --identifier=ID --token=ADDRESS --amount=0.001');
+            const tokenAddress = args.find(a => a.startsWith('--token='))?.replace('--token=', '');
+            const buyAmountSol = parseFloat(args.find(a => a.startsWith('--amount='))?.replace('--amount=', '0.001')) || 0.001;
+            const solanaCallId = args.find(a => a.startsWith('--identifier='))?.replace('--identifier=', '');
+            const strategy = args.find(a => a.startsWith('--strategy='))?.replace('--strategy=', '') || '5-SEC-SELL';
+
+            if (!tokenAddress || !solanaCallId) {
+                logToLaravel('error', 'Usage: node solana-snipe.js --identifier=ID --token=ADDRESS --amount=0.001 --strategy=10-SEC-SELL');
                 process.exit(1);
             }
 
-            const res = await snipeToken(tokenAddress,buyAmountSol,solanaCallId);
-            logToLaravel('info','Result: '+JSON.stringify(res));
+            const res = await snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy);
+            logToLaravel('info', 'Result: ' + JSON.stringify(res));
             process.exit(0);
-        }catch(e){ logToLaravel('error','Snipe failed: '+(e.message||e)); process.exit(1);}
+        } catch (e) {
+            logToLaravel('error', 'Snipe failed: ' + (e.message || e));
+            process.exit(1);
+        }
     })();
 }
 
