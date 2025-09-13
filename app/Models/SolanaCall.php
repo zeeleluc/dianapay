@@ -36,7 +36,7 @@ class SolanaCall extends Model
     {
         return self::create($data);  // Inserts nulls for missing fields
     }
-    
+
     public function orders()
     {
         return $this->hasMany(SolanaCallOrder::class);
@@ -49,16 +49,19 @@ class SolanaCall extends Model
      *
      * @return float
      */
-    public function profit(): float
+    public function profit(): string
     {
-        $totalBuy = $this->orders
-            ->where('type', 'buy')
-            ->sum('amount_sol');
+        $profit = 0;
 
-        $totalSell = $this->orders
-            ->where('type', 'sell')
-            ->sum('amount_sol');
+        foreach ($this->orders as $order) {
+            if (strtolower($order->type) === 'buy') {
+                $profit -= $order->amount_sol; // spent SOL
+            } elseif (strtolower($order->type) === 'sell') {
+                $profit += $order->amount_sol; // gained SOL
+            }
+        }
 
-        return $totalSell - $totalBuy;
+        // Format with 8 decimals, no scientific notation
+        return number_format($profit, 8, '.', '');
     }
 }

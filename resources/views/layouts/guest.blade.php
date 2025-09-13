@@ -22,20 +22,19 @@
 @endif
 
 <div class="min-h-[calc(100vh-6rem)] flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-800">
+
     <div>
         <a class="text-white" href="/" wire:navigate>
             <x-application-logo class="w-20 h-20 text-white" />
         </a>
     </div>
 
-    {{-- Conditional width for sniper route --}}
-    <div class="w-full mt-6 px-6 py-4 text-white bg-gray-950 shadow-md overflow-hidden sm:rounded-lg
-        @if(Route::currentRouteName() === 'sniper')
-            sm:max-w-4xl
-        @else
-            sm:max-w-md
-        @endif
+    {{-- Container --}}
+    <div class="
+        w-full mt-6 px-6 py-4 text-white bg-gray-950 shadow-md overflow-x-auto sm:rounded-lg
+        {{ Route::currentRouteName() === 'sniper' ? 'max-w-full sm:max-w-full' : 'sm:max-w-md' }}
     ">
+        {{-- Slot content --}}
         {{ $slot }}
     </div>
 </div>
