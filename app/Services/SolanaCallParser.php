@@ -98,7 +98,8 @@ class SolanaCallParser
             $seconds = 60;
         }
 
-        $data['strategy'] = $seconds . '-SEC-SELL';
+//        $data['strategy'] = $seconds . '-SEC-SELL';
+        $data['strategy'] = 'TAKE-PROFITS-OR-SMALL-LOSE';
 
         // ---- Save if token address exists ----
         if (!empty($data['token_address'])) {
