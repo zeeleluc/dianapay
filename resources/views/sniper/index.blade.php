@@ -33,6 +33,7 @@
                         <th class="border border-gray-700 px-2 py-1 text-left">Amount (SOL)</th>
                         <th class="border border-gray-700 px-2 py-1 text-left">DEX Used</th>
                         <th class="border border-gray-700 px-2 py-1 text-left">TX Signature</th>
+                        <th class="border border-gray-700 px-2 py-1 text-left">Error</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -44,6 +45,9 @@
                             <td class="border border-gray-700 px-2 py-1">{{ $order->dex_used }}</td>
                             <td class="border border-gray-700 px-2 py-1">
                                 {{ \Illuminate\Support\Str::limit($order->tx_signature, 10, '…') }}
+                            </td>
+                            <td class="border border-gray-700 px-2 py-1">
+                                {{ $order->error }}
                             </td>
                         </tr>
                     @endforeach
