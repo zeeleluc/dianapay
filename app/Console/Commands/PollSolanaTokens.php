@@ -186,8 +186,8 @@ class PollSolanaTokens extends Command
                 SlackNotifier::error($failsMsg);
             }
 
+            $summary = "Poll complete: Processed {$matchesFound} tokens.";
             $this->info($summary);
-            SlackNotifier::success($summary);
 
             return self::SUCCESS;
 
