@@ -74,13 +74,15 @@ class HandleSolanaCall extends Command
             $buyAmount = 0.001; // default
 
             if ($marketCap >= 100_000 && $liquidityUsd >= 50_000) {
-                $buyAmount = 0.015;
-            } elseif ($marketCap >= 50_000 && $liquidityUsd >= 20_000) {
-                $buyAmount = 0.01;
+                $buyAmount = 0.03;
+            } elseif ($marketCap >= 50_000 && $liquidityUsd >= 30_000) {
+                $buyAmount = 0.02;
             } elseif ($marketCap >= 20_000 && $liquidityUsd >= 15_000) {
-                $buyAmount = 0.008;
+                $buyAmount = 0.01;
             } elseif ($marketCap >= 10_000 && $liquidityUsd >= 10_000) {
-                $buyAmount = 0.004;
+                $buyAmount = 0.006;
+            } elseif ($marketCap < 10_000 || $liquidityUsd < 10_000) {
+                $buyAmount = 0.003;
             }
 
             $process = new Process([
