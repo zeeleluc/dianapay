@@ -10,6 +10,7 @@ use Symfony\Component\Process\Process;
 use Throwable;
 use Illuminate\Support\Facades\Http;
 use App\Helpers\SlackNotifier;
+use App\Models\SolanaCallOrder;
 
 class HandleSolanaCall extends Command
 {
@@ -102,17 +103,28 @@ class HandleSolanaCall extends Command
                 $this->error($msg);
                 \Log::error("Solana snipe ID {$id} error: " . $errorOutput . "\nOutput: " . $output);
                 SlackNotifier::error($msg);
+
+                // 🔴 Create failed order record
+                SolanaCallOrder::create([
+                    'solana_call_id' => $call->id,
+                    'type'           => 'failed',
+                    'tx_signature'   => null,
+                    'dex_used'       => null,
+                    'amount_sol'     => null,
+                    'amount_foreign' => null,
+                    'error'          => trim($errorOutput ?: 'Unknown error'),
+                ]);
+
                 return self::FAILURE;
+            } else {
+
+                $this->info("Full script output:\n" . $output);
+                \Log::info("Solana snipe ID {$id} success: " . $output);
+
+                $msg = "✅ SolanaCall {$id} SNIPED successfully! ({$call->token_name}) @ {$buyAmount} SOL";
+                $this->info($msg);
+                SlackNotifier::success($msg);
             }
-
-            $this->info("Full script output:\n" . $output);
-            \Log::info("Solana snipe ID {$id} success: " . $output);
-
-            $call->update(['status' => 'sniped', 'output' => $output]);
-
-            $msg = "✅ SolanaCall {$id} SNIPED successfully! ({$call->token_name}) @ {$buyAmount} SOL";
-            $this->info($msg);
-            SlackNotifier::success($msg);
 
             return self::SUCCESS;
 
