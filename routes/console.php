@@ -17,5 +17,5 @@ if (app()->environment('prod')) {
 // ========== Testing/High-Frequency Poll ==========
 if (app()->environment('prod')) {
     // Run every 30 seconds in testing mode
-    $schedule->command('poll-solana-tokens')->everyThirtySeconds();
+//    $schedule->command('poll-solana-tokens')->everyThirtySeconds();
 }
