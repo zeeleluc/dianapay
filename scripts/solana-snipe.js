@@ -1,18 +1,23 @@
-/**
- * solana-snipe.js
- *
- * Full rewrite:
- * - Uses TransactionMessage.compileToV0Message for versioned tx messages
- * - Robust BN / bigint / string handling
- * - Automatic Jupiter fallback if bonding curve is uninitialized or complete
- * - Creates buy/sell records via Laravel API using --identifier
- * - Clear logging to Laravel log path
- * Updates: Enhanced API retries/logging, verbose mode, env validation, broader Jupiter fallback.
- *
- * Ensure .env contains:
- *  SOLANA_PRIVATE_KEY=<mnemonic or bs58>
- *  SOLANA_RPC_URL=<rpc url>
- *  APP_URL=<url to api>
+/*
+solana-snipe.js
+
+Full rewrite:
+Uses TransactionMessage.compileToV0Message for versioned tx messages
+
+Robust BN / bigint / string handling
+
+Automatic Jupiter fallback if bonding curve is uninitialized or complete
+
+Creates buy/sell records via Laravel API using --identifier
+
+Clear logging to Laravel log path
+
+Updates: Enhanced API retries/logging, verbose mode, env validation, broader Jupiter fallback.
+
+Ensure .env contains:
+SOLANA_PRIVATE_KEY=<mnemonic or bs58>
+SOLANA_RPC_URL=<rpc url>
+APP_URL=<url to api>
  */
 
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey, VersionedTransaction, ComputeBudgetProgram, SystemProgram, TransactionInstruction, TransactionMessage } from '@solana/web3.js';
@@ -25,7 +30,6 @@ import fetch from 'node-fetch';
 import https from 'node:https';
 import fs from 'node:fs';
 import bs58 from 'bs58'; // npm i bs58
-
 dotenv.config();
 
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
@@ -36,7 +40,6 @@ const GLOBAL = new PublicKey('4wTV1YmiEkRvAtNtsSGPtUrqRYQMe5SKy2uB4haw8tqK');
 const FEE_RECIPIENT = new PublicKey('CebN5WGQ4jvTD3mcN9gUjBGxx3fUXGF9riMtfuGAjNbJ');
 const BONDING_CURVE_SEED = Buffer.from('bonding-curve');
 const ASSOCIATED_BONDING_CURVE_SEED = Buffer.from('associated-bonding-curve');
-
 const BUY_DISCRIMINATOR = Buffer.from([0x66,0x06,0x3d,0x12,0x01,0xda,0xeb,0xea]);
 const SELL_DISCRIMINATOR = Buffer.from([0x33,0xe6,0x85,0xa4,0x01,0x7f,0x83,0xad]);
 
@@ -47,9 +50,9 @@ function deriveGlobal() {
 async function logToLaravel(level, message, verbose = false) {
     const timestamp = new Date().toISOString();
     const line = `[${timestamp}] ${level.toUpperCase()}: ${message}\n`;
-
     // Still write to Laravel log file for local debugging
     try { fs.appendFileSync(LARAVEL_LOG_PATH, line); } catch (_) {}
+
     console.log(line.trim());
 
     // Send to Laravel API (which forwards to Slack)
@@ -82,7 +85,6 @@ async function createSolanaCallOrder({ solana_call_id, type, tx_signature=null, 
         logToLaravel('error', 'APP_URL not set - cannot create SolanaCallOrder record!', verbose);
         throw new Error('Missing APP_URL');
     }
-
     try {
         if(error && error.length > MAX_ERROR_LENGTH){
             error = error.slice(0, MAX_ERROR_LENGTH) + '...'; // truncate long errors
@@ -149,6 +151,7 @@ async function getMintProgramId(connection, mint) {
     if (!mintInfo) throw new Error('Mint not found');
     return mintInfo.owner;
 }
+
 const TOKEN_2022_PROGRAM = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');
 
 // Update createBuyInstruction (dynamic token/system, add WSOL ATA)
@@ -224,7 +227,7 @@ async function fetchWithRateLimit(url,options={},retries=3){
 async function getDexStatus(tokenAddress){
     try{
         const res = await fetchWithRateLimit(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`);
-        if(res?.pairs?.length) return {dexId:res.pairs[0].dexId,poolAddress:res.pairs[0].pairAddress,liquidity:res.pairs[0].liquidity?.usd??null};
+        if(res?.pairs?.length) return {dexId:res.pairs[0].dexId,poolAddress:res.pairs[0].pairAddress,liquidity:res.pairs[0].liquidity?.usd??null, priceUsd: res.pairs[0].priceUsd};
     }catch(e){ logToLaravel('error','Dex fetch failed: '+(e.message||e)); }
     return null;
 }
@@ -254,7 +257,6 @@ async function executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId, 
     const abc = deriveAssociatedBondingCurve(bc, mint);
     const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
     const state = await getBondingCurveState(connection, bc);
-
     logToLaravel('info', `Bonding curve state for ${mint.toString()}: ${state ? `complete=${state.complete}, reserves=${state.realSolReserves.toString()}` : 'null/uninitialized'}`, verbose);
 
     let txSig, dexUsed;
@@ -304,7 +306,7 @@ async function executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId, 
         tx_signature: txSig
     }, verbose);
 
-    return { txSig, dexUsed };
+    return { txSig, dexUsed, tokenBalanceBN };
 }
 
 // Updated executeSell (Jupiter fallback, dynamic createSellInstruction)
@@ -314,7 +316,6 @@ async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId, ve
         logToLaravel('info', `Attempting sell: ${bnToNumberSafe(tokenAmountBN)} tokens`, verbose);
         const bc = deriveBondingCurve(mint);
         const state = await getBondingCurveState(connection,bc);
-
         // Sell partial to avoid slippage: 80% of balance
         const sellAmountBN = tokenAmountBN.mul(new BN(80)).div(new BN(100));
         const balanceBefore = await connection.getBalance(wallet.publicKey);
@@ -350,7 +351,7 @@ async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId, ve
             const instructions=[
                 ComputeBudgetProgram.setComputeUnitLimit({units:600_000}),
                 ComputeBudgetProgram.setComputeUnitPrice({microLamports:1000000}),
-                createSellInstruction(wallet.publicKey,mint,bc,deriveAssociatedBondingCurve(bc,mint),userATA,sellAmountBN,minNum)
+                await createSellInstruction(connection, wallet.publicKey, mint, bc, deriveAssociatedBondingCurve(bc,mint), userATA, sellAmountBN.toNumber(), minNum)
             ];
 
             const msg = new TransactionMessage({payerKey:wallet.publicKey,recentBlockhash:blockhash,instructions}).compileToV0Message();
@@ -426,29 +427,17 @@ async function snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy = '
     let buySig = null;
     let tokenBalanceBN = new BN(0);
     let dexUsed = 'unknown';
+    let buyAmountForeign = 0;
+    let solBalanceAfterBuy = balance;
 
     // --- Execute Buy Safely ---
     try {
-        ({ txSig: buySig, dexUsed } = await executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId, verbose));
-        // Attempt to fetch primary ATA first
-        let tokenBalanceBN = new BN(0);
-        const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
-
-        const acc = await getAccount(connection, userATA).catch(() => null);
-        if (acc) {
-            tokenBalanceBN = toBN(acc.amount);
-        } else {
-            logToLaravel('warn', 'Primary ATA not found, checking all token accounts...', verbose);
-            const tokenAccounts = await connection.getTokenAccountsByOwner(wallet.publicKey, { mint });
-            for (const t of tokenAccounts.value) {
-                const parsed = t.account.data;
-                const amount = parseInt(parsed.parsed?.info?.tokenAmount?.amount || 0);
-                tokenBalanceBN = tokenBalanceBN.add(toBN(amount));
-            }
-        }
-
-        logToLaravel('info', `Token balance after buy: ${bnToNumberSafe(tokenBalanceBN)}`, verbose);
-
+        const buyResult = await executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId, verbose);
+        buySig = buyResult.txSig;
+        dexUsed = buyResult.dexUsed;
+        tokenBalanceBN = buyResult.tokenBalanceBN;
+        buyAmountForeign = bnToNumberSafe(tokenBalanceBN);
+        solBalanceAfterBuy = await connection.getBalance(wallet.publicKey);
     } catch (e) {
         const errMsg = e.message || String(e);
         logToLaravel('error', 'Buy failed: ' + errMsg, verbose);
@@ -466,23 +455,94 @@ async function snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy = '
 
     // --- Handle Sell ---
     let sellSig = null;
-    let waitSeconds = 5;
-    const match = /^(\d+)-SEC-SELL$/i.exec(strategy);
-    if (match) waitSeconds = parseInt(match[1], 10);
 
-    logToLaravel('info', `⏳ Waiting ${waitSeconds} seconds before selling (strategy: ${strategy})`, verbose);
-    await new Promise(r => setTimeout(r, waitSeconds * 1000));
+    if (strategy === 'TAKE-PROFITS-OR-SMALL-LOSE') {
+        const profitThreshold = 25; // 25%
+        const lossThreshold = -5; // 5% loss
+        const pollIntervalMs = 10000; // Poll every 10 seconds
+        const maxPollDurationMs = 3600000; // Max 1 hour (adjustable)
+        let pollStartTime = Date.now();
+        let shouldSell = false;
+        let sellReason = '';
 
-    if (!tokenBalanceBN.isZero()) {
-        try {
-            ({ txSig: sellSig } = await executeSell(connection, wallet, mint, tokenBalanceBN, solanaCallId, verbose));
-        } catch (e) {
-            const errMsg = e.message || String(e);
-            logToLaravel('error', 'Sell failed: ' + errMsg, verbose);
-            await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errMsg }, verbose);
+        logToLaravel('info', `Starting polling for TAKE-PROFITS-OR-SMALL-LOSE strategy (poll every ${pollIntervalMs/1000}s, max ${maxPollDurationMs/1000/60} min)`, verbose);
+
+        while (Date.now() - pollStartTime < maxPollDurationMs) {
+            try {
+                // Fetch current token price from DexScreener
+                const dexStatus = await getDexStatus(mint.toString());
+                if (!dexStatus || !dexStatus.priceUsd) {
+                    logToLaravel('warn', 'Failed to fetch token price from DexScreener, skipping this poll', verbose);
+                    await new Promise(r => setTimeout(r, pollIntervalMs));
+                    continue;
+                }
+
+                const currentPriceUsd = parseFloat(dexStatus.priceUsd);
+                const currentValueUsd = buyAmountForeign * currentPriceUsd;
+                const costBasisUsd = buyAmountSol * 150; // Approximate SOL price in USD (hardcoded; in prod, fetch real SOL price)
+                const profitLossUsd = currentValueUsd - costBasisUsd;
+                const profitLossPct = (profitLossUsd / costBasisUsd) * 100;
+
+                logToLaravel('info', `Poll: Price $${currentPriceUsd}, Value $${currentValueUsd.toFixed(2)}, PnL ${profitLossPct.toFixed(2)}%`, verbose);
+
+                if (profitLossPct >= profitThreshold) {
+                    shouldSell = true;
+                    sellReason = `Reached ${profitThreshold}% profit at $${currentPriceUsd}`;
+                    break;
+                } else if (profitLossPct <= lossThreshold) {
+                    shouldSell = true;
+                    sellReason = `Reached ${Math.abs(lossThreshold)}% loss at $${currentPriceUsd}`;
+                    break;
+                }
+
+                // Wait before next poll
+                await new Promise(r => setTimeout(r, pollIntervalMs));
+            } catch (e) {
+                logToLaravel('error', `Poll error: ${e.message}, continuing...`, verbose);
+                await new Promise(r => setTimeout(r, pollIntervalMs));
+            }
+        }
+
+        if (!shouldSell) {
+            sellReason = `Max poll time reached without hitting thresholds`;
+        }
+
+        logToLaravel('info', `Polling ended: ${shouldSell ? 'SELL' : 'HOLD'} - ${sellReason}`, verbose);
+
+        if (shouldSell && !tokenBalanceBN.isZero()) {
+            try {
+                const sellResult = await executeSell(connection, wallet, mint, tokenBalanceBN, solanaCallId, verbose);
+                sellSig = sellResult.txSig;
+            } catch (e) {
+                const errMsg = e.message || String(e);
+                logToLaravel('error', 'Sell failed: ' + errMsg, verbose);
+                await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errMsg }, verbose);
+            }
+        } else if (tokenBalanceBN.isZero()) {
+            logToLaravel('warn', 'Token balance is zero, skipping sell.', verbose);
         }
     } else {
-        logToLaravel('warn', 'Token balance is zero, skipping sell.', verbose);
+        // Time-based strategy
+        const match = /^(\d+)-SEC-SELL$/i.exec(strategy);
+        if (match) {
+            const waitSeconds = parseInt(match[1], 10);
+            logToLaravel('info', ` Waiting ${waitSeconds} seconds before selling (strategy: ${strategy})`, verbose);
+            await new Promise(r => setTimeout(r, waitSeconds * 1000));
+            if (!tokenBalanceBN.isZero()) {
+                try {
+                    const sellResult = await executeSell(connection, wallet, mint, tokenBalanceBN, solanaCallId, verbose);
+                    sellSig = sellResult.txSig;
+                } catch (e) {
+                    const errMsg = e.message || String(e);
+                    logToLaravel('error', 'Sell failed: ' + errMsg, verbose);
+                    await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errMsg }, verbose);
+                }
+            } else {
+                logToLaravel('warn', 'Token balance is zero, skipping sell.', verbose);
+            }
+        } else {
+            logToLaravel('warn', `Unknown strategy: ${strategy}, skipping sell`, verbose);
+        }
     }
 
     logToLaravel('info', 'Snipe complete! Wallet: https://solscan.io/account/' + wallet.publicKey.toString(), verbose);
@@ -501,7 +561,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
             const verbose = args.includes('--verbose');
 
             if (!tokenAddress || !solanaCallId) {
-                logToLaravel('error', 'Usage: node solana-snipe.js --identifier=ID --token=ADDRESS --amount=0.001 --strategy=10-SEC-SELL [--verbose]');
+                logToLaravel('error', 'Usage: node solana-snipe.js --identifier=ID --token=ADDRESS --amount=0.001 --strategy=TAKE-PROFITS-OR-SMALL-LOSE [--verbose]');
                 process.exit(1);
             }
 
