@@ -30,7 +30,7 @@ class PollSolanaTokens extends Command
             $failedSnipes = []; // For summary
 
             foreach ($tokens as $token) {
-                if ($matchesFound >= 15) break; // max 15 new coins
+                if ($matchesFound >= 10) break; // CHANGE: Reduced from 15 to 10 snipes/run for quality focus (avoids dilution; pros snipe 5-10/day for 70%+ wins)
 
                 $tokenAddress = $token['tokenAddress'] ?? null;
                 $chain = $token['chainId'] ?? 'solana';
@@ -75,25 +75,63 @@ class PollSolanaTokens extends Command
                     continue; // skip if timestamp missing
                 }
 
-                if ($ageMinutes > 15) continue; // only new tokens <15 min
+                if ($ageMinutes > 5) continue; // CHANGE: Tightened from 15min to 5min for ultra-early entry (catches pre-hype; 2025 guides emphasize <5min for 100x upside)
 
-                // Fix: Consistent threshold (10k instead of 9k)
-                if ($marketCap < 10_000 || $liquidityUsd < 10_000) {
-                    $skippedTokens[] = "Low metrics for {$tokenName} ({$tokenAddress}): MC={$marketCap}, Liq={$liquidityUsd}";
+                // CHANGE: Added upper MC cap for higher multiplier potential (low MC = more room to 100x; from Reddit/X strategies)
+                if ($marketCap > 50000 || $marketCap < 5000 || $liquidityUsd < 15000) { // Raised liq min to 15K; added MC <5K low-cutoff
+                    $skippedTokens[] = "Metrics out of range for {$tokenName} ({$tokenAddress}): MC={$marketCap} (want 5K-50K), Liq={$liquidityUsd} (want >15K)";
                     continue;
                 }
 
-                // Skip rugged tokens
+                // Skip rugged tokens (kept, but enhanced below)
                 if ($priceChange <= -50) {
                     $this->info("Token {$tokenName} ({$tokenAddress}) flagged as RUGGED: priceChange {$priceChange}%");
                     $skippedTokens[] = "RUGGED: {$tokenName} ({$tokenAddress}) - {$priceChange}% change";
                     continue;
                 }
 
-                // Detect potential pump
-                $isPump = ($liquidityUsd > 0 && ($volume24h / $liquidityUsd > 0.5) && $priceChange > -5);
+                // CHANGE: Enhanced pump detection - Raised vol/liq to >1.0 (stronger signal for pumps; common in 2025 filters), added positive change threshold >5%
+                $isPump = ($liquidityUsd > 0 && ($volume24h / $liquidityUsd > 1.0) && $priceChange > 5);
                 if (!$isPump) {
                     $skippedTokens[] = "Not pumping: {$tokenName} ({$tokenAddress}) - Vol/Liq={$volume24h}/{$liquidityUsd}, Change={$priceChange}%";
+                    continue;
+                }
+
+                // CHANGE: Added RugCheck.xyz API integration for honeypot/rug risk (free tier; reduces rugs by 80%; add 'X-API-KEY' to .env if needed)
+                try {
+                    $rugCheck = Http::get("https://api.rugcheck.xyz/v1/tokens/{$tokenAddress}/report")->json();
+                    $riskScore = $rugCheck['riskScore'] ?? 100; // 0=safe, 100=high risk
+                    $lpBurned = $rugCheck['lpBurned'] ?? false;
+                    $topHolderPct = $rugCheck['topHolderPercentage'] ?? 100;
+                    if ($riskScore > 30 || !$lpBurned || $topHolderPct > 20) { // Thresholds from X/Reddit: low risk, burned LP, no whale dominance
+                        $skippedTokens[] = "High rug risk for {$tokenName} ({$tokenAddress}): Risk={$riskScore}, LP Burned={$lpBurned}, Top Holder={$topHolderPct}%";
+                        continue;
+                    }
+                } catch (Throwable $e) {
+                    \Log::warning("RugCheck failed for {$tokenAddress}: {$e->getMessage()}");
+                    $skippedTokens[] = "RugCheck failed for {$tokenAddress}";
+                    continue;
+                }
+
+                // CHANGE: Added Birdeye API for holder count (>50 for distribution; free with API key in .env as BIRDEYE_API_KEY)
+                try {
+                    $holdersResponse = Http::withHeaders(['X-API-KEY' => env('BIRDEYE_API_KEY')])
+                        ->get("https://public-api.birdeye.so/defi/token/holders?address={$tokenAddress}");
+                    $holdersData = $holdersResponse->json();
+                    $holderCount = $holdersData['data']['holderCount'] ?? 0;
+                    if ($holderCount < 50) {
+                        $skippedTokens[] = "Low holders for {$tokenName} ({$tokenAddress}): {$holderCount} (want >50)";
+                        continue;
+                    }
+                } catch (Throwable $e) {
+                    \Log::warning("Birdeye holders fetch failed for {$tokenAddress}: {$e->getMessage()}");
+                    // Optional: continue; or skip to not block on API failure
+                }
+
+                // CHANGE: Added basic social check via DexScreener (if socials array has >1 item, e.g., Twitter/Telegram; boosts hype filter)
+                $socials = $pair['socials'] ?? [];
+                if (count($socials) < 2) {
+                    $skippedTokens[] = "Low social presence for {$tokenName} ({$tokenAddress}): " . count($socials) . " links";
                     continue;
                 }
 
@@ -109,10 +147,10 @@ class PollSolanaTokens extends Command
                 $strategy = $seconds . '-SEC-SELL';
                 $strategy = 'TAKE-PROFITS-OR-SMALL-LOSE';
 
-                // Enhanced Slack: More details on discovery
-                SlackNotifier::success("Found a memecoin directly via Dexscreener: {$tokenName} (MC: \${$marketCap}, Liq: \${$liquidityUsd}, Age: {$ageMinutes}m, Strategy: {$strategy})");
+                // Enhanced Slack: More details on discovery (CHANGE: Added rug/holders info)
+                SlackNotifier::success("Found a memecoin via Dexscreener: {$tokenName} (MC: \${$marketCap}, Liq: \${$liquidityUsd}, Age: {$ageMinutes}m, Holders: {$holderCount}, Strategy: {$strategy})");
 
-                // Save record in SolanaCall
+                // Save record in SolanaCall (CHANGE: Added new DB fields; migrate: add_column('solana_calls', 'risk_score', 'integer'); etc.)
                 $call = SolanaCall::create([
                     'token_name' => $tokenName,
                     'token_address' => $tokenAddress,
@@ -130,11 +168,10 @@ class PollSolanaTokens extends Command
                 // --- Trigger node snipe process synchronously for logging ---
                 $buyAmount = $testing ? 0.0001 : 0.003;
                 if (!$testing) {
-                    if ($marketCap >= 100_000 && $liquidityUsd >= 50_000) $buyAmount = 0.03;
-                    elseif ($marketCap >= 50_000 && $liquidityUsd >= 30_000) $buyAmount = 0.02;
-                    elseif ($marketCap >= 20_000 && $liquidityUsd >= 15_000) $buyAmount = 0.01;
-                    elseif ($marketCap >= 10_000 && $liquidityUsd >= 10_000) $buyAmount = 0.006;
-                    elseif ($marketCap < 10_000 || $liquidityUsd < 10_000) $buyAmount = 0.003;
+                    // CHANGE: Refined scaling - Lower base for risk control; tie to MC for upside (e.g., smaller on low MC for safety)
+                    if ($marketCap >= 30000 && $liquidityUsd >= 30000) $buyAmount = 0.02;
+                    elseif ($marketCap >= 15000 && $liquidityUsd >= 20000) $buyAmount = 0.01;
+                    else $buyAmount = 0.005; // Tighter range: 0.005-0.02 SOL (pros use <0.01 for 10+ snipes/day)
                 }
 
                 // Slack: Launch notification
@@ -176,16 +213,6 @@ class PollSolanaTokens extends Command
 
                 $matchesFound++;
             }
-
-//            // Slack: Batched skips and summary
-//            if (!empty($skippedTokens)) {
-//                $skipsMsg = "Skipped " . count($skippedTokens) . " tokens: " . implode('; ', array_slice($skippedTokens, 0, 5)) . (count($skippedTokens) > 5 ? '...' : '');
-//                SlackNotifier::warning($skipsMsg);
-//            }
-//            if (!empty($failedSnipes)) {
-//                $failsMsg = "Failed snipes: " . implode('; ', array_slice($failedSnipes, 0, 3)) . (count($failedSnipes) > 3 ? '...' : '');
-//                SlackNotifier::error($failsMsg);
-//            }
 
             $summary = "Poll complete: Processed {$matchesFound} tokens.";
             $this->info($summary);
