@@ -5,7 +5,7 @@
         <div class="mb-6 p-4 bg-gray-900 rounded shadow">
             <h2 class="font-semibold text-lg">{{ $call->token_name }}</h2>
             <h3 class="font-semibold text-lg">
-                <a target="_blank" class="underline" href="https://dexscreener.com/solana/{{ $call->token_address }}">
+                <a target="_blank" class="underline" href="https://www.defined.fi/sol/{{ $call->token_address }}">
                     {{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}
                 </a>
             </h3>
