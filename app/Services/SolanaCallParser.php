@@ -21,28 +21,44 @@ class SolanaCallParser
         $data = [];
 
         // ---- Token header ----
-        $headerText = implode("\n", array_slice($lines, 0, 5));
+        $firstLine = array_shift($lines); // grab first line
+        if ($firstLine) {
+            // Remove leading emojis or symbols
+            $firstLine = preg_replace('/^[^\p{L}\p{N}]+/u', '', $firstLine);
 
-        // Match token name (ignore emoji) and address; age is optional
-        if (preg_match(
-            '/(?:💊\s*)?(.+?)\s*\(\$[A-Za-z0-9]+\)?\s*\n├\s*([A-Za-z0-9]+)\s*(?:\n└.*🌱(\d+)([smh]))?/u',
-            $headerText,
-            $matches
-        )) {
-            $data['token_name'] = trim($matches[1]);
-            $data['token_address'] = $matches[2];
-
-            if (!empty($matches[3]) && !empty($matches[4])) {
-                $age = (int) $matches[3];
-                $unit = strtolower($matches[4]);
-                $data['age_minutes'] = match($unit) {
-                    's' => ceil($age / 60),
-                    'm' => $age,
-                    'h' => $age * 60,
-                    default => null
-                };
+            // Extract anything in parentheses as ticker
+            if (preg_match('/\((.*?)\)/', $firstLine, $matches)) {
+                $data['token_ticker'] = trim($matches[1]);
+                // Remove parentheses content from name
+                $firstLine = preg_replace('/\s*\(.*?\)\s*/', '', $firstLine);
+            } else {
+                $data['token_ticker'] = ''; // leave empty if none
             }
+
+            $data['token_name'] = trim($firstLine);
         }
+
+        // ---- Token address and age ----
+        $addressLine = $lines[0] ?? null;
+        $ageLine = $lines[1] ?? null;
+
+        if ($addressLine) {
+            // Remove leading ├ or └ and any whitespace
+            $addressLine = ltrim($addressLine, "├└ \t\n\r\0\x0B");
+            $data['token_address'] = $addressLine;
+        }
+
+        if ($ageLine && preg_match('/🌱(\d+)([smh])/u', $ageLine, $matches)) {
+            $age = (int)$matches[1];
+            $unit = strtolower($matches[2]);
+            $data['age_minutes'] = match($unit) {
+                's' => ceil($age / 60),
+                'm' => $age,
+                'h' => $age * 60,
+                default => null
+            };
+        }
+
 
         // ---- Stats section ----
         foreach ($lines as $line) {
