@@ -4,7 +4,11 @@
     @foreach($solanaCalls as $call)
         <div class="mb-6 p-4 bg-gray-900 rounded shadow">
             <h2 class="font-semibold text-lg">{{ $call->token_name }}</h2>
-            <h3 class="font-semibold text-lg">{{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}</h3>
+            <h3 class="font-semibold text-lg">
+                <a target="_blank" class="underline" href="https://dexscreener.com/solana/{{ $call->token_address }}">
+                    {{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}
+                </a>
+            </h3>
             <p>Market Cap: {{ number_format($call->market_cap, 0)}}</p>
             <p>Volume 24h: {{ number_format($call->volume_24h, 0) }}</p>
             <p>Profit (SOL): {{ number_format($call->profit(), 6) }}</p>
