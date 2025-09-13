@@ -23,6 +23,7 @@ import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import https from 'node:https';
 import fs from 'node:fs';
+import bs58 from 'bs58'; // npm i bs58
 
 dotenv.config();
 
@@ -332,35 +333,44 @@ async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId){
 
 
 // ---- Main Snipe with error fallback ----
-async function snipeToken(tokenAddress,buyAmountSol,solanaCallId){
-    const seed = process.env.SOLANA_PRIVATE_KEY?.trim();
-    if(!seed||!bip39.validateMnemonic(seed)) throw new Error('Invalid SOLANA_PRIVATE_KEY');
-    const seedBuf = await bip39.mnemonicToSeed(seed);
-    const derived = derivePath("m/44'/501'/0'/0'",seedBuf.toString('hex')).key;
-    const wallet = Keypair.fromSeed(derived);
+async function snipeToken(tokenAddress, buyAmountSol, solanaCallId) {
+    const keyString = process.env.SOLANA_PRIVATE_KEY?.trim();
+    if (!keyString) throw new Error('Missing SOLANA_PRIVATE_KEY');
+
+    let wallet;
+    try {
+        // If the key is a 64-byte array or base58 string
+        const secretKey = typeof keyString === 'string' && keyString.length > 50
+            ? bs58.decode(keyString)           // base58-encoded full secret key
+            : Uint8Array.from(JSON.parse(keyString)); // fallback for JSON array
+        wallet = Keypair.fromSecretKey(secretKey);
+    } catch (e) {
+        throw new Error('Invalid SOLANA_PRIVATE_KEY format: ' + e.message);
+    }
 
     const rpc = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
-    const connection = new Connection(rpc,'confirmed');
+    const connection = new Connection(rpc, 'confirmed');
 
     const mint = new PublicKey(tokenAddress);
-    logToLaravel('info',`Sniping ${buyAmountSol} SOL for ${tokenAddress} with wallet ${wallet.publicKey.toString()}`);
+    logToLaravel('info', `Sniping ${buyAmountSol} SOL for ${tokenAddress} with wallet ${wallet.publicKey.toString()}`);
 
     const balance = await connection.getBalance(wallet.publicKey);
-    const required = Math.floor((buyAmountSol+0.005)*LAMPORTS_PER_SOL);
-    if(balance<required){
-        const errMsg = `Insufficient balance: ${balance/LAMPORTS_PER_SOL} SOL`;
+    const required = Math.floor((buyAmountSol + 0.005) * LAMPORTS_PER_SOL);
+    if (balance < required) {
+        const errMsg = `Insufficient balance: ${balance / LAMPORTS_PER_SOL} SOL`;
         await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errMsg });
         throw new Error(errMsg);
     }
 
     let buySig, sellSig = null;
     try {
-        ({txSig:buySig} = await executeBuy(connection,wallet,mint,buyAmountSol,solanaCallId));
-    } catch(e) {
+        ({ txSig: buySig } = await executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId));
+    } catch (e) {
         const errMsg = e.message || String(e);
         await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errMsg });
-        throw new Error('Buy failed: '+errMsg);
+        throw new Error('Buy failed: ' + errMsg);
     }
+
 
     // Wait for token to arrive
     await new Promise(r=>setTimeout(r,5000));
