@@ -40,6 +40,10 @@ const ASSOCIATED_BONDING_CURVE_SEED = Buffer.from('associated-bonding-curve');
 const BUY_DISCRIMINATOR = Buffer.from([0x66,0x06,0x3d,0x12,0x01,0xda,0xeb,0xea]);
 const SELL_DISCRIMINATOR = Buffer.from([0x33,0xe6,0x85,0xa4,0x01,0x7f,0x83,0xad]);
 
+function deriveGlobal() {
+    return PublicKey.findProgramAddressSync([Buffer.from("global")], PUMP_FUN_PROGRAM)[0];
+}
+
 async function logToLaravel(level, message, verbose = false) {
     const timestamp = new Date().toISOString();
     const line = `[${timestamp}] ${level.toUpperCase()}: ${message}\n`;
@@ -140,40 +144,54 @@ function bnToNumberSafe(bn){
 function deriveBondingCurve(mint){ return PublicKey.findProgramAddressSync([BONDING_CURVE_SEED,mint.toBuffer()],PUMP_FUN_PROGRAM)[0]; }
 function deriveAssociatedBondingCurve(bondingCurve,mint){ return PublicKey.findProgramAddressSync([bondingCurve.toBuffer(),TOKEN_PROGRAM_ID.toBuffer(),mint.toBuffer()],ASSOCIATED_TOKEN_PROGRAM_ID)[0]; }
 
-function createBuyInstruction(user,mint,bondingCurve,associatedBondingCurve,userATA,solAmount,maxSolCost){
-    const data = Buffer.concat([BUY_DISCRIMINATOR,new BN(solAmount).toArrayLike(Buffer,'le',8),new BN(maxSolCost).toArrayLike(Buffer,'le',8)]);
-    const keys=[
-        {pubkey:GLOBAL,isSigner:false,isWritable:false},
-        {pubkey:FEE_RECIPIENT,isSigner:false,isWritable:true},
-        {pubkey:mint,isSigner:false,isWritable:false},
-        {pubkey:bondingCurve,isSigner:false,isWritable:true},
-        {pubkey:associatedBondingCurve,isSigner:false,isWritable:true},
-        {pubkey:userATA,isSigner:false,isWritable:true},
-        {pubkey:user,isSigner:true,isWritable:true},
-        {pubkey:SystemProgram.programId,isSigner:false,isWritable:false},
-        {pubkey:TOKEN_PROGRAM_ID,isSigner:false,isWritable:false},
-        {pubkey:ASSOCIATED_TOKEN_PROGRAM_ID,isSigner:false,isWritable:false},
-        {pubkey:PUMP_FUN_PROGRAM,isSigner:false,isWritable:false}
+async function getMintProgramId(connection, mint) {
+    const mintInfo = await connection.getAccountInfo(mint);
+    if (!mintInfo) throw new Error('Mint not found');
+    return mintInfo.owner;
+}
+const TOKEN_2022_PROGRAM = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');
+
+// Update createBuyInstruction (dynamic token/system, add WSOL ATA)
+async function createBuyInstruction(connection, user, mint, bondingCurve, associatedBondingCurve, userATA, solAmount, maxSolCost) {
+    const tokenProgramId = await getMintProgramId(connection, mint);
+    const userWSOLATA = await getAssociatedTokenAddress(SOL_MINT, user);
+    const data = Buffer.concat([BUY_DISCRIMINATOR, new BN(solAmount).toArrayLike(Buffer, 'le', 8), new BN(maxSolCost).toArrayLike(Buffer, 'le', 8)]);
+    const keys = [
+        { pubkey: deriveGlobal(), isSigner: false, isWritable: false },
+        { pubkey: FEE_RECIPIENT, isSigner: false, isWritable: true },
+        { pubkey: mint, isSigner: false, isWritable: false },
+        { pubkey: bondingCurve, isSigner: false, isWritable: true },
+        { pubkey: associatedBondingCurve, isSigner: false, isWritable: true },
+        { pubkey: userATA, isSigner: false, isWritable: true },
+        { pubkey: userWSOLATA, isSigner: false, isWritable: true }, // Fixed: WSOL ATA
+        { pubkey: user, isSigner: true, isWritable: true },
+        { pubkey: SOL_MINT, isSigner: false, isWritable: false }, // SOL mint
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+        { pubkey: tokenProgramId, isSigner: false, isWritable: false }, // Dynamic token program
+        { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+        { pubkey: PUMP_FUN_PROGRAM, isSigner: false, isWritable: false }
     ];
-    return new TransactionInstruction({programId:PUMP_FUN_PROGRAM,keys,data});
+    return new TransactionInstruction({ programId: PUMP_FUN_PROGRAM, keys, data });
 }
 
-function createSellInstruction(user,mint,bondingCurve,associatedBondingCurve,userATA,tokenAmount,minSolOut){
-    const data = Buffer.concat([SELL_DISCRIMINATOR,new BN(tokenAmount).toArrayLike(Buffer,'le',8),new BN(minSolOut).toArrayLike(Buffer,'le',8)]);
-    const keys=[
-        {pubkey:GLOBAL,isSigner:false,isWritable:false},
-        {pubkey:FEE_RECIPIENT,isSigner:false,isWritable:true},
-        {pubkey:mint,isSigner:false,isWritable:false},
-        {pubkey:bondingCurve,isSigner:false,isWritable:true},
-        {pubkey:associatedBondingCurve,isSigner:false,isWritable:true},
-        {pubkey:userATA,isSigner:false,isWritable:true},
-        {pubkey:user,isSigner:true,isWritable:true},
-        {pubkey:SystemProgram.programId,isSigner:false,isWritable:false},
-        {pubkey:TOKEN_PROGRAM_ID,isSigner:false,isWritable:false},
-        {pubkey:ASSOCIATED_TOKEN_PROGRAM_ID,isSigner:false,isWritable:false},
-        {pubkey:PUMP_FUN_PROGRAM,isSigner:false,isWritable:false}
+// Update createSellInstruction (dynamic token program)
+async function createSellInstruction(connection, user, mint, bondingCurve, associatedBondingCurve, userATA, tokenAmount, minSolOut) {
+    const tokenProgramId = await getMintProgramId(connection, mint);
+    const data = Buffer.concat([SELL_DISCRIMINATOR, new BN(tokenAmount).toArrayLike(Buffer, 'le', 8), new BN(minSolOut).toArrayLike(Buffer, 'le', 8)]);
+    const keys = [
+        { pubkey: deriveGlobal(), isSigner: false, isWritable: false },
+        { pubkey: FEE_RECIPIENT, isSigner: false, isWritable: true },
+        { pubkey: mint, isSigner: false, isWritable: false },
+        { pubkey: bondingCurve, isSigner: false, isWritable: true },
+        { pubkey: associatedBondingCurve, isSigner: false, isWritable: true },
+        { pubkey: userATA, isSigner: false, isWritable: true },
+        { pubkey: user, isSigner: true, isWritable: true },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+        { pubkey: tokenProgramId, isSigner: false, isWritable: false }, // Dynamic token program
+        { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+        { pubkey: PUMP_FUN_PROGRAM, isSigner: false, isWritable: false }
     ];
-    return new TransactionInstruction({programId:PUMP_FUN_PROGRAM,keys,data});
+    return new TransactionInstruction({ programId: PUMP_FUN_PROGRAM, keys, data });
 }
 
 async function getBondingCurveState(connection,bondingCurve){
@@ -230,78 +248,53 @@ async function jupiterSwap(connection,wallet,inputMint,outputMint,amount,slippag
 }
 
 // ---- Execute Buy (with broader fallback) ----
-async function executeBuy(connection,wallet,mint,buyAmountSol,solanaCallId, verbose = false){
-    const inLamportsBN = new BN(Math.floor(buyAmountSol*LAMPORTS_PER_SOL));
+async function executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId, verbose = false) {
+    const inLamportsBN = new BN(Math.floor(buyAmountSol * LAMPORTS_PER_SOL));
     const bc = deriveBondingCurve(mint);
-    const abc = deriveAssociatedBondingCurve(bc,mint);
-    const userATA = await getAssociatedTokenAddress(mint,wallet.publicKey);
-    const state = await getBondingCurveState(connection,bc);
+    const abc = deriveAssociatedBondingCurve(bc, mint);
+    const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
+    const state = await getBondingCurveState(connection, bc);
 
     logToLaravel('info', `Bonding curve state for ${mint.toString()}: ${state ? `complete=${state.complete}, reserves=${state.realSolReserves.toString()}` : 'null/uninitialized'}`, verbose);
 
     let txSig, dexUsed;
-    try{
-        if(!state || state.complete){
+    try {
+        if (!state || state.complete) {
             dexUsed = 'jupiter';
-            try {
-                txSig = await jupiterSwap(connection,wallet,SOL_MINT,mint,inLamportsBN.toString());
-            } catch(e) {
-                const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
-                logToLaravel('error','Buy failed (Jupiter swap): '+errorMsg, verbose);
-                await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:errorMsg }, verbose);
-                throw new Error('Buy failed: '+errorMsg);
-            }
+            txSig = await jupiterSwap(connection, wallet, SOL_MINT, mint, inLamportsBN.toString(), 1000);
         } else {
-            const maxSol = Math.floor(inLamportsBN.toNumber()*1.01);
-            const {blockhash} = await connection.getLatestBlockhash();
-            const instructions=[
-                ComputeBudgetProgram.setComputeUnitLimit({units:600_000}),
-                ComputeBudgetProgram.setComputeUnitPrice({microLamports:1000000}),
-                createAssociatedTokenAccountInstruction(wallet.publicKey,userATA,wallet.publicKey,mint),
-                createBuyInstruction(wallet.publicKey,mint,bc,abc,userATA,inLamportsBN.toNumber(),maxSol)
+            const maxSol = Math.floor(inLamportsBN.toNumber() * 1.01);
+            const { blockhash } = await connection.getLatestBlockhash();
+            const instructions = [
+                ComputeBudgetProgram.setComputeUnitLimit({ units: 600_000 }),
+                ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1000000 }),
+                createAssociatedTokenAccountInstruction(wallet.publicKey, userATA, wallet.publicKey, mint),
+                await createBuyInstruction(connection, wallet.publicKey, mint, bc, abc, userATA, inLamportsBN.toNumber(), maxSol) // Async for dynamic ID
             ];
-            const msg = new TransactionMessage({payerKey:wallet.publicKey,recentBlockhash:blockhash,instructions}).compileToV0Message();
+            const msg = new TransactionMessage({ payerKey: wallet.publicKey, recentBlockhash: blockhash, instructions }).compileToV0Message();
             const tx = new VersionedTransaction(msg);
             tx.sign([wallet]);
 
-            try {
-                txSig = await connection.sendTransaction(tx,{skipPreflight:false,maxRetries:3});
-                await connection.confirmTransaction(txSig,'finalized');
-                dexUsed = 'bonding-curve';
-            } catch(e) {
-                const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
-                logToLaravel('error','Buy failed (Bonding curve tx): '+errorMsg, verbose);
-                await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:errorMsg }, verbose);
-                throw new Error('Buy failed: '+errorMsg); // Broader throw for fallback
-            }
+            txSig = await connection.sendTransaction(tx, { skipPreflight: false, maxRetries: 3 });
+            await connection.confirmTransaction(txSig, 'finalized');
+            dexUsed = 'bonding-curve';
         }
-    }catch(e){
-        // Fix: Broader fallback - any buy error triggers Jupiter retry
-        const errorMsg = e.message || String(e);
-        logToLaravel('warn', `Buy error, falling back to Jupiter: ${errorMsg.substring(0, 200)}`, verbose);
-        dexUsed = 'jupiter';
-        try {
-            txSig = await jupiterSwap(connection,wallet,SOL_MINT,mint,inLamportsBN.toString());
-        } catch(e2) {
-            const fallbackError = e2.logs ? e2.logs.join('\n') : e2.message || String(e2);
-            logToLaravel('error','Buy failed (fallback Jupiter swap): '+fallbackError, verbose);
-            await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:fallbackError }, verbose);
-            throw new Error('Buy failed: '+fallbackError);
-        }
+    } catch (e) {
+        const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
+        logToLaravel('error', 'Buy failed (Bonding curve tx): ' + errorMsg, verbose);
+        await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errorMsg }, verbose);
+        throw new Error('Buy failed: ' + errorMsg);
     }
 
-    let tokenBalanceBN;
+    let tokenBalanceBN = new BN(0);
     try {
-        const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
         const acc = await getAccount(connection, userATA);
         tokenBalanceBN = toBN(acc.amount);
         logToLaravel('info', `Post-buy token balance: ${bnToNumberSafe(tokenBalanceBN)}`, verbose);
-    } catch(e) {
-        tokenBalanceBN = new BN(0);
+    } catch (e) {
         logToLaravel('warn', `Failed to fetch post-buy balance: ${e.message}`, verbose);
     }
 
-    // Create Laravel buy record - now throws on failure
     await createSolanaCallOrder({
         solana_call_id: solanaCallId,
         type: 'buy',
@@ -311,34 +304,29 @@ async function executeBuy(connection,wallet,mint,buyAmountSol,solanaCallId, verb
         tx_signature: txSig
     }, verbose);
 
-    return {txSig,dexUsed};
+    return { txSig, dexUsed };
 }
 
+// Updated executeSell (Jupiter fallback, dynamic createSellInstruction)
 // ---- Execute Sell with enhanced error logging ----
 async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId, verbose = false){
     try {
         logToLaravel('info', `Attempting sell: ${bnToNumberSafe(tokenAmountBN)} tokens`, verbose);
-        const dexInfo = await getDexStatus(mint.toString());
-        if(!dexInfo || !dexInfo.liquidity || dexInfo.liquidity <= 0){
-            const errorMsg = 'No liquidity detected for selling';
-            logToLaravel('warn', errorMsg, verbose);
-            await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errorMsg }, verbose);
-            return { txSig: null, dexUsed: null };
-        }
-
         const bc = deriveBondingCurve(mint);
-        const abc = deriveAssociatedBondingCurve(bc,mint);
-        const userATA = await getAssociatedTokenAddress(mint,wallet.publicKey);
         const state = await getBondingCurveState(connection,bc);
 
+        // Sell partial to avoid slippage: 80% of balance
+        const sellAmountBN = tokenAmountBN.mul(new BN(80)).div(new BN(100));
         const balanceBefore = await connection.getBalance(wallet.publicKey);
+        const userATA = await getAssociatedTokenAddress(mint,wallet.publicKey);
 
         let txSig, dexUsed;
 
         if(!state || state.complete){
+            // For complete curves, always attempt Jupiter sell (no reserve check needed - uses Raydium pool)
             dexUsed = 'jupiter';
             try {
-                txSig = await jupiterSwap(connection,wallet,mint,SOL_MINT,tokenAmountBN.toString());
+                txSig = await jupiterSwap(connection,wallet,mint,SOL_MINT,sellAmountBN.toString(),1500); // 15% slippage for volatiles
             } catch(e) {
                 const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
                 logToLaravel('error','Sell failed (Jupiter swap): '+errorMsg, verbose);
@@ -346,7 +334,15 @@ async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId, ve
                 return { txSig:null, dexUsed:null };
             }
         } else {
-            const expectedOut = state.virtualSolReserves.mul(tokenAmountBN).div(state.virtualTokenReserves.add(tokenAmountBN));
+            // Only check reserves for non-complete (on-curve sells)
+            if (state.realSolReserves.lt(new BN(100000000))) { // 0.1 SOL
+                const errorMsg = `Insufficient reserves for on-curve sell: ${state.realSolReserves.toString()}`;
+                logToLaravel('warn', errorMsg, verbose);
+                await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errorMsg }, verbose);
+                return { txSig: null, dexUsed: null };
+            }
+
+            const expectedOut = state.virtualSolReserves.mul(sellAmountBN).div(state.virtualTokenReserves.add(sellAmountBN));
             const minOut = expectedOut.mul(new BN(9900)).div(new BN(10000));
             const minNum = bnToNumberSafe(minOut);
 
@@ -354,7 +350,7 @@ async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId, ve
             const instructions=[
                 ComputeBudgetProgram.setComputeUnitLimit({units:600_000}),
                 ComputeBudgetProgram.setComputeUnitPrice({microLamports:1000000}),
-                createSellInstruction(wallet.publicKey,mint,bc,abc,userATA,tokenAmountBN,minNum)
+                createSellInstruction(wallet.publicKey,mint,bc,deriveAssociatedBondingCurve(bc,mint),userATA,sellAmountBN,minNum)
             ];
 
             const msg = new TransactionMessage({payerKey:wallet.publicKey,recentBlockhash:blockhash,instructions}).compileToV0Message();
@@ -379,7 +375,7 @@ async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId, ve
         await createSolanaCallOrder({
             solana_call_id: solanaCallId,
             type: 'sell',
-            amount_foreign: bnToNumberSafe(tokenAmountBN),
+            amount_foreign: bnToNumberSafe(sellAmountBN),
             amount_sol: amountSolReceived,
             dex_used: dexUsed,
             tx_signature: txSig
@@ -394,7 +390,6 @@ async function executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId, ve
         return {txSig:null,dexUsed:null};
     }
 }
-
 
 // ---- Main Snipe with error fallback ----
 async function snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy = '5-SEC-SELL', verbose = false) {
@@ -435,14 +430,25 @@ async function snipeToken(tokenAddress, buyAmountSol, solanaCallId, strategy = '
     // --- Execute Buy Safely ---
     try {
         ({ txSig: buySig, dexUsed } = await executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId, verbose));
-        try {
-            const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
-            const acc = await getAccount(connection, userATA);
+        // Attempt to fetch primary ATA first
+        let tokenBalanceBN = new BN(0);
+        const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
+
+        const acc = await getAccount(connection, userATA).catch(() => null);
+        if (acc) {
             tokenBalanceBN = toBN(acc.amount);
-        } catch (e) {
-            logToLaravel('warn', `Failed to fetch token balance: ${e.message}`, verbose);
-            tokenBalanceBN = new BN(0);
+        } else {
+            logToLaravel('warn', 'Primary ATA not found, checking all token accounts...', verbose);
+            const tokenAccounts = await connection.getTokenAccountsByOwner(wallet.publicKey, { mint });
+            for (const t of tokenAccounts.value) {
+                const parsed = t.account.data;
+                const amount = parseInt(parsed.parsed?.info?.tokenAmount?.amount || 0);
+                tokenBalanceBN = tokenBalanceBN.add(toBN(amount));
+            }
         }
+
+        logToLaravel('info', `Token balance after buy: ${bnToNumberSafe(tokenBalanceBN)}`, verbose);
+
     } catch (e) {
         const errMsg = e.message || String(e);
         logToLaravel('error', 'Buy failed: ' + errMsg, verbose);

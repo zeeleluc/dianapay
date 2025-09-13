@@ -174,8 +174,6 @@ class PollSolanaTokens extends Command
                 }
 
                 $matchesFound++;
-
-                exit;
             }
 
             // Slack: Batched skips and summary
