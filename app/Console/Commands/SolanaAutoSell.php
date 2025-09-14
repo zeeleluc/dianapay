@@ -64,11 +64,41 @@ class SolanaAutoSell extends Command
                 }
 
                 // Fetch latest data
+                // Fetch latest data
                 $res = Http::timeout(5)->get("https://api.dexscreener.com/latest/dex/tokens/{$tokenAddress}");
                 if (!$res->successful() || empty($res->json('pairs'))) {
-                    $this->warn("Failed to fetch data for token {$tokenAddress}");
-                    continue;
+                    $this->warn("Dexscreener API failed for {$tokenAddress}, forcing immediate sell to avoid blind holding.");
+
+                    $tokenAmount = $buyOrder->amount_foreign;
+
+                    $process = new Process([
+                        'node',
+                        base_path('scripts/solana-sell.js'),
+                        '--identifier=' . $call->id,
+                        '--token=' . $tokenAddress,
+                        '--amount=' . $tokenAmount,
+                    ]);
+
+                    $process->setTimeout(360);
+                    $process->run();
+                    $process->wait();
+
+                    if (!$process->isSuccessful()) {
+                        $this->error("Forced sell (API fail) failed for SolanaCall ID {$call->id}: " . $process->getErrorOutput());
+                    } else {
+                        $output = trim($process->getOutput());
+                        $this->info("Forced sell completed for SolanaCall ID {$call->id}: {$output}");
+
+                        Log::warning("Forced sell executed due to API failure", [
+                            'call_id' => $call->id,
+                            'token' => $tokenAddress,
+                            'amount_foreign' => $tokenAmount,
+                        ]);
+                    }
+
+                    continue; // Skip rest of loop after forced sell
                 }
+
 
                 $currentPrice = $res->json('pairs.0.priceUsd') ?? 0;
                 $currentLiquidity = $res->json('pairs.0.liquidity.usd') ?? 0;
