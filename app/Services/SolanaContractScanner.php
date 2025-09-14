@@ -88,8 +88,8 @@ class SolanaContractScanner
 
         // Last 5-minute change from pairData (assume already fetched)
         $priceChangeM5 = $this->pairData[0]['priceChange']['m5'] ?? 0;
-        $priceChangeH6 = $tokenData['priceChange']['h6'] ?? 0;   // ✅ extra timeframe
-        $priceChangeH24 = $tokenData['priceChange']['h24'] ?? 0; // ✅ extra timeframe
+        $priceChangeH6 = $tokenData['priceChange']['h6'] ?? 0;
+        $priceChangeH24 = $tokenData['priceChange']['h24'] ?? 0;
 
         // --- Thresholds ---
         $minLiquidity   = 1000;
@@ -98,7 +98,7 @@ class SolanaContractScanner
         $minVolumeH1    = 500;
         $minVolLiqRatio = 0.2;
         $maxH1Loss      = -10;
-        $minM5Gain      = 0.1;
+        $minM5Gain      = 5.0; // ✅ Adjusted for 5% minimum gain
         $maxM5Gain      = 50;
 
         // 🚨 Rug filter: reject if any timeframe is -50% or worse
