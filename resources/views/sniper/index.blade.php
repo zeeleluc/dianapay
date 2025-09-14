@@ -6,7 +6,7 @@
     <div class="mb-6 text-center">
         <div class="inline-block bg-gray-800 text-white px-6 py-3 rounded-lg shadow-md">
             <p class="text-lg font-semibold">
-                Total Profit:
+                Total Profit Closed Positions:
                 <span class="{{ \App\Models\SolanaCall::totalProfitSol() < 0 ? 'text-red-400' : 'text-green-400' }}">
                     {{ \App\Models\SolanaCall::totalProfitSol() }} SOL
                 </span>
