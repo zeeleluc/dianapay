@@ -6,20 +6,16 @@ use App\Helpers\SlackNotifier;
 use App\Helpers\SolanaTokenData;
 use App\Models\SolanaCall;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
 
 class SolanaAutoSell extends Command
 {
     protected $signature = 'solana:auto-sell';
-    protected $description = 'Automatically sell tokens based on momentum, trailing stop, and time';
+    protected $description = 'Automatically sell tokens based on 5-minute price drop or time';
 
     protected float $minLiquidity = 5000;  // Minimum liquidity for sell
-    protected float $m5Threshold = -15.0;  // Sell if 5-minute price change < -15%
-    protected float $h1Threshold = 0.0;    // Confirm M5 sell with H1 trend
-    protected float $h6Threshold = -10.0;  // Confirm with H6 trend
-    protected float $trailingStopPercentage = -15.0; // Sell if price drops 15% from peak
+    protected float $m5Threshold = -5.0;   // Sell if 5-minute price change < -5%
     protected int $maxHoldMinutes = 120;   // Sell after 120 minutes
 
     public function handle()
@@ -100,7 +96,6 @@ class SolanaAutoSell extends Command
                     'call_id' => $call->id,
                     'token' => $tokenAddress,
                 ]);
-                $data = $tokenDataHelper->getTokenData($tokenAddress);
 
                 if ($data === null) {
                     SlackNotifier::error("QuickNode API failed or token not indexed for {$tokenAddress}.");
@@ -150,7 +145,6 @@ class SolanaAutoSell extends Command
                 $currentLiquidity = $data['liquidity']['usd'] ?? 0;
                 $priceChangeM5 = $data['priceChange']['m5'] ?? 0;
                 $priceChangeH1 = $data['priceChange']['h1'] ?? 0;
-                $priceChangeH6 = $data['priceChange']['h6'] ?? 0;
                 $priceChangeH24 = $data['priceChange']['h24'] ?? 0;
 
                 Log::info('[AutoSell Command] Fetched token data', [
@@ -161,7 +155,6 @@ class SolanaAutoSell extends Command
                     'priceChange' => [
                         'm5' => $priceChangeM5,
                         'h1' => $priceChangeH1,
-                        'h6' => $priceChangeH6,
                         'h24' => $priceChangeH24,
                     ],
                 ]);
@@ -197,53 +190,26 @@ class SolanaAutoSell extends Command
                     continue;
                 }
 
-                // Update trailing stop (cached peak price)
-                $cacheKey = "peak_price_{$tokenAddress}";
-                $peakPrice = Cache::get($cacheKey, $currentPrice);
-                if ($currentPrice > $peakPrice) {
-                    Cache::put($cacheKey, $currentPrice, now()->addHours(24));
-                    $peakPrice = $currentPrice;
-                    Log::info('[AutoSell Command] Updated peak price', [
-                        'call_id' => $call->id,
-                        'token' => $tokenAddress,
-                        'peak_price' => $peakPrice,
-                    ]);
-                }
-                $trailingStopPrice = $peakPrice * (1 + $this->trailingStopPercentage / 100);
-                $trailingStopChange = $peakPrice > 0 ? (($currentPrice - $peakPrice) / $peakPrice) * 100 : 0;
+                // Check hold time (handle negative values)
+                $holdTime = max(0, now()->diffInMinutes($buyOrder->created_at));
 
-                // Adjust m5Threshold based on 24-hour volatility
-                $volatility = abs($priceChangeH24);
-                $m5Threshold = $volatility > 20 ? -10.0 : -15.0;
-
-                // Check hold time
-                $holdTime = now()->diffInMinutes($buyOrder->created_at);
-
-                $this->info("Token {$tokenAddress} M5: {$priceChangeM5}%, H1: {$priceChangeH1}%, H6: {$priceChangeH6}%, Volatility: {$volatility}%, Hold Time: {$holdTime} minutes, Trailing Stop: {$trailingStopChange}%");
+                $this->info("Token {$tokenAddress} M5: {$priceChangeM5}%, H1: {$priceChangeH1}%, Volatility: {$priceChangeH24}%, Hold Time: {$holdTime} minutes");
                 Log::info('[AutoSell Command] Evaluating sell conditions', [
                     'call_id' => $call->id,
                     'token' => $tokenAddress,
                     'm5_change' => $priceChangeM5,
                     'h1_change' => $priceChangeH1,
-                    'h6_change' => $priceChangeH6,
-                    'volatility' => $volatility,
-                    'm5_threshold' => $m5Threshold,
-                    'h1_threshold' => $this->h1Threshold,
-                    'h6_threshold' => $this->h6Threshold,
+                    'h24_change' => $priceChangeH24,
+                    'm5_threshold' => $this->m5Threshold,
                     'hold_time' => $holdTime,
                     'max_hold_minutes' => $this->maxHoldMinutes,
                     'current_price' => $currentPrice,
-                    'peak_price' => $peakPrice,
-                    'trailing_stop_change' => $trailingStopChange,
-                    'trailing_stop_price' => $trailingStopPrice,
                 ]);
 
                 // Sell conditions
                 $sellReason = null;
-                if ($priceChangeM5 < $m5Threshold && ($priceChangeH1 < $this->h1Threshold || $priceChangeH6 < $this->h6Threshold)) {
-                    $sellReason = "negative M5 ({$priceChangeM5}%) with weak H1 ({$priceChangeH1}%) or H6 ({$priceChangeH6}%)";
-                } elseif ($currentPrice < $trailingStopPrice) {
-                    $sellReason = "trailing stop triggered (price dropped to {$currentPrice} below {$trailingStopPrice}, {$trailingStopChange}%)";
+                if ($priceChangeM5 < $this->m5Threshold) {
+                    $sellReason = "negative M5 ({$priceChangeM5}% < {$this->m5Threshold}%)";
                 } elseif ($holdTime > $this->maxHoldMinutes) {
                     $sellReason = "maximum hold time exceeded ({$holdTime} minutes)";
                 }
@@ -289,25 +255,19 @@ class SolanaAutoSell extends Command
                             'reason' => $sellReason,
                             'm5_change' => $priceChangeM5,
                             'h1_change' => $priceChangeH1,
-                            'h6_change' => $priceChangeH6,
                             'hold_time' => $holdTime,
-                            'peak_price' => $peakPrice,
-                            'trailing_stop_change' => $trailingStopChange,
                         ]);
                         SlackNotifier::success("Sell completed for SolanaCall #{$call->id} ({$tokenAddress}): {$output}");
                     }
                 } else {
-                    $this->info("Holding token {$tokenAddress}: M5 ({$priceChangeM5}%) still viable, Trailing Stop: {$trailingStopChange}%");
+                    $this->info("Holding token {$tokenAddress}: M5 ({$priceChangeM5}% >= {$this->m5Threshold}%)");
                     Log::info('[AutoSell Command] Holding token', [
                         'call_id' => $call->id,
                         'token' => $tokenAddress,
                         'm5_change' => $priceChangeM5,
                         'h1_change' => $priceChangeH1,
-                        'h6_change' => $priceChangeH6,
                         'hold_time' => $holdTime,
                         'current_price' => $currentPrice,
-                        'peak_price' => $peakPrice,
-                        'trailing_stop_change' => $trailingStopChange,
                     ]);
                 }
 
