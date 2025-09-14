@@ -98,8 +98,9 @@ class SolanaContractScanner
         $minVolumeH1    = 500;
         $minVolLiqRatio = 0.2;
         $maxH1Loss      = -10;
-        $minM5Gain      = 5.0; // ✅ Adjusted for 5% minimum gain
+        $minM5Gain      = 5.0;  // Small peak in 5-minute timeframe
         $maxM5Gain      = 50;
+        $maxH1Downtrend = -0.1; // ✅ Small downtrend in prior 1-hour (e.g., -0.1% to -10%)
 
         // 🚨 Rug filter: reject if any timeframe is -50% or worse
         $rugThreshold = -50;
@@ -129,8 +130,9 @@ class SolanaContractScanner
             return false;
         }
 
-        if ($priceChangeH1 < $maxH1Loss) {
-            Log::info("Skipping {$this->tokenAddress}: H1 change {$priceChangeH1}% outside desired short-wave range ({$maxH1Loss}% → 0%)");
+        // Check for prior downtrend in H1 (small decline before M5 peak)
+        if ($priceChangeH1 > $maxH1Downtrend || $priceChangeH1 < $maxH1Loss) {
+            Log::info("Skipping {$this->tokenAddress}: H1 change {$priceChangeH1}% not in desired downtrend range ({$maxH1Loss}% to {$maxH1Downtrend}%)");
             return false;
         }
 
