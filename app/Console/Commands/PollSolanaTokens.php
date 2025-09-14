@@ -16,28 +16,16 @@ use App\Services\SolanaContractScanner;
 
 class PollSolanaTokens extends Command
 {
-    protected $signature = 'solana:poll-solana-tokens
-                            {--testing=0 : If 1, use tiny buy amounts for testing}';
-
+    protected $signature = 'solana:poll-solana-tokens';
     protected $description = 'Poll trending + boosted Solana tokens, detect pump potential, and buy them';
 
     public function handle(): int
     {
-        $testing = (bool) $this->option('testing');
-        $this->info('Starting trending/boosted memecoin scan...' . ($testing ? ' [TEST MODE]' : ''));
-
         try {
+            $boostedPairs = Http::get('https://api.dexscreener.com/token-boosts/latest/v1')->json() ?? [];
+            $topBoostedPairs = Http::get('https://api.dexscreener.com/token-boosts/top/v1')->json() ?? [];
 
-            $boostedResponse = Http::get('https://api.dexscreener.com/token-boosts/latest/v1')->json();
-            $boostedPairs = $boostedResponse ?? [];
-
-            $topBoostedResponse = Http::get('https://api.dexscreener.com/token-boosts/top/v1')->json();
-            $topBoostedPairs = $topBoostedResponse ?? [];
-
-            // --- Normalize all tokens ---
             $allTokens = [];
-
-            // Collect token addresses first
             foreach (array_merge($boostedPairs, $topBoostedPairs) as $b) {
                 if (!isset($b['tokenAddress']) || ($b['chainId'] ?? '') !== 'solana') continue;
 
@@ -49,17 +37,14 @@ class PollSolanaTokens extends Command
                 ];
             }
 
-            // Separate call to fetch token info
             foreach ($allTokens as &$token) {
                 $info = $this->getTokenInfo($token['tokenAddress'], $token['chainId']);
-
-                $token['tokenName'] = substr($info['name'] ?? 'Unknown Token', 0, 100); // truncate if needed
-                $token['ticker']    = $info['symbol'] ?? null;
+                $token['tokenName'] = substr($info['name'] ?? 'Unknown Token', 0, 100);
+                $token['ticker'] = $info['symbol'] ?? null;
             }
 
             $matchesFound = 0;
             $skippedTokens = [];
-            $failedBuys = [];
 
             foreach ($allTokens as $token) {
                 if ($matchesFound >= 10) break;
@@ -70,51 +55,42 @@ class PollSolanaTokens extends Command
                 $isBoosted = $token['boosted'] ?? false;
 
                 if (!$tokenAddress || $chain !== 'solana') continue;
+                if ($this->shouldSkipToken($tokenAddress)) continue;
 
-                if ($this->shouldSkipToken($tokenAddress)) {
-                    continue;
-                }
+                // ✅ Fetch token-pair data once
+                $pairResponse = Http::get("https://api.dexscreener.com/token-pairs/v1/{$chain}/{$tokenAddress}")->json();
+                $pair = is_array($pairResponse) && !empty($pairResponse[0]) ? $pairResponse[0] : [];
 
-                // 🔍 Run scanner
+                // 🔍 Run scanner with fetched pair
                 $scanner = new SolanaContractScanner($tokenAddress, $chain);
                 $scanner->setBoosted($isBoosted);
-
-                $pairResponse = Http::get("https://api.dexscreener.com/token-pairs/v1/{$chain}/{$tokenAddress}")->json();
-                $pair = $pairResponse[0] ?? [];
-
                 if (!$scanner->canTrade($pair)) {
                     $skippedTokens[] = "Scanner rejected {$tokenName} ({$tokenAddress})";
                     continue;
                 }
 
-                // ✅ Fetch pair details safely
-                $pairResponse = Http::get("https://api.dexscreener.com/token-pairs/v1/{$chain}/{$tokenAddress}")->json();
-                $pair = is_array($pairResponse) && !empty($pairResponse[0]) ? $pairResponse[0] : [];
                 $marketCap = $pair['marketCap'] ?? 0;
                 $liquidityUsd = $pair['liquidity']['usd'] ?? 0;
                 $volume24h = $pair['volume']['h24'] ?? 0;
                 $pairCreatedAtMs = $pair['pairCreatedAt'] ?? 0;
-                $pairCreatedAt = $pairCreatedAtMs > 0 ? (int) ($pairCreatedAtMs / 1000) : time();
+                $pairCreatedAt = $pairCreatedAtMs > 0 ? (int)($pairCreatedAtMs / 1000) : time();
                 $ageMinutes = max(0, round((time() - $pairCreatedAt) / 60));
                 $devSold = $token['devSold'] ?? false;
 
                 $boostLabel = $isBoosted ? ' [BOOSTED]' : '';
                 SlackNotifier::success("Found trending{$boostLabel} Solana token: {$tokenName} (MC: \${$marketCap}, Liq: \${$liquidityUsd}, Age: {$ageMinutes}m)");
 
-
-                // Fetch latest market cap
+                // Fetch latest market cap (still a separate endpoint)
                 $res = Http::timeout(5)->get("https://api.dexscreener.com/latest/dex/tokens/{$tokenAddress}");
                 if (!$res->successful() || empty($res->json('pairs'))) {
                     $this->warn("Failed to fetch market cap for token {$tokenAddress}");
                     continue;
                 }
-
                 $currentMarketCap = $res->json('pairs.0.marketCap');
-
 
                 // Save call in DB
                 $call = SolanaCall::create([
-                    'token_name' => substr($tokenName, 0, 100), // limit to 100 chars
+                    'token_name' => substr($tokenName, 0, 100),
                     'token_address' => $tokenAddress,
                     'age_minutes' => $ageMinutes,
                     'market_cap' => $currentMarketCap,
@@ -128,13 +104,7 @@ class PollSolanaTokens extends Command
                 $this->info("Saved SolanaCall ID: {$call->id} - Token: {$tokenName} ({$tokenAddress}){$boostLabel}");
 
                 // --- Node buy process ---
-                $buyAmount = $testing ? 0.001 : 0.003;
-                if (!$testing) {
-                    if ($marketCap >= 30000 && $liquidityUsd >= 30000) $buyAmount = 0.02;
-                    elseif ($marketCap >= 15000 && $liquidityUsd >= 20000) $buyAmount = 0.01;
-                    else $buyAmount = 0.005;
-                }
-
+                $buyAmount = 0.002;
                 SlackNotifier::info("Launching buy for SolanaCall #{$call->id}: {$tokenName} ({$buyAmount} SOL){$boostLabel}");
 
                 $process = new Process([
@@ -145,9 +115,7 @@ class PollSolanaTokens extends Command
                     '--amount=' . $buyAmount,
                 ]);
                 $process->setTimeout(360);
-                $process->run(); // <-- run() waits for completion
-
-                $this->info("Started buy process for SolanaCall ID {$call->id} (PID: " . $process->getPid() . ")");
+                $process->run();
                 $process->wait();
 
                 $exitCode = $process->getExitCode();
@@ -161,7 +129,6 @@ class PollSolanaTokens extends Command
                     $errorMsg = $errorOutput ?: $output ?: 'Unknown error (exit ' . $exitCode . ')';
                     SlackNotifier::error("❌ Buy failed for #{$call->id} ({$tokenName}): {$errorMsg}");
                     $this->error("Buy failed for #{$call->id}: {$errorMsg}");
-                    $failedBuys[] = "#{$call->id}: {$errorMsg}";
                 } else {
                     SlackNotifier::info("Buy completed for #{$call->id} ({$tokenName}) (no output)");
                 }
@@ -169,18 +136,7 @@ class PollSolanaTokens extends Command
                 $matchesFound++;
             }
 
-            if (!empty($skippedTokens)) {
-                $skipsMsg = "Skipped " . count($skippedTokens) . " tokens: " . implode('; ', array_slice($skippedTokens, 0, 5)) . (count($skippedTokens) > 5 ? '...' : '');
-//                SlackNotifier::warning($skipsMsg);
-            }
-            if (!empty($failedBuys)) {
-                $failsMsg = "Failed buys: " . implode('; ', array_slice($failedBuys, 0, 3)) . (count($failedBuys) > 3 ? '...' : '');
-//                SlackNotifier::error($failsMsg);
-            }
-
-            $summary = "Poll complete: Processed {$matchesFound} tokens.";
-            $this->info($summary);
-
+            $this->info("Poll complete: Processed {$matchesFound} tokens.");
             return self::SUCCESS;
 
         } catch (Throwable $e) {
@@ -191,10 +147,10 @@ class PollSolanaTokens extends Command
             return self::FAILURE;
         }
     }
+
     private function getTokenInfo(string $tokenAddress, string $chain): array
     {
         $response = Http::get("https://api.dexscreener.com/token-pairs/v1/{$chain}/{$tokenAddress}");
-
         if ($response->failed()) {
             \Log::warning("Failed to fetch token info for {$tokenAddress}");
             return [];
@@ -204,7 +160,7 @@ class PollSolanaTokens extends Command
         $pair = $data[0] ?? [];
 
         return [
-            'name'   => $pair['baseToken']['name'] ?? null,
+            'name' => $pair['baseToken']['name'] ?? null,
             'symbol' => $pair['baseToken']['symbol'] ?? null,
         ];
     }
@@ -216,41 +172,22 @@ class PollSolanaTokens extends Command
             ->with('orders')
             ->first();
 
-        if (!$call) {
-            // No call at all for this token → continue
-            return false;
-        }
-
+        if (!$call) return false;
         $orders = $call->orders;
+        if ($orders->isEmpty()) return true;
 
-        if ($orders->isEmpty()) {
-            // No orders at all → skip
-            return true;
-        }
-
-        $hasBuy  = $orders->where('type', 'buy')->count() > 0;
+        $hasBuy = $orders->where('type', 'buy')->count() > 0;
         $hasSell = $orders->where('type', 'sell')->count() > 0;
 
-        if ($hasBuy && !$hasSell) {
-            // Only buy orders, no sells yet → skip
-            return true;
-        }
-
+        if ($hasBuy && !$hasSell) return true;
         if ($hasBuy && $hasSell) {
-            // Find the last sell across ALL calls for this token
             $lastSell = SolanaCallOrder::whereHas('solanaCall', function ($q) use ($tokenAddress) {
                 $q->where('token_address', $tokenAddress);
-            })
-                ->where('type', 'sell')
-                ->latest('created_at')
-                ->first();
+            })->where('type', 'sell')->latest('created_at')->first();
 
-            if ($lastSell && $lastSell->created_at->gt(Carbon::now()->subHours(2))) {
-                // Last sell is within 2 hours → skip
-                return true;
-            }
+            if ($lastSell && $lastSell->created_at->gt(Carbon::now()->subHours(2))) return true;
         }
 
-        return false; // ✅ Safe to proceed
+        return false;
     }
 }

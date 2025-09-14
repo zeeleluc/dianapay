@@ -17,13 +17,11 @@ use App\Helpers\SlackNotifier;
 class BuyNewSolanaTokens extends Command
 {
     protected $signature = 'solana:buy-new-solana-tokens';
-
     protected $description = 'Poll new trending/boosted Solana tokens and buy them using solana-buy.js';
 
     public function handle(): int
     {
         try {
-            // --- Fetch trending + boosted tokens ---
             $boostedPairs = Http::get('https://api.dexscreener.com/token-boosts/latest/v1')->json() ?? [];
             $topBoostedPairs = Http::get('https://api.dexscreener.com/token-boosts/top/v1')->json() ?? [];
 
@@ -39,9 +37,10 @@ class BuyNewSolanaTokens extends Command
             }
 
             foreach ($allTokens as &$token) {
-                $info = $this->getTokenInfo($token['tokenAddress'], $token['chainId']);
-                $token['tokenName'] = substr($info['name'] ?? 'Unknown Token', 0, 100);
-                $token['ticker'] = $info['symbol'] ?? null;
+                $pair = $this->getTokenPair($token['tokenAddress'], $token['chainId']);
+                $token['tokenName'] = substr($pair['baseToken']['name'] ?? 'Unknown Token', 0, 100);
+                $token['ticker'] = $pair['baseToken']['symbol'] ?? null;
+                $token['pair'] = $pair; // store for reuse
             }
 
             $matchesFound = 0;
@@ -53,48 +52,35 @@ class BuyNewSolanaTokens extends Command
                 $chain = $token['chainId'];
                 $tokenName = $token['tokenName'];
                 $isBoosted = $token['boosted'] ?? false;
+                $pair = $token['pair'] ?? [];
 
                 if (!$tokenAddress || $chain !== 'solana') continue;
+                if ($this->shouldSkipToken($tokenAddress)) continue;
 
-                // Skip if any recent buys exist
-                if ($this->shouldSkipToken($tokenAddress)) {
-                    continue;
-                }
-
-                // 🔍 Run scanner
+                // 🔍 Run scanner with stored pair
                 $scanner = new SolanaContractScanner($tokenAddress, $chain, true);
                 $scanner->setBoosted($isBoosted);
+                if (!$scanner->canTrade($pair)) continue;
 
-                $pairResponse = Http::get("https://api.dexscreener.com/token-pairs/v1/{$chain}/{$tokenAddress}")->json();
-                $pair = $pairResponse[0] ?? [];
+                // --- Calculate age and basic metrics from stored pair ---
+                $pairCreatedAtMs = $pair['pairCreatedAt'] ?? 0;
+                $nowMs = round(microtime(true) * 1000);
+                $ageSeconds = ($nowMs - $pairCreatedAtMs) / 1000;
 
-                if (!$scanner->canTrade($pair)) {
-                    continue;
-                }
+                if ($ageSeconds > 120) continue; // skip tokens older than 2 minutes
 
-                // --- Save call record ---
-                $pairResponse = Http::get("https://api.dexscreener.com/latest/dex/tokens/{$tokenAddress}");
-                $pair = $pairResponse->json('pairs.0') ?? [];
                 $liquidityUsd = $pair['liquidity']['usd'] ?? 0;
                 $volume24h = $pair['volume']['h24'] ?? 0;
 
-                $pairCreatedAtMs = $pair['pairCreatedAt'] ?? 0;
-                $nowMs = round(microtime(true) * 1000); // current time in ms
-                $ageSeconds = ($nowMs - $pairCreatedAtMs) / 1000; // age in seconds
-
-                if ($ageSeconds > 60) {
-                    continue; // skip tokens older than 1 minute
-                }
-
-                // Fetch latest market cap
+                // Fetch latest market cap once
                 $res = Http::timeout(5)->get("https://api.dexscreener.com/latest/dex/tokens/{$tokenAddress}");
                 if (!$res->successful() || empty($res->json('pairs'))) {
                     $this->warn("Failed to fetch market cap for token {$tokenAddress}");
                     continue;
                 }
-
                 $currentMarketCap = $res->json('pairs.0.marketCap');
 
+                // --- Save call record ---
                 $call = SolanaCall::create([
                     'token_name'    => substr($tokenName, 0, 100),
                     'token_address' => $tokenAddress,
@@ -109,7 +95,6 @@ class BuyNewSolanaTokens extends Command
 
                 // --- Determine buy amount ---
                 $buyAmount = 0.001;
-
                 SlackNotifier::info("Launching buy for SolanaCall #{$call->id}: {$tokenName} ({$buyAmount} SOL)");
 
                 // --- Launch Node.js buy process ---
@@ -151,15 +136,11 @@ class BuyNewSolanaTokens extends Command
         }
     }
 
-    private function getTokenInfo(string $tokenAddress, string $chain): array
+    private function getTokenPair(string $tokenAddress, string $chain): array
     {
         $response = Http::get("https://api.dexscreener.com/token-pairs/v1/{$chain}/{$tokenAddress}");
         if ($response->failed()) return [];
-        $pair = $response->json()[0] ?? [];
-        return [
-            'name'   => $pair['baseToken']['name'] ?? null,
-            'symbol' => $pair['baseToken']['symbol'] ?? null,
-        ];
+        return $response->json()[0] ?? [];
     }
 
     private function shouldSkipToken(string $tokenAddress): bool
@@ -169,16 +150,15 @@ class BuyNewSolanaTokens extends Command
             ->with('orders')
             ->first();
 
-        if (!$call) return false; // New token → safe to buy
+        if (!$call) return false;
 
         $orders = $call->orders;
-        if ($orders->isEmpty()) return true; // Only call, no buys → skip
+        if ($orders->isEmpty()) return true;
 
-        $hasBuy  = $orders->where('type', 'buy')->count() > 0;
+        $hasBuy = $orders->where('type', 'buy')->count() > 0;
         $hasSell = $orders->where('type', 'sell')->count() > 0;
 
-        if ($hasBuy && !$hasSell) return true; // Only buys, no sells → skip
-
+        if ($hasBuy && !$hasSell) return true;
         if ($hasBuy && $hasSell) {
             $lastSell = SolanaCallOrder::whereHas('solanaCall', fn($q) => $q->where('token_address', $tokenAddress))
                 ->where('type', 'sell')

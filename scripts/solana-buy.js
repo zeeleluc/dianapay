@@ -127,16 +127,14 @@ async function createSolanaCallOrder({ solana_call_id, type, tx_signature=null, 
     }
 }
 
-function toBN(value){
-    if(BN.isBN(value)) return value;
-    if(typeof value==='bigint') return new BN(value.toString());
-    if(typeof value==='number') return new BN(Math.floor(value));
-    if(typeof value==='string') return new BN(value.split('.')[0]);
-    return new BN(String(value));
+function toBNLamports(solAmount) {
+    // Round up to ensure even tiny amounts actually get sent
+    const lamports = Math.ceil(solAmount * LAMPORTS_PER_SOL);
+    return new BN(lamports);
 }
 
 function bnToNumberSafe(bn){
-    if(!BN.isBN(bn)) bn = toBN(bn);
+    if(!BN.isBN(bn)) bn = toBNLamports(bn);
     const max = new BN(Number.MAX_SAFE_INTEGER.toString());
     if(bn.gt(max)) throw new Error('BN too large to convert safely');
     return bn.toNumber();
@@ -154,10 +152,17 @@ async function getMintProgramId(connection, mint) {
 const TOKEN_2022_PROGRAM = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');
 
 // Update createBuyInstruction (dynamic token/system, add WSOL ATA)
-async function createBuyInstruction(connection, user, mint, bondingCurve, associatedBondingCurve, userATA, solAmount, maxSolCost) {
+async function createBuyInstruction(connection, user, mint, bondingCurve, associatedBondingCurve, userATA, solLamportsBN, maxSolLamportsBN) {
     const tokenProgramId = await getMintProgramId(connection, mint);
     const userWSOLATA = await getAssociatedTokenAddress(SOL_MINT, user);
-    const data = Buffer.concat([BUY_DISCRIMINATOR, new BN(solAmount).toArrayLike(Buffer, 'le', 8), new BN(maxSolCost).toArrayLike(Buffer, 'le', 8)]);
+
+    // Encode lamports directly as BN
+    const data = Buffer.concat([
+        BUY_DISCRIMINATOR,
+        solLamportsBN.toArrayLike(Buffer, 'le', 8),
+        maxSolLamportsBN.toArrayLike(Buffer, 'le', 8)
+    ]);
+
     const keys = [
         { pubkey: deriveGlobal(), isSigner: false, isWritable: false },
         { pubkey: FEE_RECIPIENT, isSigner: false, isWritable: true },
@@ -165,14 +170,15 @@ async function createBuyInstruction(connection, user, mint, bondingCurve, associ
         { pubkey: bondingCurve, isSigner: false, isWritable: true },
         { pubkey: associatedBondingCurve, isSigner: false, isWritable: true },
         { pubkey: userATA, isSigner: false, isWritable: true },
-        { pubkey: userWSOLATA, isSigner: false, isWritable: true }, // Fixed: WSOL ATA
+        { pubkey: userWSOLATA, isSigner: false, isWritable: true },
         { pubkey: user, isSigner: true, isWritable: true },
-        { pubkey: SOL_MINT, isSigner: false, isWritable: false }, // SOL mint
+        { pubkey: SOL_MINT, isSigner: false, isWritable: false },
         { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-        { pubkey: tokenProgramId, isSigner: false, isWritable: false }, // Dynamic token program
+        { pubkey: tokenProgramId, isSigner: false, isWritable: false },
         { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
         { pubkey: PUMP_FUN_PROGRAM, isSigner: false, isWritable: false }
     ];
+
     return new TransactionInstruction({ programId: PUMP_FUN_PROGRAM, keys, data });
 }
 
@@ -229,11 +235,12 @@ async function jupiterSwap(connection,wallet,inputMint,outputMint,amount,slippag
     return sig;
 }
 
-// ---- Execute Buy (with broader fallback) ----
-// ---- Execute Buy (with dynamic fallback to Jupiter) ----
 async function executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId, verbose = false) {
     try {
-        const inLamportsBN = new BN(Math.floor(buyAmountSol * LAMPORTS_PER_SOL));
+        // Convert SOL → lamports as BN immediately
+        const inLamportsBN = toBNLamports(buyAmountSol);
+        const maxSolLamportsBN = inLamportsBN.muln(101).divn(100); // +1% slippage
+
         const bc = deriveBondingCurve(mint);
         const abc = deriveAssociatedBondingCurve(bc, mint);
         const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
@@ -245,19 +252,18 @@ async function executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId, 
         let txSig, dexUsed;
 
         if (!state || state.complete) {
-            // Use Jupiter swap if curve is uninitialized or fully complete
+            // Use Jupiter swap if curve is uninitialized or complete
             dexUsed = 'jupiter';
             txSig = await jupiterSwap(connection, wallet, SOL_MINT, mint, inLamportsBN.toString(), 1000);
         } else {
             // On-curve buy
-            const maxSol = Math.floor(inLamportsBN.toNumber() * 1.01); // 1% slippage
             const { blockhash } = await connection.getLatestBlockhash();
 
             const instructions = [
                 ComputeBudgetProgram.setComputeUnitLimit({ units: 600_000 }),
                 ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000_000 }),
                 createAssociatedTokenAccountInstruction(wallet.publicKey, userATA, wallet.publicKey, mint),
-                await createBuyInstruction(connection, wallet.publicKey, mint, bc, abc, userATA, inLamportsBN.toNumber(), maxSol)
+                await createBuyInstruction(connection, wallet.publicKey, mint, bc, abc, userATA, inLamportsBN, maxSolLamportsBN)
             ];
 
             const msg = new TransactionMessage({
@@ -274,27 +280,28 @@ async function executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId, 
             dexUsed = 'bonding-curve';
         }
 
-        // Fetch post-buy token balance
+        // Post-buy token balance
         let tokenBalanceBN = new BN(0);
         try {
             const acc = await getAccount(connection, userATA);
-            tokenBalanceBN = toBN(acc.amount);
-            logToLaravel('info', `Post-buy token balance: ${bnToNumberSafe(tokenBalanceBN)}`, verbose);
+            tokenBalanceBN = new BN(acc.amount.toString()); // Already integer
+            logToLaravel('info', `Post-buy token balance: ${tokenBalanceBN.toString()}`, verbose);
         } catch (e) {
             logToLaravel('warn', `Failed to fetch post-buy balance: ${e.message}`, verbose);
         }
 
-        // Record the buy in Laravel
+        // Record buy
         await createSolanaCallOrder({
             solana_call_id: solanaCallId,
             type: 'buy',
             amount_sol: buyAmountSol,
-            amount_foreign: bnToNumberSafe(tokenBalanceBN),
+            amount_foreign: tokenBalanceBN.toNumber(),
             dex_used: dexUsed,
             tx_signature: txSig
         }, verbose);
 
         return { txSig, dexUsed, tokenBalanceBN };
+
     } catch (e) {
         const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
         logToLaravel('error', `Buy failed: ${errorMsg}`, verbose);
@@ -302,6 +309,7 @@ async function executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId, 
         throw new Error('Buy failed: ' + errorMsg);
     }
 }
+
 
 // ---- Main Snipe with error fallback ----
 async function snipeToken(tokenAddress, buyAmountSol, solanaCallId, verbose = false) {
@@ -373,7 +381,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         try {
             const args = process.argv.slice(2);
             const tokenAddress = args.find(a => a.startsWith('--token='))?.replace('--token=', '');
-            const buyAmountSol = parseFloat(args.find(a => a.startsWith('--amount='))?.replace('--amount=', '0.001')) || 0.001;
+            // Extract the amount, default to 0.001 only if flag is missing or invalid
+            const amountArg = args.find(a => a.startsWith('--amount='));
+            const buyAmountSol = amountArg ? parseFloat(amountArg.replace('--amount=', '')) || 0.001 : 0.001;
             const solanaCallId = args.find(a => a.startsWith('--identifier='))?.replace('--identifier=', '');
             const verbose = args.includes('--verbose');
 
@@ -392,4 +402,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     })();
 }
 
-export { snipeToken, toBN };
+export { snipeToken, toBNLamports };
