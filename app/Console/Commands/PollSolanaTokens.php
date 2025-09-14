@@ -98,6 +98,14 @@ class PollSolanaTokens extends Command
                 SlackNotifier::success("Found trending{$boostLabel} Solana token: {$tokenName} (MC: \${$marketCap}, Liq: \${$liquidityUsd}, Age: {$ageMinutes}m)");
 
 
+                // Fetch latest market cap
+                $res = Http::timeout(5)->get("https://api.dexscreener.com/latest/dex/tokens/{$tokenAddress}");
+                if (!$res->successful() || empty($res->json('pairs'))) {
+                    $this->warn("Failed to fetch market cap for token {$tokenAddress}");
+                    continue;
+                }
+
+                $currentMarketCap = $res->json('pairs.0.marketCap');
 
 
                 // Save call in DB
@@ -105,7 +113,7 @@ class PollSolanaTokens extends Command
                     'token_name' => substr($tokenName, 0, 100), // limit to 100 chars
                     'token_address' => $tokenAddress,
                     'age_minutes' => $ageMinutes,
-                    'market_cap' => $marketCap,
+                    'market_cap' => $currentMarketCap,
                     'volume_24h' => $volume24h,
                     'liquidity_pool' => $liquidityUsd,
                     'strategy' => $isBoosted ? 'BOOSTED-BUY' : 'TRENDING-BUY',
