@@ -18,5 +18,5 @@ if (app()->environment('prod')) {
 if (app()->environment('prod')) {
     $schedule->command('solana:poll-solana-tokens')->everyThirtySeconds();
     $schedule->command('solana:buy-new-solana-tokens')->everyThirtySeconds();
-    $schedule->command('solana:auto-sell')->everyThirtySeconds();
+    $schedule->command('solana:auto-sell')->everyFiveSeconds();
 }
