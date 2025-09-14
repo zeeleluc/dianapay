@@ -36,7 +36,8 @@ class SolanaContractScanner
         if ($this->trimmedChecks) {
             $checks = ['checkMarketMetrics'];
         } else {
-            $checks = ['checkMarketMetrics', 'checkRugProof', 'checkBirdseye', 'checkSocials'];
+            $checks = ['checkMarketMetrics', 'checkRugProof', 'checkSocials'];
+//            $checks = ['checkMarketMetrics', 'checkRugProof', 'checkBirdseye', 'checkSocials'];
         }
 
         foreach ($checks as $check) {
@@ -165,55 +166,6 @@ class SolanaContractScanner
         if ($rugged) return false;
         return true;
     }
-
-    private function checkBirdseye(): bool
-    {
-        $holdersResponse = Http::withHeaders([
-            'X-API-KEY' => env('BIRDEYE_API_KEY')
-        ])->get("https://public-api.birdeye.so/defi/v3/token/holder?address={$this->tokenAddress}&limit=50");
-
-        if (!$holdersResponse->json('success')) {
-            // most likely "Compute units usage limit exceeded", go degen mode and skip this check
-            return true;
-        }
-
-        $holdersData = $holdersResponse->json();
-        $items = $holdersData['data']['items'] ?? [];
-        $holderCount = count($items);
-
-        if ($holderCount < 50) {
-            return false;
-        }
-
-        $overviewResponse = Http::withHeaders([
-            'X-API-KEY' => env('BIRDEYE_API_KEY')
-        ])->get("https://public-api.birdeye.so/defi/token/overview?address={$this->tokenAddress}");
-
-        if ($overviewResponse->failed()) {
-            $pairs = $this->pairData;
-            $marketCap = $pairs[0]['marketCap'] ?? 0;
-            $priceUsd = $pairs[0]['priceUsd'] ?? 0;
-            $totalSupply = ($priceUsd > 0) ? $marketCap / $priceUsd : 0;
-        } else {
-            $overviewData = $overviewResponse->json();
-            $totalSupply = $overviewData['data']['supply'] ?? 0;
-        }
-
-        if ($totalSupply <= 0) {
-            return false;
-        }
-
-        $topHolderAmount = $items[0]['ui_amount'] ?? 0;
-        $topHolderPct = ($topHolderAmount / $totalSupply) * 100;
-        $maxTopHolderPct = $this->isBoosted ? 30.0 : 20.0;
-
-        if ($topHolderPct > $maxTopHolderPct) {
-            return false;
-        }
-
-        return true;
-    }
-
 
     private function checkSocials(): bool
     {

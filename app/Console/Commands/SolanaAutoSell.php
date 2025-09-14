@@ -7,16 +7,17 @@ use App\Models\SolanaCall;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class SolanaAutoSell extends Command
 {
     protected $signature = 'solana:auto-sell';
     protected $description = 'Automatically sell tokens based on momentum and time';
 
-    protected float $minLiquidity        = 1000;  // Minimum liquidity for sell
-    protected float $m5Threshold         = -25.0;  // Default: Sell if 5-minute price change < -22%
-    protected float $h1Threshold         = 0.0;   // Confirm M5 sell with H1 trend
-    protected int $maxHoldMinutes        = 60;    // Sell after 60 minutes if no other conditions
+    protected float $minLiquidity = 1000;  // Minimum liquidity for sell
+    protected float $m5Threshold = -25.0;  // Default: Sell if 5-minute price change < -22%
+    protected float $h1Threshold = 0.0;    // Confirm M5 sell with H1 trend
+    protected int $maxHoldMinutes = 60;    // Sell after 60 minutes if no other conditions
 
     public function handle()
     {
@@ -63,11 +64,31 @@ class SolanaAutoSell extends Command
                     continue;
                 }
 
-                // Fetch latest data
-                // Fetch latest data
-                $res = Http::timeout(5)->get("https://api.dexscreener.com/latest/dex/tokens/{$tokenAddress}");
-                if (!$res->successful() || empty($res->json('pairs'))) {
-                    $this->warn("Dexscreener API failed for {$tokenAddress}, forcing immediate sell to avoid blind holding.");
+                // Fetch latest data from Birdeye API
+                $cacheKey = "token_data_{$tokenAddress}";
+                $data = Cache::remember($cacheKey, 30, function () use ($tokenAddress) {
+                    $apiKey = config('services.birdeye.api_key');
+                    $baseUrl = config('services.birdeye.base_url');
+                    $response = Http::withHeaders([
+                        'X-API-KEY' => $apiKey,
+                        'Accept' => 'application/json',
+                    ])->timeout(5)->get("{$baseUrl}/defi/token_overview", [
+                        'address' => $tokenAddress,
+                    ]);
+
+                    if (!$response->successful() || null === $response->json('data')) {
+                        Log::warning("Birdeye API failed for {$tokenAddress}", [
+                            'status' => $response->status(),
+                            'response' => $response->body(),
+                        ]);
+                        return null;
+                    }
+
+                    return $response->json('data');
+                });
+
+                if ($data === null) {
+                    $this->warn("Birdeye API failed for {$tokenAddress}, forcing immediate sell to avoid blind holding.");
 
                     $tokenAmount = $buyOrder->amount_foreign;
 
@@ -99,12 +120,12 @@ class SolanaAutoSell extends Command
                     continue; // Skip rest of loop after forced sell
                 }
 
-
-                $currentPrice = $res->json('pairs.0.priceUsd') ?? 0;
-                $currentLiquidity = $res->json('pairs.0.liquidity.usd') ?? 0;
-                $priceChangeM5 = $res->json('pairs.0.priceChange.m5') ?? 0;
-                $priceChangeH1 = $res->json('pairs.0.priceChange.h1') ?? 0;
-                $priceChangeH24 = $res->json('pairs.0.priceChange.h24') ?? 0;
+                // Extract data from Birdeye response
+                $currentPrice = $data['price'] ?? 0;
+                $currentLiquidity = $data['liquidity'] ?? 0;
+                $priceChangeM5 = $data['priceChange']['m5'] ?? 0;
+                $priceChangeH1 = $data['priceChange']['h1'] ?? 0;
+                $priceChangeH24 = $data['priceChange']['h24'] ?? 0;
 
                 if (!is_numeric($currentPrice) || $currentPrice <= 0) {
                     $this->warn("Invalid price for token {$tokenAddress}");

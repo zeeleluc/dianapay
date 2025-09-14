@@ -36,4 +36,8 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'birdeye' => [
+        'api_key' => env('BIRDEYE_API_KEY', ''),
+        'base_url' => 'https://public-api.birdeye.so',
+    ],
 ];
