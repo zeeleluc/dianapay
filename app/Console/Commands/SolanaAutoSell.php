@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Helpers\SlackNotifier;
 use Illuminate\Console\Command;
 use App\Models\SolanaCall;
 use Symfony\Component\Process\Process;
@@ -88,6 +89,7 @@ class SolanaAutoSell extends Command
                 });
 
                 if ($data === null) {
+                    SlackNotifier::error('Birdeye API Rate Limited.');
                     $this->warn("Birdeye API failed for {$tokenAddress}, forcing immediate sell to avoid blind holding.");
 
                     $tokenAmount = $buyOrder->amount_foreign;
