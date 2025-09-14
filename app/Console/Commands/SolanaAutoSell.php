@@ -96,6 +96,7 @@ class SolanaAutoSell extends Command
                     'call_id' => $call->id,
                     'token' => $tokenAddress,
                 ]);
+                $data = $tokenDataHelper->getTokenData($tokenAddress);
 
                 if ($data === null) {
                     SlackNotifier::error("QuickNode API failed or token not indexed for {$tokenAddress}.");
