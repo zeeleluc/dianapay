@@ -6,8 +6,12 @@
         <div class="inline-block bg-gray-800 text-white px-6 py-3 rounded-lg shadow-md">
             <p class="text-lg font-semibold">
                 Total Profit:
-                <span class="text-green-400">{{ \App\Models\SolanaCall::totalProfitSol() }} SOL</span>
-                (<span class="text-green-400">{{ \App\Models\SolanaCall::totalProfitPercentage() }}%</span>)
+                <span class="{{ \App\Models\SolanaCall::totalProfitSol() < 0 ? 'text-red-400' : 'text-green-400' }}">
+                {{ \App\Models\SolanaCall::totalProfitSol() }} SOL
+            </span>
+                (<span class="{{ \App\Models\SolanaCall::totalProfitPercentage() < 0 ? 'text-red-400' : 'text-green-400' }}">
+                {{ \App\Models\SolanaCall::totalProfitPercentage() }}%
+            </span>)
             </p>
         </div>
     </div>
