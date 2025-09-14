@@ -97,6 +97,9 @@ class PollSolanaTokens extends Command
                 $boostLabel = $isBoosted ? ' [BOOSTED]' : '';
                 SlackNotifier::success("Found trending{$boostLabel} Solana token: {$tokenName} (MC: \${$marketCap}, Liq: \${$liquidityUsd}, Age: {$ageMinutes}m)");
 
+
+
+
                 // Save call in DB
                 $call = SolanaCall::create([
                     'token_name' => substr($tokenName, 0, 100), // limit to 100 chars
