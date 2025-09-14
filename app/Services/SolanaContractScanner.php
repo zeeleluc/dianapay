@@ -74,23 +74,23 @@ class SolanaContractScanner
         $pairs = $pairResponse->json();
         $priceChangeM5 = $pairs[0]['priceChange']['m5'] ?? 0;
 
-        // Dynamic thresholds for 10% profit potential
-        $minLiquidity = $marketCap <= 50000 ? 10000 : 50000; // $10K for low MC, $50K for high MC
-        $minMarketCap = 5000; // Avoid microcap scams
-        $maxMarketCap = 10000000; // Up to $10M for high MC pumps
-        $minVolumeH1 = $marketCap <= 50000 ? 5000 : 50000; // $5K for low MC, $50K for high MC
-        $minVolLiqRatio = 1.0; // Strong pump signal
-        $minPriceChangeH1 = 5; // +5% h1 for momentum
-        $maxPriceChangeH1 = 30; // Cap at +30% to avoid dumps
-        $minPriceChangeM5 = -10; // Allow -10% dip for entry
-        $maxPriceChangeM5 = 10; // Cap at +10% to avoid overbought
+        // 📊 Adjusted thresholds
+        $minLiquidity = 5000;        // was 10k/50k → allow smaller pools
+        $minMarketCap = 2000;        // was 5k → catch earlier plays
+        $maxMarketCap = 20000000;    // was 10M → allow more midcaps
+        $minVolumeH1 = 2000;         // was 5k/50k → allow smaller but active tokens
+        $minVolLiqRatio = 0.5;       // was 1.0 → allow less extreme pumps
+        $minPriceChangeH1 = -5;      // was +5% → allow dip entries
+        $maxPriceChangeH1 = 50;      // was 30% → allow hotter pumps
+        $minPriceChangeM5 = -15;     // was -10% → allow sharper dips
+        $maxPriceChangeM5 = 15;      // was +10% → allow stronger breakouts
 
         if ($liquidity < $minLiquidity) {
-            Log::info("Low liquidity for {$this->tokenAddress}: \${$liquidity} (<\$" . ($marketCap <= 50000 ? "10K" : "50K") . ")");
+            Log::info("Low liquidity for {$this->tokenAddress}: \${$liquidity} (<\${$minLiquidity})");
             return false;
         }
         if ($marketCap < $minMarketCap || $marketCap > $maxMarketCap) {
-            Log::info("Market cap out of range for {$this->tokenAddress}: \${$marketCap} (want \$5K-\$10M)");
+            Log::info("Market cap out of range for {$this->tokenAddress}: \${$marketCap} (want \${$minMarketCap}-\${$maxMarketCap})");
             return false;
         }
         if ($volumeH1 < $minVolumeH1 || ($liquidity > 0 && $volumeH1 / $liquidity < $minVolLiqRatio)) {
@@ -98,17 +98,18 @@ class SolanaContractScanner
             return false;
         }
         if ($priceChangeH1 < $minPriceChangeH1 || $priceChangeH1 > $maxPriceChangeH1) {
-            Log::info("Hourly price change out of range for {$this->tokenAddress}: {$priceChangeH1}% (want +5% to +30%)");
+            Log::info("Hourly price change out of range for {$this->tokenAddress}: {$priceChangeH1}% (want {$minPriceChangeH1}% to {$maxPriceChangeH1}%)");
             return false;
         }
         if ($priceChangeM5 < $minPriceChangeM5 || $priceChangeM5 > $maxPriceChangeM5) {
-            Log::info("5-min price change out of range for {$this->tokenAddress}: {$priceChangeM5}% (want -10% to +10%)");
+            Log::info("5-min price change out of range for {$this->tokenAddress}: {$priceChangeM5}% (want {$minPriceChangeM5}% to {$maxPriceChangeM5}%)");
             return false;
         }
 
-        Log::info("Market metrics passed for {$this->tokenAddress}: MC=\${$marketCap}, Liq=\${$liquidity}, Vol=\${$volumeH1}, H1 Change={$priceChangeH1}%, M5 Change={$priceChangeM5}%");
+        Log::info("✅ Market metrics passed for {$this->tokenAddress}: MC=\${$marketCap}, Liq=\${$liquidity}, Vol=\${$volumeH1}, H1 Change={$priceChangeH1}%, M5 Change={$priceChangeM5}%");
         return true;
     }
+
 
     private function checkRugProof(): bool
     {
