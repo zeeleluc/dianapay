@@ -51,70 +51,31 @@ class SolanaContractScanner
             }
         }
 
-        if (!$this->isBoosted) {
-            try {
-                if (!$this->checkFreshness()) {
-                    Log::info("❌ checkFreshness failed for {$this->tokenAddress}");
-                    return false;
-                }
-            } catch (\Throwable $e) {
-                Log::warning("⚠️ checkFreshness exception for {$this->tokenAddress}: {$e->getMessage()}");
-                return false;
-            }
-        }
+        // No freshness check anymore
 
-        return true;
+        return true; // all checks passed
     }
 
-    // ---------------- PRIVATE CHECKS ---------------- //
-
-    private function checkFreshness(): bool
-    {
-        $pairResponse = Http::get("https://api.dexscreener.com/token-pairs/v1/{$this->chain}/{$this->tokenAddress}");
-        $pairs = $pairResponse->json();
-        if (empty($pairs) || !is_array($pairs)) return false;
-
-        $pair = $pairs[0];
-        $pairCreatedAtMs = $pair['pairCreatedAt'] ?? 0;
-        if ($pairCreatedAtMs <= 0) return false;
-
-        $ageMinutes = max(0, round((time() - ($pairCreatedAtMs / 1000)) / 60));
-        return $ageMinutes <= 5; // keep same cutoff
-    }
+// ---------------- PRIVATE CHECKS ---------------- //
 
     public function checkMarketMetrics($tokenData)
     {
         $marketCap = $tokenData['marketCap'] ?? 0;
-        $liquidity = $tokenData['liquidity']['usd'] ?? 0;    // fix key
-        $volume = $tokenData['volume']['h24'] ?? 0;           // fix key
-        $priceChange = $tokenData['priceChange']['h24'] ?? 0; // fix key
+        $liquidity = $tokenData['liquidity']['usd'] ?? 0;
+        $volume = $tokenData['volume']['h24'] ?? 0;
+        $priceChange = $tokenData['priceChange']['h24'] ?? 0;
 
-        // Dynamic thresholds
-        $minLiquidity = max(1000, $volume * 0.1); // 10% of 24h volume or at least 1k USD
-        $maxMarketCap = max(1000000, $marketCap * 2);
-        $minVolumeGrowth = 500;
-        $maxPriceDrop = -50;
+        // Relaxed thresholds
+        $minLiquidity = max(500, $volume * 0.05); // 5% of 24h volume or at least $500
+        $maxMarketCap = max(5_000_000, $marketCap * 2);
+        $minVolumeGrowth = 200;
+        $maxPriceDrop = -80;  // allow more volatility
         $maxPriceRise = 500;
 
-        if ($liquidity < $minLiquidity) {
-            \Log::info("Liquidity too low for {$tokenData['baseToken']['address']}: {$liquidity}");
-            return false;
-        }
-
-        if ($marketCap > $maxMarketCap) {
-            \Log::info("MarketCap out of range for {$tokenData['baseToken']['address']}: {$marketCap}");
-            return false;
-        }
-
-        if ($volume < $minVolumeGrowth) {
-            \Log::info("24h volume too low for {$tokenData['baseToken']['address']}: {$volume}");
-            return false;
-        }
-
-        if ($priceChange < $maxPriceDrop || $priceChange > $maxPriceRise) {
-            \Log::info("24h price change out of range for {$tokenData['baseToken']['address']}: {$priceChange}%");
-            return false;
-        }
+        if ($liquidity < $minLiquidity) return false;
+        if ($marketCap > $maxMarketCap) return false;
+        if ($volume < $minVolumeGrowth) return false;
+        if ($priceChange < $maxPriceDrop || $priceChange > $maxPriceRise) return false;
 
         return true;
     }
@@ -122,49 +83,11 @@ class SolanaContractScanner
     private function checkRugProof(): bool
     {
         $rugCheck = Http::get("https://api.rugcheck.xyz/v1/tokens/{$this->tokenAddress}/report")->json();
-
         $riskScore = $rugCheck['score_normalised'] ?? 100;
         $lpBurned = $rugCheck['lpLockedPct'] ?? 0;
 
-        // Reject if normalized score too high
-        if ($riskScore >= 50) {
-            Log::info("RugCheck score too high: {$riskScore}");
-            return false;
-        }
-
-        // Reject if LP not burned or not locked
-        if ($lpBurned < 50) { // e.g., require at least 50% LP locked
-            Log::info("Liquidity pool insufficiently locked: {$lpBurned}%");
-            return false;
-        }
-
-        // Reject if creator has a history of dangerous tokens
-        foreach ($rugCheck['creatorTokens'] ?? [] as $creatorToken) {
-            if ($creatorToken['marketCap'] < 1000) { // tiny tokens often risky
-                Log::info("Creator history risky: {$creatorToken['mint']}");
-                return false;
-            }
-        }
-
-        // Reject if token too centralized
-        if (($rugCheck['totalHolders'] ?? 0) < 50) {
-            Log::info("Not enough holders: {$rugCheck['totalHolders']}");
-            return false;
-        }
-
-        // Reject if any 'danger' risks in the report
-        foreach ($rugCheck['risks'] ?? [] as $risk) {
-            if ($risk['level'] === 'danger') {
-                Log::info("Dangerous risk detected: {$risk['name']}");
-                return false;
-            }
-        }
-
-        // Reject if token is already flagged as rugged
-        if (!empty($rugCheck['rugged'])) {
-            Log::info("Token flagged as rugged");
-            return false;
-        }
+        if ($riskScore >= 70) return false; // relaxed
+        if ($lpBurned < 30) return false;    // relaxed LP requirement
 
         return true;
     }
@@ -175,54 +98,35 @@ class SolanaContractScanner
             'X-API-KEY' => env('BIRDEYE_API_KEY')
         ])->get("https://public-api.birdeye.so/defi/v3/token/holder?address={$this->tokenAddress}&limit=50");
 
-        // Check for 200 OK
-        if ($holdersResponse->failed()) {
-            Log::warning("Birdseye API failed for token {$this->tokenAddress}: HTTP {$holdersResponse->status()}");
-            return false; // fail-safe: assume risky if no data
-        }
+        if ($holdersResponse->failed()) return false; // fail if API fails
 
         $holdersData = $holdersResponse->json();
-
-        // Ensure 'items' exists
         $items = $holdersData['data']['items'] ?? [];
         $holderCount = count($items);
 
-        Log::info("Token {$this->tokenAddress} has {$holderCount} holders according to Birdseye.");
-
-        // Require at least 50 holders
-        return $holderCount >= 50;
+        return $holderCount >= 20; // lower threshold but still strict
     }
 
     private function checkSocials(): bool
     {
         $pairResponse = Http::get("https://api.dexscreener.com/token-pairs/v1/{$this->chain}/{$this->tokenAddress}");
-
-        if ($pairResponse->failed()) {
-            Log::warning("Dexscreener API failed for token {$this->tokenAddress}: HTTP {$pairResponse->status()}");
-            return false;
-        }
+        if ($pairResponse->failed()) return false;
 
         $pairs = $pairResponse->json();
-
-        if (empty($pairs) || !is_array($pairs)) {
-            return false;
-        }
+        if (empty($pairs) || !is_array($pairs)) return false;
 
         $allSocials = [];
-
         foreach ($pairs as $pair) {
             $socials = $pair['info']['socials'] ?? [];
             foreach ($socials as $social) {
                 $url = $social['url'] ?? null;
                 if ($url && filter_var($url, FILTER_VALIDATE_URL)) {
-                    $allSocials[$url] = true; // using keys to avoid duplicates
+                    $allSocials[$url] = true;
                 }
             }
         }
 
-        $socialCount = count($allSocials);
-        Log::info("Token {$this->tokenAddress} has {$socialCount} valid social links.");
-
-        return $socialCount >= 2;
+        return count($allSocials) >= 1; // require at least 1 social link
     }
+
 }
