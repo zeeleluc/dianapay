@@ -11,6 +11,7 @@ dotenv.config();
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 const LARAVEL_LOG_PATH = './storage/logs/laravel.log';
 const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
+const RATE_LIMIT_DELAY_MS = 1000; // 1 second delay between requests to avoid 429 errors
 
 // ----- Logging -----
 async function logToLaravel(level, message) {
@@ -24,6 +25,7 @@ async function logToLaravel(level, message) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ level, message }),
+                agent: httpsAgent
             });
         } catch (_) {}
     }
@@ -35,7 +37,8 @@ async function createSolanaCallOrder({ solana_call_id, type, tx_signature = null
         await fetch(`${process.env.APP_URL}/api/solana-call-orders`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ solana_call_id, type, tx_signature, dex_used, amount_sol, amount_foreign, error })
+            body: JSON.stringify({ solana_call_id, type, tx_signature, dex_used, amount_sol, amount_foreign, error }),
+            agent: httpsAgent
         });
     } catch (e) {
         logToLaravel('error', `Failed to create SolanaCallOrder record: ${e.message || e}`);
@@ -58,6 +61,11 @@ function bnToNumberSafe(bn) {
     return bn.toNumber();
 }
 
+// ----- Rate Limit Handler -----
+async function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // ----- Jupiter Swap with Retry Logic -----
 async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, slippageBps = 1000, retries = 3) {
     const quoteUrl = 'https://quote-api.jup.ag/v6/quote';
@@ -66,7 +74,7 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
 
     for (let attempt = 1; attempt <= retries; attempt++) {
         try {
-            const currentSlippage = slippageBps + (attempt - 1) * 500; // Increase slippage by 5% per retry
+            const currentSlippage = slippageBps + (attempt - 1) * 500;
             const qParams = new URLSearchParams({
                 inputMint: inputMint.toString(),
                 outputMint: outputMint.toString(),
@@ -75,6 +83,7 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
             });
 
             logToLaravel('info', `Fetching Jupiter quote (attempt ${attempt}, slippage ${currentSlippage} bps)`);
+            await delay(RATE_LIMIT_DELAY_MS); // Delay to avoid rate limits
 
             const qRes = await fetch(`${quoteUrl}?${qParams}`, { agent: httpsAgent });
             const qData = await qRes.json();
@@ -104,8 +113,10 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
 
             // Check if WSOL ATA exists
             const wsolATA = await getAssociatedTokenAddress(SOL_MINT, wallet.publicKey);
+            let wsolATAExists = false;
             try {
                 await getAccount(connection, wsolATA);
+                wsolATAExists = true;
                 logToLaravel('info', `WSOL ATA exists: ${wsolATA.toBase58()}`);
             } catch (e) {
                 logToLaravel('info', `Creating WSOL ATA: ${wsolATA.toBase58()}`);
@@ -120,21 +131,34 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
             // Extract instructions from VersionedTransaction
             const jupiterMessage = tx.message;
             const jupiterInstructions = jupiterMessage.compiledInstructions.map(inst => ({
-                programId: jupiterMessage.staticAccountKeys[inst.programIdIndex],
-                keys: inst.accountKeyIndexes.map(idx => ({
-                    pubkey: jupiterMessage.staticAccountKeys[idx],
-                    isSigner: jupiterMessage.isAccountSigner(idx),
-                    isWritable: jupiterMessage.isAccountWritable(idx)
-                })),
+                programId: jupiterMessage.getAccountKeys().get(inst.programIdIndex),
+                keys: inst.accountKeyIndexes.map(idx => {
+                    const pubkey = jupiterMessage.getAccountKeys().get(idx);
+                    if (!pubkey) throw new Error(`Invalid account key index: ${idx}`);
+                    return {
+                        pubkey,
+                        isSigner: jupiterMessage.isAccountSigner(idx),
+                        isWritable: jupiterMessage.isAccountWritable(idx)
+                    };
+                }),
                 data: Buffer.from(inst.data)
             }));
 
-            // Compile new transaction with combined instructions
+            // Remove duplicate WSOL ATA creation if already included
+            const filteredJupiterInstructions = jupiterInstructions.filter(inst => {
+                if (wsolATAExists && inst.programId.equals(ASSOCIATED_TOKEN_PROGRAM_ID)) {
+                    const isWsolATAInstruction = inst.keys.some(key => key.pubkey.equals(wsolATA));
+                    return !isWsolATAInstruction;
+                }
+                return true;
+            });
+
+            // Compile new transaction
             const { blockhash } = await connection.getLatestBlockhash();
             const msg = new TransactionMessage({
                 payerKey: wallet.publicKey,
                 recentBlockhash: blockhash,
-                instructions: [...instructions, ...jupiterInstructions]
+                instructions: [...instructions, ...filteredJupiterInstructions]
             }).compileToV0Message();
 
             const finalTx = new VersionedTransaction(msg);
@@ -146,9 +170,14 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
         } catch (e) {
             const errorMsg = e.message || String(e);
             logToLaravel('warn', `Jupiter swap attempt ${attempt} failed: ${errorMsg}`);
+            if ((errorMsg.includes('429') || errorMsg.includes('Too Many Requests')) && attempt < retries) {
+                logToLaravel('info', `Retrying after rate limit delay (attempt ${attempt + 1})`);
+                await delay(RATE_LIMIT_DELAY_MS * 2);
+                continue;
+            }
             if (errorMsg.includes('0x1788') && attempt < retries) {
                 logToLaravel('info', `Retrying with increased slippage: ${currentSlippage + 500} bps`);
-                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                await delay(RATE_LIMIT_DELAY_MS);
                 continue;
             }
             throw e;
