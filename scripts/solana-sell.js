@@ -59,7 +59,7 @@ function bnToNumberSafe(bn) {
 }
 
 // ----- Jupiter Swap with Retry Logic -----
-async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, slippageBps = 500, retries = 3) {
+async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, slippageBps = 1000, retries = 3) {
     const quoteUrl = 'https://quote-api.jup.ag/v6/quote';
     const swapUrl = 'https://quote-api.jup.ag/v6/swap';
     const amountStr = BN.isBN(amount) ? amount.toString() : String(amount);
@@ -85,7 +85,7 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
                     quoteResponse: qData,
                     userPublicKey: wallet.publicKey.toString(),
                     wrapAndUnwrapSol: true,
-                    computeUnitPriceMicroLamports: 2000000 // Increased for priority
+                    computeUnitPriceMicroLamports: 2000000
                 }),
                 agent: httpsAgent
             });
@@ -96,11 +96,11 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
 
             // Add compute budget instructions
             const instructions = [
-                ComputeBudgetProgram.setComputeUnitLimit({ units: 800_000 }), // Increased compute units
-                ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 2000000 }) // Higher priority fee
+                ComputeBudgetProgram.setComputeUnitLimit({ units: 800_000 }),
+                ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 2000000 })
             ];
 
-            // Check if WSOL ATA exists, create if not
+            // Check if WSOL ATA exists
             const wsolATA = await getAssociatedTokenAddress(SOL_MINT, wallet.publicKey);
             try {
                 await getAccount(connection, wsolATA);
@@ -132,7 +132,7 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
             logToLaravel('warn', `Jupiter swap attempt ${attempt} failed: ${errorMsg}`);
             if (errorMsg.includes('0x1788') && attempt < retries) {
                 logToLaravel('info', `Retrying with increased slippage: ${currentSlippage + 500} bps`);
-                await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Delay before retry
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
                 continue;
             }
             throw e;
@@ -147,10 +147,14 @@ async function executeSell(connection, wallet, mint, amountTokens, solanaCallId)
         // Validate input
         if (amountTokens <= 0) throw new Error('Token amount must be positive');
 
-        // Get mint info and token balance
+        // Convert amountTokens to BN (assuming raw units)
+        const tokenAmountBN = toBN(amountTokens);
+        logToLaravel('info', `Attempting to sell ${amountTokens} raw tokens (BN: ${tokenAmountBN.toString()}) for mint ${mint.toString()}`);
+
+        // Get mint info
         const mintInfo = await getMint(connection, mint);
-        const decimals = mintInfo?.decimals ?? 0;
-        const tokenAmountBN = new BN(Math.floor(amountTokens * Math.pow(10, decimals)).toString());
+        const decimals = mintInfo?.decimals ?? 9;
+        logToLaravel('info', `Token decimals: ${decimals}`);
 
         // Check token balance
         const tokenATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
@@ -158,6 +162,7 @@ async function executeSell(connection, wallet, mint, amountTokens, solanaCallId)
         try {
             const tokenAccount = await getAccount(connection, tokenATA);
             tokenBalanceBN = new BN(tokenAccount.amount.toString());
+            logToLaravel('info', `Wallet token balance: ${tokenBalanceBN.toString()} raw units (${tokenBalanceBN.toNumber() / Math.pow(10, decimals)} human-readable)`);
             if (tokenBalanceBN.lt(tokenAmountBN)) {
                 throw new Error(`Insufficient token balance: ${tokenBalanceBN.toString()} < ${tokenAmountBN.toString()}`);
             }
@@ -166,7 +171,7 @@ async function executeSell(connection, wallet, mint, amountTokens, solanaCallId)
         }
 
         // Execute swap
-        const txSig = await jupiterSwap(connection, wallet, mint, SOL_MINT, tokenAmountBN, 1000, 3); // Start with 10% slippage, 3 retries
+        const txSig = await jupiterSwap(connection, wallet, mint, SOL_MINT, tokenAmountBN, 1000, 3);
 
         // Fetch transaction details
         const tx = await connection.getTransaction(txSig, { commitment: 'finalized', maxSupportedTransactionVersion: 0 });
@@ -179,7 +184,6 @@ async function executeSell(connection, wallet, mint, amountTokens, solanaCallId)
         if (preSol && postSol) {
             amountSolReceived = parseFloat(postSol.uiTokenAmount.uiAmountString || "0") - parseFloat(preSol.uiTokenAmount.uiAmountString || "0");
         } else {
-            // Fallback: lamport difference
             const acctIndex = tx.transaction.message.accountKeys.findIndex(k => k.toBase58() === wallet.publicKey.toBase58());
             amountSolReceived = (tx.meta.postBalances[acctIndex] - tx.meta.preBalances[acctIndex]) / 1e9;
         }
@@ -194,7 +198,7 @@ async function executeSell(connection, wallet, mint, amountTokens, solanaCallId)
             tx_signature: txSig
         });
 
-        logToLaravel('info', `Sell complete: ${amountTokens} tokens => ${amountSolReceived} SOL, tx ${txSig}`);
+        logToLaravel('info', `Sell complete: ${tokenAmountBN.toString()} raw tokens (${tokenAmountBN.toNumber() / Math.pow(10, decimals)} human-readable) => ${amountSolReceived} SOL, tx ${txSig}`);
         return { txSig, amountSolReceived };
 
     } catch (e) {
