@@ -71,18 +71,9 @@ class PollSolanaTokens extends Command
 
                 if (!$tokenAddress || $chain !== 'solana') continue;
 
-                $lastSell = SolanaCallOrder::whereHas('solanaCall', function ($q) use ($tokenAddress) {
-                    $q->where('token_address', $tokenAddress);
-                })
-                    ->where('type', 'sell')
-                    ->latest('created_at')
-                    ->first();
-
-                if ($lastSell && $lastSell->created_at->gt(Carbon::now()->subHours(2))) {
-                    // Skip if ANY sell exists within the last 2 hours for this token
+                if ($this->shouldSkipToken($tokenAddress)) {
                     continue;
                 }
-continue;
 
                 // 🔍 Run scanner
                 $scanner = new SolanaContractScanner($tokenAddress, $chain);
@@ -216,5 +207,50 @@ continue;
             'name'   => $pair['baseToken']['name'] ?? null,
             'symbol' => $pair['baseToken']['symbol'] ?? null,
         ];
+    }
+
+    private function shouldSkipToken(string $tokenAddress): bool
+    {
+        $call = SolanaCall::where('token_address', $tokenAddress)
+            ->latest('id')
+            ->with('orders')
+            ->first();
+
+        if (!$call) {
+            // No call at all for this token → continue
+            return false;
+        }
+
+        $orders = $call->orders;
+
+        if ($orders->isEmpty()) {
+            // No orders at all → skip
+            return true;
+        }
+
+        $hasBuy  = $orders->where('type', 'buy')->count() > 0;
+        $hasSell = $orders->where('type', 'sell')->count() > 0;
+
+        if ($hasBuy && !$hasSell) {
+            // Only buy orders, no sells yet → skip
+            return true;
+        }
+
+        if ($hasBuy && $hasSell) {
+            // Find the last sell across ALL calls for this token
+            $lastSell = SolanaCallOrder::whereHas('solanaCall', function ($q) use ($tokenAddress) {
+                $q->where('token_address', $tokenAddress);
+            })
+                ->where('type', 'sell')
+                ->latest('created_at')
+                ->first();
+
+            if ($lastSell && $lastSell->created_at->gt(Carbon::now()->subHours(2))) {
+                // Last sell is within 2 hours → skip
+                return true;
+            }
+        }
+
+        return false; // ✅ Safe to proceed
     }
 }
