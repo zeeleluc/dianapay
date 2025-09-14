@@ -18,7 +18,7 @@
 
     {{-- Open Positions Table --}}
     <h2 class="text-xl font-semibold mb-4">Open Positions</h2>
-    <table class="w-full border-collapse border border-gray-700 text-white mb-8">
+    <table class="w-full border-collapse border border-gray-700 text-white mb-8" id="open-positions-table">
         <thead>
         <tr class="bg-gray-800">
             <th class="border border-gray-700 px-2 py-1 text-left">Name</th>
@@ -50,26 +50,18 @@
                 $buyOrder = $call->orders->where('type', 'buy')->first();
 
                 // Fetch current price for unrealized profit
-                $currentPrice = 0;
+                $currentPrice = $call->current_price ?? 0;
                 $profitSol = '-';
                 $profitPct = '-';
-                try {
-                    $response = \Illuminate\Support\Facades\Http::timeout(5)->get("https://api.dexscreener.com/latest/dex/tokens/{$call->token_address}");
-                    if ($response->successful() && !empty($response->json('pairs'))) {
-                        $currentPrice = $response->json('pairs.0.priceUsd') ?? 0;
-                        if ($buyOrder && $buyOrder->price && $currentPrice > 0) {
-                            $profitPct = (($currentPrice - $buyOrder->price) / $buyOrder->price) * 100;
-                            $profitSol = ($currentPrice - $buyOrder->price) * $buyOrder->amount_foreign;
-                            $profitPct = number_format($profitPct, 2) . '%';
-                            $profitSol = number_format($profitSol, 6);
-                        }
-                    }
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::warning("Failed to fetch price for {$call->token_address}: {$e->getMessage()}");
+                if ($buyOrder && $buyOrder->price && $currentPrice > 0) {
+                    $profitPct = (($currentPrice - $buyOrder->price) / $buyOrder->price) * 100;
+                    $profitSol = ($currentPrice - $buyOrder->price) * $buyOrder->amount_foreign;
+                    $profitPct = number_format($profitPct, 2) . '%';
+                    $profitSol = number_format($profitSol, 6);
                 }
             @endphp
 
-            <tr class="hover:bg-gray-800">
+            <tr class="hover:bg-gray-800 cursor-pointer" data-id="{{ $call->id }}" role="button" aria-expanded="false" aria-controls="details-{{ $call->id }}">
                 <td class="border border-gray-700 px-2 py-1">{{ $call->token_name }}</td>
                 <td class="border border-gray-700 px-2 py-1">
                     <a target="_blank" class="underline" href="https://www.defined.fi/sol/{{ $call->token_address }}">
@@ -95,6 +87,57 @@
                     {{ $profitPct }}
                 </td>
             </tr>
+            <tr id="details-{{ $call->id }}" class="hidden">
+                <td colspan="12" class="border border-gray-700 px-2 py-1 bg-gray-900 transition-all duration-300">
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold mb-2">Order Details</h3>
+                        @if($call->orders->isNotEmpty())
+                            <table class="w-full border-collapse border border-gray-600 text-white">
+                                <thead>
+                                <tr class="bg-gray-700">
+                                    <th class="border border-gray-600 px-2 py-1 text-left">ID</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-left">Type</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-right">Price (USD)</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-right">Amount (Tokens)</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-right">Amount (SOL)</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-left">DEX Used</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-left">Error</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-left">Tx Signature</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-left">Created At</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-left">Updated At</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach($call->orders as $order)
+                                    <tr>
+                                        <td class="border border-gray-600 px-2 py-1">{{ $order->id }}</td>
+                                        <td class="border border-gray-600 px-2 py-1 capitalize">{{ $order->type }}</td>
+                                        <td class="border border-gray-600 px-2 py-1 text-right">{{ number_format($order->price, 6) }}</td>
+                                        <td class="border border-gray-600 px-2 py-1 text-right">{{ number_format($order->amount_foreign, 8) }}</td>
+                                        <td class="border border-gray-600 px-2 py-1 text-right">{{ number_format($order->amount_sol, 9) }}</td>
+                                        <td class="border border-gray-600 px-2 py-1">{{ $order->dex_used ?: '-' }}</td>
+                                        <td class="border border-gray-600 px-2 py-1">{{ $order->error ?: '-' }}</td>
+                                        <td class="border border-gray-600 px-2 py-1">
+                                            @if($order->tx_signature)
+                                                <a target="_blank" class="underline" href="https://solscan.io/tx/{{ $order->tx_signature }}">
+                                                    {{ \Illuminate\Support\Str::limit($order->tx_signature, 10, '…') }}
+                                                </a>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        <td class="border border-gray-600 px-2 py-1">{{ $order->created_at->format('Y-m-d H:i:s') }}</td>
+                                        <td class="border border-gray-600 px-2 py-1">{{ $order->updated_at->format('Y-m-d H:i:s') }}</td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        @else
+                            <p class="text-gray-400">No orders found.</p>
+                        @endif
+                    </div>
+                </td>
+            </tr>
         @endforeach
         @if($openCalls->isEmpty())
             <tr>
@@ -104,7 +147,7 @@
         </tbody>
     </table>
 
-    {{-- Closed Positions Table --}}
+    {{-- Closed Positions Table (Unchanged) --}}
     <h2 class="text-xl font-semibold mb-4">Closed Positions</h2>
     <table class="w-full border-collapse border border-gray-700 text-white">
         <thead>
@@ -173,4 +216,45 @@
         @endif
         </tbody>
     </table>
+
+    {{-- JavaScript for toggling order details --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const table = document.getElementById('open-positions-table');
+            const rows = table.querySelectorAll('tr[data-id]');
+
+            rows.forEach(row => {
+                row.addEventListener('click', function () {
+                    const callId = this.getAttribute('data-id');
+                    const detailsRow = document.getElementById(`details-${callId}`);
+                    const isExpanded = !detailsRow.classList.contains('hidden');
+
+                    // Collapse all other details rows
+                    document.querySelectorAll('tr[id^="details-"]').forEach(otherRow => {
+                        if (otherRow !== detailsRow) {
+                            otherRow.classList.add('hidden');
+                            const otherRowParent = otherRow.previousElementSibling;
+                            if (otherRowParent) {
+                                otherRowParent.setAttribute('aria-expanded', 'false');
+                            }
+                        }
+                    });
+
+                    // Toggle the clicked details row
+                    detailsRow.classList.toggle('hidden');
+                    this.setAttribute('aria-expanded', !isExpanded);
+                });
+            });
+        });
+    </script>
+
+    {{-- CSS for smooth transition --}}
+    <style>
+        tr[id^="details-"] {
+            transition: all 0.3s ease-in-out;
+        }
+        tr[id^="details-"].hidden {
+            display: none;
+        }
+    </style>
 </x-guest-layout>

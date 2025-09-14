@@ -11,15 +11,12 @@ use Illuminate\Support\Facades\Http;
 class SolanaAutoSell extends Command
 {
     protected $signature = 'solana:auto-sell';
-    protected $description = 'Automatically sell tokens based on momentum, profit, and trailing stop';
+    protected $description = 'Automatically sell tokens based on momentum and time';
 
-    protected float $profitThreshold = 10.0;  // Sell if profit > 10% and momentum slows
-    protected float $lossThreshold   = -7.0;  // Hard stop-loss
-    protected float $minLiquidity    = 1000;  // Minimum liquidity for sell
-    protected float $m5Threshold     = -2.0;  // Sell if 5-minute price change < -2%
-    protected float $m5SlowThreshold = 2.0;   // Momentum considered "slow" for TP
-    protected float $trailingStop     = -3.0;  // Trailing stop: sell if drops 3% from peak
-    protected float $h1Threshold      = 0.0;   // Confirm M5 sell with H1 trend
+    protected float $minLiquidity        = 1000;  // Minimum liquidity for sell
+    protected float $m5Threshold         = -2.0;  // Default: Sell if 5-minute price change < -2%
+    protected float $h1Threshold         = 0.0;   // Confirm M5 sell with H1 trend
+    protected int $maxHoldMinutes        = 60;    // Sell after 60 minutes if no other conditions
 
     public function handle()
     {
@@ -31,6 +28,11 @@ class SolanaAutoSell extends Command
 
         $this->info("Found {$calls->count()} calls eligible for potential sell.");
 
+        $totalBuyOrders = $calls->sum(function ($call) {
+            return $call->orders->where('type', 'buy')->count();
+        });
+        $this->info("Total buy orders across all calls: {$totalBuyOrders}");
+
         foreach ($calls as $call) {
             try {
                 // Check failures first
@@ -41,11 +43,23 @@ class SolanaAutoSell extends Command
                     continue;
                 }
 
+                // Verify exactly one buy order
+                $buyOrdersCount = $call->orders->where('type', 'buy')->count();
+                $this->info("SolanaCall ID {$call->id}: {$buyOrdersCount} buy orders found.");
+                if ($buyOrdersCount !== 1) {
+                    $this->warn("Skipping SolanaCall ID {$call->id}: Expected 1 buy order, found {$buyOrdersCount}.");
+                    Log::warning("Unexpected buy order count for SolanaCall ID {$call->id}", [
+                        'buy_orders' => $buyOrdersCount,
+                        'orders' => $call->orders->pluck('type')->toJson(),
+                    ]);
+                    continue;
+                }
+
                 $buyOrder = $call->orders->where('type', 'buy')->first();
                 $tokenAddress = $call->token_address;
 
-                if (!$buyOrder || !$buyOrder->amount_foreign || !$buyOrder->price) {
-                    $this->warn("Skipping SolanaCall ID {$call->id}: no buy order, amount, or price");
+                if (!$buyOrder || !$buyOrder->amount_foreign) {
+                    $this->warn("Skipping SolanaCall ID {$call->id}: no buy order or amount_foreign");
                     continue;
                 }
 
@@ -60,6 +74,7 @@ class SolanaAutoSell extends Command
                 $currentLiquidity = $res->json('pairs.0.liquidity.usd') ?? 0;
                 $priceChangeM5 = $res->json('pairs.0.priceChange.m5') ?? 0;
                 $priceChangeH1 = $res->json('pairs.0.priceChange.h1') ?? 0;
+                $priceChangeH24 = $res->json('pairs.0.priceChange.h24') ?? 0;
 
                 if (!is_numeric($currentPrice) || $currentPrice <= 0) {
                     $this->warn("Invalid price for token {$tokenAddress}");
@@ -76,37 +91,25 @@ class SolanaAutoSell extends Command
                     continue;
                 }
 
-                // Calculate profit/loss based on price
-                $buyPrice = $buyOrder->price;
-                $profitPct = (($currentPrice - $buyPrice) / $buyPrice) * 100;
+                // Adjust m5Threshold based on 24-hour volatility
+                $volatility = abs($priceChangeH24);
+                $m5Threshold = $volatility > 20 ? -3.0 : -2.0; // Looser for high volatility
 
-                // Update peak profit (assuming stored in SolanaCall model)
-                $peakProfit = $call->peak_profit ?? $profitPct;
-                if ($profitPct > $peakProfit) {
-                    $call->peak_profit = $profitPct;
-                    $call->save();
-                    $peakProfit = $profitPct;
-                }
+                // Check hold time
+                $holdTime = now()->diffInMinutes($buyOrder->created_at);
 
-                // Check trailing stop
-                $trailingLoss = $profitPct - $peakProfit;
-
-                $this->info("Token {$tokenAddress} PnL: {$profitPct}%, Peak: {$peakProfit}%, M5: {$priceChangeM5}%, H1: {$priceChangeH1}%");
+                $this->info("Token {$tokenAddress} M5: {$priceChangeM5}%, H1: {$priceChangeH1}%, Volatility: {$volatility}%, Hold Time: {$holdTime} minutes");
 
                 // Sell conditions
                 $sellReason = null;
-                if ($priceChangeM5 < $this->m5Threshold && $priceChangeH1 < $this->h1Threshold) {
+                if ($priceChangeM5 < $m5Threshold && $priceChangeH1 < $this->h1Threshold) {
                     $sellReason = "negative M5 ({$priceChangeM5}%) with weak H1 ({$priceChangeH1}%)";
-                } elseif ($profitPct >= $this->profitThreshold && $priceChangeM5 < $this->m5SlowThreshold) {
-                    $sellReason = "profit ({$profitPct}%) with slow M5 ({$priceChangeM5}%)";
-                } elseif ($profitPct <= $this->lossThreshold) {
-                    $sellReason = "hit stop-loss ({$profitPct}%)";
-                } elseif ($trailingLoss <= $this->trailingStop) {
-                    $sellReason = "trailing stop hit ({$trailingLoss}% from peak)";
+                } elseif ($holdTime > $this->maxHoldMinutes) {
+                    $sellReason = "maximum hold time exceeded ({$holdTime} minutes)";
                 }
 
                 if ($sellReason) {
-                    $this->info("Triggering sell for SolanaCall ID {$call->id} (PnL: {$profitPct}%, M5: {$priceChangeM5}%, Reason: {$sellReason})");
+                    $this->info("Triggering sell for SolanaCall ID {$call->id} (M5: {$priceChangeM5}%, Reason: {$sellReason})");
 
                     $tokenAmount = $buyOrder->amount_foreign;
 
@@ -127,9 +130,21 @@ class SolanaAutoSell extends Command
                     } else {
                         $output = trim($process->getOutput());
                         $this->info("Sell completed for SolanaCall ID {$call->id}: {$output}");
+
+                        // Log trade outcome for analysis
+                        Log::info("Trade outcome", [
+                            'call_id' => $call->id,
+                            'token' => $tokenAddress,
+                            'sell_price' => $currentPrice,
+                            'amount_foreign' => $tokenAmount,
+                            'reason' => $sellReason,
+                            'm5_change' => $priceChangeM5,
+                            'h1_change' => $priceChangeH1,
+                            'hold_time' => $holdTime,
+                        ]);
                     }
                 } else {
-                    $this->info("Holding token {$tokenAddress}: PnL ({$profitPct}%), M5 ({$priceChangeM5}%) still viable");
+                    $this->info("Holding token {$tokenAddress}: M5 ({$priceChangeM5}%) still viable");
                 }
 
             } catch (\Exception $e) {
