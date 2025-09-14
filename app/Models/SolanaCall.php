@@ -91,7 +91,8 @@ class SolanaCall extends Model
     }
 
     /**
-     * Get total profit of all SolanaCalls in SOL.
+     * Get total profit of all SolanaCalls in SOL,
+     * only including calls with both buy and sell orders.
      *
      * @return string
      */
@@ -102,6 +103,13 @@ class SolanaCall extends Model
         $calls = self::with('orders')->get();
 
         foreach ($calls as $call) {
+            $hasBuy = $call->orders->where('type', 'buy')->isNotEmpty();
+            $hasSell = $call->orders->where('type', 'sell')->isNotEmpty();
+
+            if (!($hasBuy && $hasSell)) {
+                continue; // skip calls without both buy and sell
+            }
+
             foreach ($call->orders as $order) {
                 $type = strtolower($order->type);
                 if ($type === 'buy') {
@@ -112,23 +120,30 @@ class SolanaCall extends Model
             }
         }
 
-        // Format with 8 decimals, no scientific notation
         return number_format($totalProfit, 8, '.', '');
     }
 
     /**
-     * Get total profit of all SolanaCalls in percentage.
+     * Get total profit percentage of all SolanaCalls,
+     * only including calls with both buy and sell orders.
      *
      * @return string
      */
     public static function totalProfitPercentage(): string
     {
         $totalBought = 0.0;
-        $totalSold = 0.0;
+        $totalSold   = 0.0;
 
         $calls = self::with('orders')->get();
 
         foreach ($calls as $call) {
+            $hasBuy = $call->orders->where('type', 'buy')->isNotEmpty();
+            $hasSell = $call->orders->where('type', 'sell')->isNotEmpty();
+
+            if (!($hasBuy && $hasSell)) {
+                continue; // skip calls without both buy and sell
+            }
+
             foreach ($call->orders as $order) {
                 $type = strtolower($order->type);
                 if ($type === 'buy') {
@@ -145,7 +160,6 @@ class SolanaCall extends Model
 
         $percentage = (($totalSold - $totalBought) / $totalBought) * 100;
 
-        // Format with 2 decimals, no scientific notation
         return number_format($percentage, 2, '.', '');
     }
 

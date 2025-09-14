@@ -1,13 +1,12 @@
 <x-guest-layout>
     <h1 class="text-2xl font-bold mb-4 text-center">Solana Calls</h1>
 
-    <!-- Total profits summary -->
-    <div class="mb-6 p-4 bg-gray-800 rounded shadow text-white text-center">
-        <p class="text-2xl font-semibold">Total Profit (SOL): {{ \App\Models\SolanaCall::totalProfitSol() }}</p>
-        <p class="text-2xl font-semibold">Total Profit (%): {{ \App\Models\SolanaCall::totalProfitPercentage() }}%</p>
-    </div>
-
     @foreach($solanaCalls as $call)
+        @php
+            $hasBuy = $call->orders->where('type', 'buy')->isNotEmpty();
+            $hasSell = $call->orders->where('type', 'sell')->isNotEmpty();
+        @endphp
+
         <div class="mb-6 p-4 bg-gray-900 rounded shadow">
             <h2 class="font-semibold text-lg">{{ $call->token_name }}</h2>
             <h3 class="font-semibold text-lg">
@@ -18,8 +17,13 @@
 
             <p>Market Cap: {{ number_format($call->market_cap, 0)}}</p>
             <p>Volume 24h: {{ number_format($call->volume_24h, 0) }}</p>
-            <p>Profit (SOL): {{ number_format($call->profit(), 6) }}</p>
-            <p>Profit (%): {{ $call->profitPercentage() }}%</p>
+
+            {{-- Only show profit summary if both buy and sell exist --}}
+            @if($hasBuy && $hasSell)
+                <p>Profit (SOL): {{ number_format($call->profit(), 6) }}</p>
+                <p>Profit (%): {{ $call->profitPercentage() }}%</p>
+            @endif
+
             <p>Dev Sold: {{ $call->dev_sold ? 'Y' : 'N' }}</p>
             <p>Dex Paid: {{ $call->dex_paid ? 'Y' : 'N' }}</p>
             <p>Strategy: {{ $call->strategy ?: '-' }}</p>
