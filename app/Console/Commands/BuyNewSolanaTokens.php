@@ -75,10 +75,8 @@ class BuyNewSolanaTokens extends Command
                 // --- Save call record ---
                 $pairResponse = Http::get("https://api.dexscreener.com/latest/dex/tokens/{$tokenAddress}");
                 $pair = $pairResponse->json('pairs.0') ?? [];
-                $marketCap = $pair['marketCap'] ?? 0;
                 $liquidityUsd = $pair['liquidity']['usd'] ?? 0;
                 $volume24h = $pair['volume']['h24'] ?? 0;
-                $pairCreatedAtMs = $pair['pairCreatedAt'] ?? 0;
 
                 $pairCreatedAtMs = $pair['pairCreatedAt'] ?? 0;
                 $nowMs = round(microtime(true) * 1000); // current time in ms
@@ -88,11 +86,20 @@ class BuyNewSolanaTokens extends Command
                     continue; // skip tokens older than 1 minute
                 }
 
+                // Fetch latest market cap
+                $res = Http::timeout(5)->get("https://api.dexscreener.com/latest/dex/tokens/{$tokenAddress}");
+                if (!$res->successful() || empty($res->json('pairs'))) {
+                    $this->warn("Failed to fetch market cap for token {$tokenAddress}");
+                    continue;
+                }
+
+                $currentMarketCap = $res->json('pairs.0.marketCap');
+
                 $call = SolanaCall::create([
                     'token_name'    => substr($tokenName, 0, 100),
                     'token_address' => $tokenAddress,
-                    'age_minutes'   => $ageMinutes,
-                    'market_cap'    => $marketCap,
+                    'age_minutes'   => floor($ageSeconds / 60),
+                    'market_cap'    => $currentMarketCap,
                     'volume_24h'    => $volume24h,
                     'liquidity_pool'=> $liquidityUsd,
                     'strategy'      => 'NEW-SNIPE',
