@@ -89,22 +89,22 @@ class SolanaContractScanner
             Log::info("Low liquidity for {$this->tokenAddress}: \${$liquidity} (<\$" . ($marketCap <= 50000 ? "10K" : "50K") . ")");
             return false;
         }
-//        if ($marketCap < $minMarketCap || $marketCap > $maxMarketCap) {
-//            Log::info("Market cap out of range for {$this->tokenAddress}: \${$marketCap} (want \$5K-\$10M)");
-//            return false;
-//        }
-//        if ($volumeH1 < $minVolumeH1 || ($liquidity > 0 && $volumeH1 / $liquidity < $minVolLiqRatio)) {
-//            Log::info("Low volume or vol/liq for {$this->tokenAddress}: \${$volumeH1}, ratio=" . ($liquidity ? $volumeH1 / $liquidity : 0));
-//            return false;
-//        }
-//        if ($priceChangeH1 < $minPriceChangeH1 || $priceChangeH1 > $maxPriceChangeH1) {
-//            Log::info("Hourly price change out of range for {$this->tokenAddress}: {$priceChangeH1}% (want +5% to +30%)");
-//            return false;
-//        }
-//        if ($priceChangeM5 < $minPriceChangeM5 || $priceChangeM5 > $maxPriceChangeM5) {
-//            Log::info("5-min price change out of range for {$this->tokenAddress}: {$priceChangeM5}% (want -10% to +10%)");
-//            return false;
-//        }
+        if ($marketCap < $minMarketCap || $marketCap > $maxMarketCap) {
+            Log::info("Market cap out of range for {$this->tokenAddress}: \${$marketCap} (want \$5K-\$10M)");
+            return false;
+        }
+        if ($volumeH1 < $minVolumeH1 || ($liquidity > 0 && $volumeH1 / $liquidity < $minVolLiqRatio)) {
+            Log::info("Low volume or vol/liq for {$this->tokenAddress}: \${$volumeH1}, ratio=" . ($liquidity ? $volumeH1 / $liquidity : 0));
+            return false;
+        }
+        if ($priceChangeH1 < $minPriceChangeH1 || $priceChangeH1 > $maxPriceChangeH1) {
+            Log::info("Hourly price change out of range for {$this->tokenAddress}: {$priceChangeH1}% (want +5% to +30%)");
+            return false;
+        }
+        if ($priceChangeM5 < $minPriceChangeM5 || $priceChangeM5 > $maxPriceChangeM5) {
+            Log::info("5-min price change out of range for {$this->tokenAddress}: {$priceChangeM5}% (want -10% to +10%)");
+            return false;
+        }
 
         Log::info("Market metrics passed for {$this->tokenAddress}: MC=\${$marketCap}, Liq=\${$liquidity}, Vol=\${$volumeH1}, H1 Change={$priceChangeH1}%, M5 Change={$priceChangeM5}%");
         return true;
