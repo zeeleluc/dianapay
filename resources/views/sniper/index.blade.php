@@ -59,6 +59,13 @@
                     $profitPct = ($priceRatio - 1) * 100;
                     $profitSol = number_format($profitSol, 6);
                     $profitPct = number_format($profitPct, 2) . '%';
+                } else {
+                    \Illuminate\Support\Facades\Log::debug("Profit calculation skipped for SolanaCall ID {$call->id}", [
+                        'market_cap' => $call->market_cap,
+                        'current_market_cap' => $call->current_market_cap,
+                        'amount_sol' => $buyOrder ? $buyOrder->amount_sol : null,
+                        'amount_foreign' => $buyOrder ? $buyOrder->amount_foreign : null,
+                    ]);
                 }
             @endphp
 
@@ -146,7 +153,7 @@
         </tbody>
     </table>
 
-    {{-- Closed Positions Table (Unchanged) --}}
+    {{-- Closed Positions Table --}}
     <h2 class="text-xl font-semibold mb-4">Closed Positions</h2>
     <table class="w-full border-collapse border border-gray-700 text-white">
         <thead>
