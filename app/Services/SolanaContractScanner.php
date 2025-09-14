@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\SolanaTokenData;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -12,17 +13,17 @@ class SolanaContractScanner
     protected string $chain;
     protected bool $isBoosted = false;
     protected bool $trimmedChecks = false;
-
-    // Store the DexScreener pair data to avoid multiple API calls
     protected array $pairData = [];
+    protected SolanaTokenData $tokenDataHelper;
 
     public function __construct(string $tokenAddress, string $chain = 'solana', $trimmedChecks = false)
     {
         $this->tokenAddress = $tokenAddress;
         $this->chain = $chain;
         $this->trimmedChecks = $trimmedChecks;
+        $this->tokenDataHelper = new SolanaTokenData();
 
-        // Fetch and cache the pair data on initialization
+        // Fetch pair data for socials
         $this->fetchPairData();
     }
 
@@ -31,27 +32,19 @@ class SolanaContractScanner
         $this->isBoosted = $boosted;
     }
 
-    public function canTrade(array $tokenData): bool
+    public function canTrade(): bool
     {
         if ($this->trimmedChecks) {
             $checks = ['checkMarketMetrics'];
         } else {
             $checks = ['checkMarketMetrics', 'checkRugProof', 'checkSocials'];
-//            $checks = ['checkMarketMetrics', 'checkRugProof', 'checkBirdseye', 'checkSocials'];
         }
 
         foreach ($checks as $check) {
             try {
-                if ($check === 'checkMarketMetrics') {
-                    if (!$this->$check($tokenData)) {
-                        Log::info("❌ {$check} failed for {$this->tokenAddress}");
-                        return false;
-                    }
-                } else {
-                    if (!$this->$check()) {
-                        Log::info("❌ {$check} failed for {$this->tokenAddress}");
-                        return false;
-                    }
+                if (!$this->$check()) {
+                    Log::info("❌ {$check} failed for {$this->tokenAddress}");
+                    return false;
                 }
             } catch (\Throwable $e) {
                 Log::warning("⚠️ {$check} exception for {$this->tokenAddress}: {$e->getMessage()}");
@@ -80,28 +73,36 @@ class SolanaContractScanner
         }
     }
 
-    public function checkMarketMetrics($tokenData): bool
+    protected function checkMarketMetrics(): bool
     {
+        // Fetch token data using SolanaTokenData helper
+        $tokenData = $this->tokenDataHelper->getTokenData($this->tokenAddress);
+
+        if ($tokenData === null) {
+            Log::warning("Skipping {$this->tokenAddress}: Failed to fetch token data from QuickNode");
+            return false;
+        }
+
         // Extract metrics with null coalescing for safety
-        $marketCap     = $tokenData['marketCap'] ?? 0;
-        $liquidity     = $tokenData['liquidity']['usd'] ?? 0;
-        $volumeH1      = $tokenData['volume']['h1'] ?? 0;
-        $priceChangeM5 = $this->pairData[0]['priceChange']['m5'] ?? 0;
+        $marketCap = $tokenData['marketCap'] ?? 0;
+        $liquidity = $tokenData['liquidity']['usd'] ?? 0;
+        $volumeH1 = $tokenData['volume']['h1'] ?? 0;
+        $priceChangeM5 = $tokenData['priceChange']['m5'] ?? 0;
         $priceChangeH1 = $tokenData['priceChange']['h1'] ?? 0;
-        $priceChangeH6 = $tokenData['priceChange']['h6'] ?? 0;
+        $priceChangeH6 = $tokenData['priceChange']['h6'] ?? 0; // Compute or adjust if API doesn't provide
         $priceChangeH24 = $tokenData['priceChange']['h24'] ?? 0;
 
         // --- Thresholds ---
-        $minLiquidity   = 5000;          // Increased to ensure more robust liquidity
-        $minMarketCap   = 5000;          // Slightly higher to avoid micro-caps
-        $maxMarketCap   = 50000000;      // Increased to capture more growth potential
-        $minVolumeH1    = 1000;          // Higher volume for stronger trading activity
-        $minVolLiqRatio = 0.3;           // Slightly higher to ensure active trading
-        $minM5Gain      = 0.5;           // Require stronger short-term momentum
-        $maxM5Gain      = 100;           // Allow larger pumps for new listings
-        $maxH1Loss      = -15;           // Allow slightly larger 1h dips
-        $minH6Gain      = 0;             // New: Ensure non-negative 6h trend
-        $rugThreshold   = -50;           // Unchanged: Reject extreme drops
+        $minLiquidity = 5000;          // Increased to ensure more robust liquidity
+        $minMarketCap = 5000;          // Slightly higher to avoid micro-caps
+        $maxMarketCap = 50000000;      // Increased to capture more growth potential
+        $minVolumeH1 = 1000;           // Higher volume for stronger trading activity
+        $minVolLiqRatio = 0.3;         // Slightly higher to ensure active trading
+        $minM5Gain = 0.5;              // Require stronger short-term momentum
+        $maxM5Gain = 100;              // Allow larger pumps for new listings
+        $maxH1Loss = -15;              // Allow slightly larger 1h dips
+        $minH6Gain = 0;                // New: Ensure non-negative 6h trend
+        $rugThreshold = -50;           // Unchanged: Reject extreme drops
 
         // --- Rug filter: reject if any timeframe has extreme drop ---
         $allDrops = [$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24];

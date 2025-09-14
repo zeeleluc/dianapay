@@ -3,11 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Helpers\SlackNotifier;
+use App\Helpers\SolanaTokenData;
 use Illuminate\Console\Command;
 use App\Models\SolanaCall;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 
 class SolanaAutoSell extends Command
@@ -34,6 +34,8 @@ class SolanaAutoSell extends Command
             return $call->orders->where('type', 'buy')->count();
         });
         $this->info("Total buy orders across all calls: {$totalBuyOrders}");
+
+        $tokenDataHelper = new SolanaTokenData();
 
         foreach ($calls as $call) {
             try {
@@ -65,32 +67,12 @@ class SolanaAutoSell extends Command
                     continue;
                 }
 
-                // Fetch latest data from Birdeye API
-                $cacheKey = "token_data_{$tokenAddress}";
-                $data = Cache::remember($cacheKey, 30, function () use ($tokenAddress) {
-                    $apiKey = config('services.birdeye.api_key');
-                    $baseUrl = config('services.birdeye.base_url');
-                    $response = Http::withHeaders([
-                        'X-API-KEY' => $apiKey,
-                        'Accept' => 'application/json',
-                    ])->timeout(5)->get("{$baseUrl}/defi/token_overview", [
-                        'address' => $tokenAddress,
-                    ]);
-
-                    if (!$response->successful() || null === $response->json('data')) {
-                        Log::warning("Birdeye API failed for {$tokenAddress}", [
-                            'status' => $response->status(),
-                            'response' => $response->body(),
-                        ]);
-                        return null;
-                    }
-
-                    return $response->json('data');
-                });
+                // Fetch latest data from QuickNode using SolanaTokenData helper
+                $data = $tokenDataHelper->getTokenData($tokenAddress);
 
                 if ($data === null) {
-                    SlackNotifier::error('Birdeye API Rate Limited.');
-                    $this->warn("Birdeye API failed for {$tokenAddress}, forcing immediate sell to avoid blind holding.");
+                    SlackNotifier::error('QuickNode API failed or token not indexed.');
+                    $this->warn("QuickNode API failed for {$tokenAddress}, forcing immediate sell to avoid blind holding.");
 
                     $tokenAmount = $buyOrder->amount_foreign;
 
@@ -122,9 +104,9 @@ class SolanaAutoSell extends Command
                     continue; // Skip rest of loop after forced sell
                 }
 
-                // Extract data from Birdeye response
+                // Extract data from QuickNode response
                 $currentPrice = $data['price'] ?? 0;
-                $currentLiquidity = $data['liquidity'] ?? 0;
+                $currentLiquidity = $data['liquidity']['usd'] ?? 0;
                 $priceChangeM5 = $data['priceChange']['m5'] ?? 0;
                 $priceChangeH1 = $data['priceChange']['h1'] ?? 0;
                 $priceChangeH24 = $data['priceChange']['h24'] ?? 0;
@@ -170,8 +152,8 @@ class SolanaAutoSell extends Command
                         'node',
                         base_path('scripts/solana-sell.js'),
                         '--identifier=' . $call->id,
-                        '--token=' . $tokenAddress,
-                        '--amount=' . $tokenAmount,
+                        '--token' => $tokenAddress,
+                        '--amount' => $tokenAmount,
                     ]);
 
                     $process->setTimeout(360);

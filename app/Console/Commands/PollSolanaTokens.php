@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Helpers\SolanaTokenData;
 use App\Models\SolanaCallOrder;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -80,20 +81,15 @@ class PollSolanaTokens extends Command
                 $boostLabel = $isBoosted ? ' [BOOSTED]' : '';
                 SlackNotifier::success("Found trending{$boostLabel} Solana token: {$tokenName} (MC: \${$marketCap}, Liq: \${$liquidityUsd}, Age: {$ageMinutes}m)");
 
-                // Fetch latest market cap (still a separate endpoint)
-                $res = Http::timeout(5)->get("https://api.dexscreener.com/latest/dex/tokens/{$tokenAddress}");
-                if (!$res->successful() || empty($res->json('pairs'))) {
-                    $this->warn("Failed to fetch market cap for token {$tokenAddress}");
-                    continue;
-                }
-                $currentMarketCap = $res->json('pairs.0.marketCap');
+                $tokenDataHelper = new SolanaTokenData();
+                $data = $tokenDataHelper->getTokenData($tokenAddress);
 
                 // Save call in DB
                 $call = SolanaCall::create([
                     'token_name' => substr($tokenName, 0, 100),
                     'token_address' => $tokenAddress,
                     'age_minutes' => $ageMinutes,
-                    'market_cap' => $currentMarketCap,
+                    'market_cap' => $data['marketCap'],
                     'volume_24h' => $volume24h,
                     'liquidity_pool' => $liquidityUsd,
                     'strategy' => 'TRENDING-TRADE',

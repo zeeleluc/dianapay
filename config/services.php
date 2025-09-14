@@ -40,4 +40,7 @@ return [
         'api_key' => env('BIRDEYE_API_KEY', ''),
         'base_url' => 'https://public-api.birdeye.so',
     ],
+    'quicknode' => [
+        'endpoint' => env('QUICKNODE_ENDPOINT'),
+    ],
 ];
