@@ -17,6 +17,7 @@ class SolanaCallOrder extends Model
         'dex_used',
         'error',
         'tx_signature',
+
     ];
 
     protected $casts = [
