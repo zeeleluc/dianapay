@@ -151,18 +151,16 @@ class PollSolanaTokens extends Command
                     SlackNotifier::info("Buy completed for #{$call->id} ({$tokenName}) (no output)");
                 }
 
-//                exit;
-
                 $matchesFound++;
             }
 
             if (!empty($skippedTokens)) {
                 $skipsMsg = "Skipped " . count($skippedTokens) . " tokens: " . implode('; ', array_slice($skippedTokens, 0, 5)) . (count($skippedTokens) > 5 ? '...' : '');
-                SlackNotifier::warning($skipsMsg);
+//                SlackNotifier::warning($skipsMsg);
             }
             if (!empty($failedBuys)) {
                 $failsMsg = "Failed buys: " . implode('; ', array_slice($failedBuys, 0, 3)) . (count($failedBuys) > 3 ? '...' : '');
-                SlackNotifier::error($failsMsg);
+//                SlackNotifier::error($failsMsg);
             }
 
             $summary = "Poll complete: Processed {$matchesFound} tokens.";
