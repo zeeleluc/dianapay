@@ -70,21 +70,18 @@ class PollSolanaTokens extends Command
 
                 if (!$tokenAddress || $chain !== 'solana') continue;
 
-                $existingCall = SolanaCall::where('token_address', $tokenAddress)
-                    ->latest('id')
+                $lastSell = SolanaCallOrder::whereHas('call', function ($q) use ($tokenAddress) {
+                    $q->where('token_address', $tokenAddress);
+                })
+                    ->where('type', 'sell')
+                    ->latest('created_at')
                     ->first();
 
-                if ($existingCall) {
-                    $lastSell = $existingCall->orders()
-                        ->where('type', 'sell')
-                        ->latest('created_at')
-                        ->first();
-
-                    if ($lastSell && $lastSell->created_at->gt(Carbon::now()->subHours(2))) {
-                        // Skip if a sell exists within the last 2 hours
-                        continue;
-                    }
+                if ($lastSell && $lastSell->created_at->gt(Carbon::now()->subHours(2))) {
+                    // Skip if ANY sell exists within the last 2 hours for this token
+                    continue;
                 }
+
 
                 // 🔍 Run scanner
                 $scanner = new SolanaContractScanner($tokenAddress, $chain);
