@@ -74,6 +74,8 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
                 slippageBps: String(currentSlippage)
             });
 
+            logToLaravel('info', `Fetching Jupiter quote (attempt ${attempt}, slippage ${currentSlippage} bps)`);
+
             const qRes = await fetch(`${quoteUrl}?${qParams}`, { agent: httpsAgent });
             const qData = await qRes.json();
             if (!qRes.ok) throw new Error(`Jupiter quote failed: ${JSON.stringify(qData)}`);
@@ -104,7 +106,9 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
             const wsolATA = await getAssociatedTokenAddress(SOL_MINT, wallet.publicKey);
             try {
                 await getAccount(connection, wsolATA);
+                logToLaravel('info', `WSOL ATA exists: ${wsolATA.toBase58()}`);
             } catch (e) {
+                logToLaravel('info', `Creating WSOL ATA: ${wsolATA.toBase58()}`);
                 instructions.push(createAssociatedTokenAccountInstruction(
                     wallet.publicKey,
                     wsolATA,
@@ -113,12 +117,24 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
                 ));
             }
 
-            // Compile transaction
+            // Extract instructions from VersionedTransaction
+            const jupiterMessage = tx.message;
+            const jupiterInstructions = jupiterMessage.compiledInstructions.map(inst => ({
+                programId: jupiterMessage.staticAccountKeys[inst.programIdIndex],
+                keys: inst.accountKeyIndexes.map(idx => ({
+                    pubkey: jupiterMessage.staticAccountKeys[idx],
+                    isSigner: jupiterMessage.isAccountSigner(idx),
+                    isWritable: jupiterMessage.isAccountWritable(idx)
+                })),
+                data: Buffer.from(inst.data)
+            }));
+
+            // Compile new transaction with combined instructions
             const { blockhash } = await connection.getLatestBlockhash();
             const msg = new TransactionMessage({
                 payerKey: wallet.publicKey,
                 recentBlockhash: blockhash,
-                instructions: [...instructions, ...tx.message.instructions]
+                instructions: [...instructions, ...jupiterInstructions]
             }).compileToV0Message();
 
             const finalTx = new VersionedTransaction(msg);

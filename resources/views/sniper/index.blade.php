@@ -1,65 +1,70 @@
 <x-guest-layout>
     <h1 class="text-2xl font-bold mb-4 text-center">Solana Calls</h1>
 
-    @foreach($solanaCalls as $call)
-        @php
-            $hasBuy = $call->orders->where('type', 'buy')->isNotEmpty();
-            $hasSell = $call->orders->where('type', 'sell')->isNotEmpty();
-        @endphp
+    <table class="w-full border-collapse border border-gray-700 text-white">
+        <thead>
+        <tr class="bg-gray-800">
+            <th class="border border-gray-700 px-2 py-1">Name</th>
+            <th class="border border-gray-700 px-2 py-1">Contract</th>
+            <th class="border border-gray-700 px-2 py-1">Market Cap</th>
+            <th class="border border-gray-700 px-2 py-1">Volume 24h</th>
+            <th class="border border-gray-700 px-2 py-1">Dev Sold</th>
+            <th class="border border-gray-700 px-2 py-1">Dex Paid</th>
+            <th class="border border-gray-700 px-2 py-1">Strategy</th>
+            <th class="border border-gray-700 px-2 py-1">Bought</th>
+            <th class="border border-gray-700 px-2 py-1">Sold</th>
+            <th class="border border-gray-700 px-2 py-1">Failures</th>
+            <th class="border border-gray-700 px-2 py-1">Profit (SOL)</th>
+            <th class="border border-gray-700 px-2 py-1">Profit (%)</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($solanaCalls as $call)
+            @php
+                $hasBuy = $call->orders->where('type', 'buy')->isNotEmpty();
+                $hasSell = $call->orders->where('type', 'sell')->isNotEmpty();
+                $failures = $call->orders->where('type', 'failed')->count();
+                $profitSol = $hasBuy && $hasSell ? number_format($call->profit(), 6) : '-';
+                $profitPct = $hasBuy && $hasSell ? $call->profitPercentage().'%' : '-';
+            @endphp
 
-        <div class="mb-6 p-4 bg-gray-900 rounded shadow">
-            <h2 class="font-semibold text-lg">{{ $call->token_name }}</h2>
-            <h3 class="font-semibold text-lg">
-                <a target="_blank" class="underline" href="https://www.defined.fi/sol/{{ $call->token_address }}">
-                    {{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}
-                </a>
-            </h3>
+            <tr class="hover:bg-gray-800">
+                <td class="border border-gray-700 px-2 py-1">{{ $call->token_name }}</td>
+                <td class="border border-gray-700 px-2 py-1">
+                    <a target="_blank" class="underline" href="https://www.defined.fi/sol/{{ $call->token_address }}">
+                        {{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}
+                    </a>
+                </td>
+                <td class="border border-gray-700 px-2 py-1">{{ number_format($call->market_cap, 0) }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ number_format($call->volume_24h, 0) }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ $call->dev_sold ? 'Y' : 'N' }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ $call->dex_paid ? 'Y' : 'N' }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ $call->strategy ?: '-' }}</td>
 
-            <p>Market Cap: {{ number_format($call->market_cap, 0)}}</p>
-            <p>Volume 24h: {{ number_format($call->volume_24h, 0) }}</p>
+                {{-- Bought / Sold status --}}
+                <td class="border border-gray-700 px-2 py-1 text-center">
+                    @if($hasBuy)
+                        <span class="text-green-500 font-semibold">✓</span>
+                    @else
+                        <span class="text-red-500 font-semibold">✗</span>
+                    @endif
+                </td>
+                <td class="border border-gray-700 px-2 py-1 text-center">
+                    @if($hasSell)
+                        <span class="text-green-500 font-semibold">✓</span>
+                    @else
+                        <span class="text-red-500 font-semibold">✗</span>
+                    @endif
+                </td>
 
-            {{-- Only show profit summary if both buy and sell exist --}}
-            @if($hasBuy && $hasSell)
-                <p>Profit (SOL): {{ number_format($call->profit(), 6) }}</p>
-                <p>Profit (%): {{ $call->profitPercentage() }}%</p>
-            @endif
+                {{-- Failures count --}}
+                <td class="border border-gray-700 px-2 py-1 text-center">{{ $failures }}</td>
 
-            <p>Dev Sold: {{ $call->dev_sold ? 'Y' : 'N' }}</p>
-            <p>Dex Paid: {{ $call->dex_paid ? 'Y' : 'N' }}</p>
-            <p>Strategy: {{ $call->strategy ?: '-' }}</p>
-
-            @if($call->orders->count() > 0)
-                <table class="w-full mt-4 border-collapse border border-gray-700 text-white">
-                    <thead>
-                    <tr>
-                        <th class="border border-gray-700 px-2 py-1 text-left">Type</th>
-                        <th class="border border-gray-700 px-2 py-1 text-left">Amount (Foreign)</th>
-                        <th class="border border-gray-700 px-2 py-1 text-left">Amount (SOL)</th>
-                        <th class="border border-gray-700 px-2 py-1 text-left">DEX Used</th>
-                        <th class="border border-gray-700 px-2 py-1 text-left">TX Signature</th>
-                        <th class="border border-gray-700 px-2 py-1 text-left">Error</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($call->orders as $order)
-                        <tr>
-                            <td class="border border-gray-700 px-2 py-1">{{ $order->type }}</td>
-                            <td class="border border-gray-700 px-2 py-1">{{ number_format($order->amount_foreign, 0) }}</td>
-                            <td class="border border-gray-700 px-2 py-1">{{ number_format($order->amount_sol, 6) }}</td>
-                            <td class="border border-gray-700 px-2 py-1">{{ $order->dex_used }}</td>
-                            <td class="border border-gray-700 px-2 py-1">
-                                {{ \Illuminate\Support\Str::limit($order->tx_signature, 10, '…') }}
-                            </td>
-                            <td class="border border-gray-700 px-2 py-1">
-                                {{ $order->error }}
-                            </td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-                </table>
-            @else
-                <p class="mt-2 text-gray-400">No related orders.</p>
-            @endif
-        </div>
-    @endforeach
+                {{-- Profit --}}
+                <td class="border border-gray-700 px-2 py-1 text-right">{{ $profitSol }}</td>
+                <td class="border border-gray-700 px-2 py-1 text-right">{{ $profitPct }}</td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
 </x-guest-layout>
