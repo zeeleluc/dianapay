@@ -31,7 +31,50 @@
         </thead>
         <tbody>
         @foreach($solanaCalls as $call)
-            {{-- existing rows --}}
+            @php
+                $hasBuy = $call->orders->where('type', 'buy')->isNotEmpty();
+                $hasSell = $call->orders->where('type', 'sell')->isNotEmpty();
+                $failures = $call->orders->where('type', 'failed')->count();
+                $profitSol = $hasBuy && $hasSell ? number_format($call->profit(), 6) : '-';
+                $profitPct = $hasBuy && $hasSell ? $call->profitPercentage().'%' : '-';
+            @endphp
+
+            <tr class="hover:bg-gray-800">
+                <td class="border border-gray-700 px-2 py-1">{{ $call->token_name }}</td>
+                <td class="border border-gray-700 px-2 py-1">
+                    <a target="_blank" class="underline" href="https://www.defined.fi/sol/{{ $call->token_address }}">
+                        {{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}
+                    </a>
+                </td>
+                <td class="border border-gray-700 px-2 py-1">{{ number_format($call->market_cap, 0) }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ number_format($call->volume_24h, 0) }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ $call->dev_sold ? 'Y' : 'N' }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ $call->dex_paid ? 'Y' : 'N' }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ $call->strategy ?: '-' }}</td>
+
+                {{-- Bought / Sold status --}}
+                <td class="border border-gray-700 px-2 py-1 text-center">
+                    @if($hasBuy)
+                        <span class="text-green-500 font-semibold">✓</span>
+                    @else
+                        <span class="text-red-500 font-semibold">✗</span>
+                    @endif
+                </td>
+                <td class="border border-gray-700 px-2 py-1 text-center">
+                    @if($hasSell)
+                        <span class="text-green-500 font-semibold">✓</span>
+                    @else
+                        <span class="text-red-500 font-semibold">✗</span>
+                    @endif
+                </td>
+
+                {{-- Failures count --}}
+                <td class="border border-gray-700 px-2 py-1 text-center">{{ $failures }}</td>
+
+                {{-- Profit --}}
+                <td class="border border-gray-700 px-2 py-1 text-right">{{ $profitSol }}</td>
+                <td class="border border-gray-700 px-2 py-1 text-right">{{ $profitPct }}</td>
+            </tr>
         @endforeach
         </tbody>
     </table>
