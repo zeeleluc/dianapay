@@ -1,4 +1,4 @@
-import { Connection, Keypair, PublicKey, VersionedTransaction, TransactionMessage, ComputeBudgetProgram, SystemProgram } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, VersionedTransaction, TransactionMessage, ComputeBudgetProgram, SystemProgram, AddressLookupTableAccount } from '@solana/web3.js';
 import { getAssociatedTokenAddress, getAccount, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getMint, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 import { BN } from 'bn.js';
 import fetch from 'node-fetch';
@@ -11,7 +11,7 @@ dotenv.config();
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 const LARAVEL_LOG_PATH = './storage/logs/laravel.log';
 const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
-const RATE_LIMIT_DELAY_MS = 1000; // 1 second delay between requests to avoid 429 errors
+const RATE_LIMIT_DELAY_MS = 1000; // 1 second delay between requests
 
 // ----- Logging -----
 async function logToLaravel(level, message) {
@@ -83,7 +83,7 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
             });
 
             logToLaravel('info', `Fetching Jupiter quote (attempt ${attempt}, slippage ${currentSlippage} bps)`);
-            await delay(RATE_LIMIT_DELAY_MS); // Delay to avoid rate limits
+            await delay(RATE_LIMIT_DELAY_MS);
 
             const qRes = await fetch(`${quoteUrl}?${qParams}`, { agent: httpsAgent });
             const qData = await qRes.json();
@@ -128,23 +128,39 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
                 ));
             }
 
-            // Extract instructions from VersionedTransaction
+            // Resolve address lookup tables
             const jupiterMessage = tx.message;
-            const jupiterInstructions = jupiterMessage.compiledInstructions.map(inst => ({
-                programId: jupiterMessage.getAccountKeys().get(inst.programIdIndex),
-                keys: inst.accountKeyIndexes.map(idx => {
-                    const pubkey = jupiterMessage.getAccountKeys().get(idx);
-                    if (!pubkey) throw new Error(`Invalid account key index: ${idx}`);
-                    return {
-                        pubkey,
-                        isSigner: jupiterMessage.isAccountSigner(idx),
-                        isWritable: jupiterMessage.isAccountWritable(idx)
-                    };
-                }),
-                data: Buffer.from(inst.data)
-            }));
+            const lookupTableAccounts = [];
+            for (const lookup of jupiterMessage.addressTableLookups) {
+                const lookupTableAccount = await connection.getAddressLookupTable(lookup.accountKey);
+                if (lookupTableAccount.value) {
+                    lookupTableAccounts.push(lookupTableAccount.value);
+                } else {
+                    throw new Error(`Failed to fetch address lookup table: ${lookup.accountKey.toBase58()}`);
+                }
+            }
 
-            // Remove duplicate WSOL ATA creation if already included
+            // Extract instructions from VersionedTransaction
+            const accountKeys = jupiterMessage.getAccountKeys({ addressTableLookups: lookupTableAccounts });
+            const jupiterInstructions = jupiterMessage.compiledInstructions.map(inst => {
+                const programId = accountKeys.get(inst.programIdIndex);
+                if (!programId) throw new Error(`Invalid program ID index: ${inst.programIdIndex}`);
+                return {
+                    programId,
+                    keys: inst.accountKeyIndexes.map(idx => {
+                        const pubkey = accountKeys.get(idx);
+                        if (!pubkey) throw new Error(`Invalid account key index: ${idx}`);
+                        return {
+                            pubkey,
+                            isSigner: jupiterMessage.isAccountSigner(idx),
+                            isWritable: jupiterMessage.isAccountWritable(idx)
+                        };
+                    }),
+                    data: Buffer.from(inst.data)
+                };
+            });
+
+            // Remove duplicate WSOL ATA creation
             const filteredJupiterInstructions = jupiterInstructions.filter(inst => {
                 if (wsolATAExists && inst.programId.equals(ASSOCIATED_TOKEN_PROGRAM_ID)) {
                     const isWsolATAInstruction = inst.keys.some(key => key.pubkey.equals(wsolATA));
@@ -159,7 +175,7 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
                 payerKey: wallet.publicKey,
                 recentBlockhash: blockhash,
                 instructions: [...instructions, ...filteredJupiterInstructions]
-            }).compileToV0Message();
+            }).compileToV0Message(lookupTableAccounts);
 
             const finalTx = new VersionedTransaction(msg);
             finalTx.sign([wallet]);
