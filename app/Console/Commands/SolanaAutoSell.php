@@ -28,6 +28,14 @@ class SolanaAutoSell extends Command
 
         foreach ($calls as $call) {
             try {
+                // 🚨 Check failures first
+                $failures = $call->orders->where('type', 'failed')->count();
+                if ($failures >= 10) {
+                    $this->warn("Deleting SolanaCall ID {$call->id}: {$failures} failed attempts.");
+                    $call->delete(); // This will also delete orders if you set up cascade in DB/migration
+                    continue;
+                }
+
                 $buyOrder = $call->orders->where('type', 'buy')->first();
                 $tokenAddress = $call->token_address;
                 $originalMarketCap = $call->market_cap;
@@ -86,4 +94,5 @@ class SolanaAutoSell extends Command
 
         $this->info('SolanaAutoSell run completed.');
     }
+
 }
