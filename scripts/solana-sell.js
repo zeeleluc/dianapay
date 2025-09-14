@@ -86,29 +86,44 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
 }
 
 // ----- Execute Sell -----
-async function executeSell(connection, wallet, mint, tokenAmountBN, solanaCallId){
+// ----- Execute Sell -----
+async function executeSell(connection, wallet, mint, tokenAmountBN, solanaCallId) {
     try {
         const bc = deriveBondingCurve(mint);
         const abc = deriveAssociatedBondingCurve(bc, mint);
         const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
-        const balanceBefore = await connection.getBalance(wallet.publicKey);
 
         let txSig, dexUsed;
 
-        // Check bonding curve state (pseudo, implement parse if needed)
-        const state = null; // placeholder for bonding curve state fetch
+        // Check bonding curve state (skipped here, fallback to Jupiter)
+        const state = null;
 
-        if(!state || state.complete){
+        if (!state || state.complete) {
             dexUsed = 'jupiter';
             txSig = await jupiterSwap(connection, wallet, mint, SOL_MINT, tokenAmountBN);
         } else {
-            // Bonding curve sell logic (if needed)
             // TODO: implement bonding curve sell
         }
 
-        const balanceAfter = await connection.getBalance(wallet.publicKey);
-        const amountSolReceived = (balanceAfter - balanceBefore)/1e9;
+        // ✅ Fetch transaction details to compute SOL actually received
+        const tx = await connection.getTransaction(txSig, {
+            commitment: 'confirmed',
+            maxSupportedTransactionVersion: 0
+        });
 
+        if (!tx) throw new Error(`Transaction not found: ${txSig}`);
+
+        // Pre- and post-balance arrays contain lamports for each account
+        const acctIndex = tx.transaction.message.accountKeys.findIndex(
+            k => k.toBase58() === wallet.publicKey.toBase58()
+        );
+        if (acctIndex === -1) throw new Error('Wallet pubkey not found in tx keys');
+
+        const lamportsBefore = tx.meta.preBalances[acctIndex];
+        const lamportsAfter  = tx.meta.postBalances[acctIndex];
+        const amountSolReceived = (lamportsAfter - lamportsBefore) / 1e9;
+
+        // Store in Laravel
         await createSolanaCallOrder({
             solana_call_id: solanaCallId,
             type: 'sell',
@@ -118,14 +133,17 @@ async function executeSell(connection, wallet, mint, tokenAmountBN, solanaCallId
             tx_signature: txSig
         });
 
-        logToLaravel('info', `Sell complete: ${bnToNumberSafe(tokenAmountBN)} tokens, received ${amountSolReceived} SOL via ${dexUsed}, tx ${txSig}`);
-        return {txSig, dexUsed};
+        logToLaravel(
+            'info',
+            `Sell complete: ${bnToNumberSafe(tokenAmountBN)} tokens, received ${amountSolReceived} SOL via ${dexUsed}, tx ${txSig}`
+        );
 
-    } catch(e){
+        return { txSig, dexUsed };
+    } catch (e) {
         const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
-        logToLaravel('error','Sell failed: '+errorMsg);
-        await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:errorMsg });
-        return {txSig:null,dexUsed:null};
+        logToLaravel('error', 'Sell failed: ' + errorMsg);
+        await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errorMsg });
+        return { txSig: null, dexUsed: null };
     }
 }
 
