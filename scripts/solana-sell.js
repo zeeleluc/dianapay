@@ -85,47 +85,67 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
     return sig;
 }
 
-// ----- Execute Sell -----
-async function executeSell(connection, wallet, mint, tokenAmountBN, solanaCallId){
+async function executeSell(connection, wallet, mint, tokenAmountBN, solanaCallId) {
     try {
         const bc = deriveBondingCurve(mint);
         const abc = deriveAssociatedBondingCurve(bc, mint);
         const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
-        const balanceBefore = await connection.getBalance(wallet.publicKey);
 
-        let txSig, dexUsed;
+        let txSig, dexUsed, amountSolReceived;
 
         // Check bonding curve state (pseudo, implement parse if needed)
         const state = null; // placeholder for bonding curve state fetch
 
-        if(!state || state.complete){
+        if (!state || state.complete) {
             dexUsed = 'jupiter';
+            // Perform Jupiter swap and get the transaction signature
             txSig = await jupiterSwap(connection, wallet, mint, SOL_MINT, tokenAmountBN);
+
+            // Fetch transaction details to get the exact SOL received
+            const txDetails = await connection.getParsedTransaction(txSig, { commitment: 'finalized' });
+            if (!txDetails) throw new Error('Failed to fetch transaction details');
+
+            // Extract SOL received from the transaction's token balance changes
+            amountSolReceived = 0;
+            const postBalances = txDetails.meta.postTokenBalances;
+            const preBalances = txDetails.meta.preTokenBalances;
+            for (const balance of postBalances) {
+                if (balance.mint === SOL_MINT.toString() && balance.owner === wallet.publicKey.toString()) {
+                    const preBalance = preBalances.find(
+                        (b) => b.mint === SOL_MINT.toString() && b.owner === wallet.publicKey.toString()
+                    );
+                    if (preBalance) {
+                        amountSolReceived = (balance.uiTokenAmount.uiAmount - preBalance.uiTokenAmount.uiAmount) || 0;
+                    }
+                    break;
+                }
+            }
+
+            if (amountSolReceived <= 0) {
+                throw new Error('Could not determine SOL received from transaction');
+            }
         } else {
             // Bonding curve sell logic (if needed)
             // TODO: implement bonding curve sell
         }
 
-        const balanceAfter = await connection.getBalance(wallet.publicKey);
-        const amountSolReceived = (balanceAfter - balanceBefore)/1e9;
-
         await createSolanaCallOrder({
             solana_call_id: solanaCallId,
             type: 'sell',
             amount_foreign: bnToNumberSafe(tokenAmountBN),
-            amount_sol: amountSolReceived,
+            amount_sol: amountSolReceived, // Use exact SOL received
             dex_used: dexUsed,
             tx_signature: txSig
         });
 
         logToLaravel('info', `Sell complete: ${bnToNumberSafe(tokenAmountBN)} tokens, received ${amountSolReceived} SOL via ${dexUsed}, tx ${txSig}`);
-        return {txSig, dexUsed};
+        return { txSig, dexUsed };
 
-    } catch(e){
+    } catch (e) {
         const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
-        logToLaravel('error','Sell failed: '+errorMsg);
-        await createSolanaCallOrder({ solana_call_id: solanaCallId, type:'failed', error:errorMsg });
-        return {txSig:null,dexUsed:null};
+        logToLaravel('error', 'Sell failed: ' + errorMsg);
+        await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errorMsg });
+        return { txSig: null, dexUsed: null };
     }
 }
 
