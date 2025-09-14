@@ -26,8 +26,8 @@ class SolanaContractScanner
     public function canTrade(array $tokenData): bool
     {
         $checks = [
-            'checkMarketMetrics',
-            'checkRugProof',
+//            'checkMarketMetrics',
+//            'checkRugProof',
             'checkBirdseye',
             'checkSocials',
         ];
@@ -83,28 +83,72 @@ class SolanaContractScanner
     private function checkRugProof(): bool
     {
         $rugCheck = Http::get("https://api.rugcheck.xyz/v1/tokens/{$this->tokenAddress}/report")->json();
-        $riskScore = $rugCheck['score_normalised'] ?? 100;
-        $lpBurned = $rugCheck['lpLockedPct'] ?? 0;
 
-        if ($riskScore >= 70) return false; // relaxed
-        if ($lpBurned < 30) return false;    // relaxed LP requirement
+        $riskScore = $rugCheck['score_normalised'] ?? 100;
+        $rugged = $rugCheck['rugged'];
+
+        if ($riskScore >= 50) return false;
+        if ($rugged) return false;
 
         return true;
     }
 
     private function checkBirdseye(): bool
     {
+        // Fetch holders
         $holdersResponse = Http::withHeaders([
             'X-API-KEY' => env('BIRDEYE_API_KEY')
         ])->get("https://public-api.birdeye.so/defi/v3/token/holder?address={$this->tokenAddress}&limit=50");
 
-        if ($holdersResponse->failed()) return false; // fail if API fails
+        if ($holdersResponse->failed()) {
+            Log::warning("Birdeye API failed for {$this->tokenAddress}: {$holdersResponse->status()}");
+            return false;
+        }
 
         $holdersData = $holdersResponse->json();
         $items = $holdersData['data']['items'] ?? [];
         $holderCount = count($items);
+        if ($holderCount < 50) { // Keep your min threshold
+            Log::info("Low holder count for {$this->tokenAddress}: {$holderCount} (<50)");
+            return false;
+        }
 
-        return $holderCount >= 20; // lower threshold but still strict
+        // Fetch total supply
+        $overviewResponse = Http::withHeaders([
+            'X-API-KEY' => env('BIRDEYE_API_KEY')
+        ])->get("https://public-api.birdeye.so/defi/token/overview?address={$this->tokenAddress}");
+
+        if ($overviewResponse->failed()) {
+            Log::warning("Birdeye token overview failed for {$this->tokenAddress}: {$overviewResponse->status()}");
+            // Fallback: Estimate from DexScreener (used in checkMarketMetrics)
+            $pairResponse = Http::get("https://api.dexscreener.com/token-pairs/v1/{$this->chain}/{$this->tokenAddress}");
+            if ($pairResponse->failed()) return false;
+            $pairs = $pairResponse->json();
+            $marketCap = $pairs[0]['marketCap'] ?? 0;
+            $priceUsd = $pairs[0]['priceUsd'] ?? 0;
+            $totalSupply = ($priceUsd > 0) ? $marketCap / $priceUsd : 0;
+        } else {
+            $overviewData = $overviewResponse->json();
+            $totalSupply = $overviewData['data']['supply'] ?? 0;
+        }
+
+        if ($totalSupply <= 0) {
+            Log::warning("Invalid total supply for {$this->tokenAddress}: {$totalSupply}");
+            return false;
+        }
+
+        // Calculate top holder percentage
+        $topHolderAmount = $items[0]['ui_amount'] ?? 0;
+        $topHolderPct = ($topHolderAmount / $totalSupply) * 100;
+        $maxTopHolderPct = $this->isBoosted ? 30.0 : 20.0; // Relaxed if boosted
+
+        if ($topHolderPct > $maxTopHolderPct) {
+            Log::info("Top holder % too high for {$this->tokenAddress}: {$topHolderPct}% (max {$maxTopHolderPct}%)");
+            return false;
+        }
+
+        Log::info("Birdeye check passed for {$this->tokenAddress}: {$holderCount} holders, top holder {$topHolderPct}%");
+        return true;
     }
 
     private function checkSocials(): bool
@@ -126,7 +170,7 @@ class SolanaContractScanner
             }
         }
 
-        return count($allSocials) >= 1; // require at least 1 social link
+        return count($allSocials) >= 2;
     }
 
 }
