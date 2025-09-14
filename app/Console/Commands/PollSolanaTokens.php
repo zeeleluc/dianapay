@@ -71,7 +71,7 @@ class PollSolanaTokens extends Command
 
                 if (!$tokenAddress || $chain !== 'solana') continue;
 
-                $lastSell = SolanaCallOrder::whereHas('call', function ($q) use ($tokenAddress) {
+                $lastSell = SolanaCallOrder::whereHas('solanaCall', function ($q) use ($tokenAddress) {
                     $q->where('token_address', $tokenAddress);
                 })
                     ->where('type', 'sell')
