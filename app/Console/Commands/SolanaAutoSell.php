@@ -13,8 +13,8 @@ class SolanaAutoSell extends Command
     protected $signature = 'solana:auto-sell';
     protected $description = 'Automatically sell tokens that reached market cap profit/loss thresholds';
 
-    protected float $profitThreshold = 2.0; // 2% profit
-    protected float $lossThreshold   = -1.0; // -1% loss
+    protected float $profitThreshold = 5.0; // 2% profit
+    protected float $lossThreshold   = -10.0; // -1% loss
 
     public function handle()
     {
