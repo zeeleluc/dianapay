@@ -26,8 +26,8 @@ class SolanaContractScanner
     public function canTrade(array $tokenData): bool
     {
         $checks = [
-//            'checkMarketMetrics',
-//            'checkRugProof',
+            'checkMarketMetrics',
+            'checkRugProof',
             'checkBirdseye',
             'checkSocials',
         ];
@@ -62,21 +62,51 @@ class SolanaContractScanner
     {
         $marketCap = $tokenData['marketCap'] ?? 0;
         $liquidity = $tokenData['liquidity']['usd'] ?? 0;
-        $volume = $tokenData['volume']['h24'] ?? 0;
-        $priceChange = $tokenData['priceChange']['h24'] ?? 0;
+        $volumeH1 = $tokenData['volume']['h1'] ?? 0;
+        $priceChangeH1 = $tokenData['priceChange']['h1'] ?? 0;
 
-        // Relaxed thresholds
-        $minLiquidity = max(500, $volume * 0.05); // 5% of 24h volume or at least $500
-        $maxMarketCap = max(5_000_000, $marketCap * 2);
-        $minVolumeGrowth = 200;
-        $maxPriceDrop = -80;  // allow more volatility
-        $maxPriceRise = 500;
+        // Fetch 5-minute price change
+        $pairResponse = Http::get("https://api.dexscreener.com/token-pairs/v1/{$this->chain}/{$this->tokenAddress}");
+        if ($pairResponse->failed()) {
+            Log::info("Failed to fetch pair data for {$this->tokenAddress}");
+            return false;
+        }
+        $pairs = $pairResponse->json();
+        $priceChangeM5 = $pairs[0]['priceChange']['m5'] ?? 0;
 
-        if ($liquidity < $minLiquidity) return false;
-        if ($marketCap > $maxMarketCap) return false;
-        if ($volume < $minVolumeGrowth) return false;
-        if ($priceChange < $maxPriceDrop || $priceChange > $maxPriceRise) return false;
+        // Dynamic thresholds for 10% profit potential
+        $minLiquidity = $marketCap <= 50000 ? 10000 : 50000; // $10K for low MC, $50K for high MC
+        $minMarketCap = 5000; // Avoid microcap scams
+        $maxMarketCap = 10000000; // Up to $10M for high MC pumps
+        $minVolumeH1 = $marketCap <= 50000 ? 5000 : 50000; // $5K for low MC, $50K for high MC
+        $minVolLiqRatio = 1.0; // Strong pump signal
+        $minPriceChangeH1 = 5; // +5% h1 for momentum
+        $maxPriceChangeH1 = 30; // Cap at +30% to avoid dumps
+        $minPriceChangeM5 = -10; // Allow -10% dip for entry
+        $maxPriceChangeM5 = 10; // Cap at +10% to avoid overbought
 
+        if ($liquidity < $minLiquidity) {
+            Log::info("Low liquidity for {$this->tokenAddress}: \${$liquidity} (<\$" . ($marketCap <= 50000 ? "10K" : "50K") . ")");
+            return false;
+        }
+//        if ($marketCap < $minMarketCap || $marketCap > $maxMarketCap) {
+//            Log::info("Market cap out of range for {$this->tokenAddress}: \${$marketCap} (want \$5K-\$10M)");
+//            return false;
+//        }
+//        if ($volumeH1 < $minVolumeH1 || ($liquidity > 0 && $volumeH1 / $liquidity < $minVolLiqRatio)) {
+//            Log::info("Low volume or vol/liq for {$this->tokenAddress}: \${$volumeH1}, ratio=" . ($liquidity ? $volumeH1 / $liquidity : 0));
+//            return false;
+//        }
+//        if ($priceChangeH1 < $minPriceChangeH1 || $priceChangeH1 > $maxPriceChangeH1) {
+//            Log::info("Hourly price change out of range for {$this->tokenAddress}: {$priceChangeH1}% (want +5% to +30%)");
+//            return false;
+//        }
+//        if ($priceChangeM5 < $minPriceChangeM5 || $priceChangeM5 > $maxPriceChangeM5) {
+//            Log::info("5-min price change out of range for {$this->tokenAddress}: {$priceChangeM5}% (want -10% to +10%)");
+//            return false;
+//        }
+
+        Log::info("Market metrics passed for {$this->tokenAddress}: MC=\${$marketCap}, Liq=\${$liquidity}, Vol=\${$volumeH1}, H1 Change={$priceChangeH1}%, M5 Change={$priceChangeM5}%");
         return true;
     }
 

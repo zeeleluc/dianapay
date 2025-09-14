@@ -251,29 +251,42 @@ async function jupiterSwap(connection,wallet,inputMint,outputMint,amount,slippag
 }
 
 // ---- Execute Buy (with broader fallback) ----
+// ---- Execute Buy (with dynamic fallback to Jupiter) ----
 async function executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId, verbose = false) {
-    const inLamportsBN = new BN(Math.floor(buyAmountSol * LAMPORTS_PER_SOL));
-    const bc = deriveBondingCurve(mint);
-    const abc = deriveAssociatedBondingCurve(bc, mint);
-    const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
-    const state = await getBondingCurveState(connection, bc);
-    logToLaravel('info', `Bonding curve state for ${mint.toString()}: ${state ? `complete=${state.complete}, reserves=${state.realSolReserves.toString()}` : 'null/uninitialized'}`, verbose);
-
-    let txSig, dexUsed;
     try {
+        const inLamportsBN = new BN(Math.floor(buyAmountSol * LAMPORTS_PER_SOL));
+        const bc = deriveBondingCurve(mint);
+        const abc = deriveAssociatedBondingCurve(bc, mint);
+        const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
+
+        // Fetch bonding curve state
+        const state = await getBondingCurveState(connection, bc);
+        logToLaravel('info', `Bonding curve state for ${mint.toString()}: ${state ? `complete=${state.complete}, realSolReserves=${state.realSolReserves.toString()}` : 'uninitialized'}`, verbose);
+
+        let txSig, dexUsed;
+
         if (!state || state.complete) {
+            // Use Jupiter swap if curve is uninitialized or fully complete
             dexUsed = 'jupiter';
             txSig = await jupiterSwap(connection, wallet, SOL_MINT, mint, inLamportsBN.toString(), 1000);
         } else {
-            const maxSol = Math.floor(inLamportsBN.toNumber() * 1.01);
+            // On-curve buy
+            const maxSol = Math.floor(inLamportsBN.toNumber() * 1.01); // 1% slippage
             const { blockhash } = await connection.getLatestBlockhash();
+
             const instructions = [
                 ComputeBudgetProgram.setComputeUnitLimit({ units: 600_000 }),
-                ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1000000 }),
+                ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000_000 }),
                 createAssociatedTokenAccountInstruction(wallet.publicKey, userATA, wallet.publicKey, mint),
-                await createBuyInstruction(connection, wallet.publicKey, mint, bc, abc, userATA, inLamportsBN.toNumber(), maxSol) // Async for dynamic ID
+                await createBuyInstruction(connection, wallet.publicKey, mint, bc, abc, userATA, inLamportsBN.toNumber(), maxSol)
             ];
-            const msg = new TransactionMessage({ payerKey: wallet.publicKey, recentBlockhash: blockhash, instructions }).compileToV0Message();
+
+            const msg = new TransactionMessage({
+                payerKey: wallet.publicKey,
+                recentBlockhash: blockhash,
+                instructions
+            }).compileToV0Message();
+
             const tx = new VersionedTransaction(msg);
             tx.sign([wallet]);
 
@@ -281,32 +294,34 @@ async function executeBuy(connection, wallet, mint, buyAmountSol, solanaCallId, 
             await connection.confirmTransaction(txSig, 'finalized');
             dexUsed = 'bonding-curve';
         }
+
+        // Fetch post-buy token balance
+        let tokenBalanceBN = new BN(0);
+        try {
+            const acc = await getAccount(connection, userATA);
+            tokenBalanceBN = toBN(acc.amount);
+            logToLaravel('info', `Post-buy token balance: ${bnToNumberSafe(tokenBalanceBN)}`, verbose);
+        } catch (e) {
+            logToLaravel('warn', `Failed to fetch post-buy balance: ${e.message}`, verbose);
+        }
+
+        // Record the buy in Laravel
+        await createSolanaCallOrder({
+            solana_call_id: solanaCallId,
+            type: 'buy',
+            amount_sol: buyAmountSol,
+            amount_foreign: bnToNumberSafe(tokenBalanceBN),
+            dex_used: dexUsed,
+            tx_signature: txSig
+        }, verbose);
+
+        return { txSig, dexUsed, tokenBalanceBN };
     } catch (e) {
         const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
-        logToLaravel('error', 'Buy failed (Bonding curve tx): ' + errorMsg, verbose);
+        logToLaravel('error', `Buy failed: ${errorMsg}`, verbose);
         await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errorMsg }, verbose);
         throw new Error('Buy failed: ' + errorMsg);
     }
-
-    let tokenBalanceBN = new BN(0);
-    try {
-        const acc = await getAccount(connection, userATA);
-        tokenBalanceBN = toBN(acc.amount);
-        logToLaravel('info', `Post-buy token balance: ${bnToNumberSafe(tokenBalanceBN)}`, verbose);
-    } catch (e) {
-        logToLaravel('warn', `Failed to fetch post-buy balance: ${e.message}`, verbose);
-    }
-
-    await createSolanaCallOrder({
-        solana_call_id: solanaCallId,
-        type: 'buy',
-        amount_sol: buyAmountSol,
-        amount_foreign: bnToNumberSafe(tokenBalanceBN),
-        dex_used: dexUsed,
-        tx_signature: txSig
-    }, verbose);
-
-    return { txSig, dexUsed, tokenBalanceBN };
 }
 
 // Updated executeSell (Jupiter fallback, dynamic createSellInstruction)
