@@ -16,8 +16,8 @@ if (app()->environment('prod')) {
 
 // ========== Testing/High-Frequency Poll ==========
 if (app()->environment('prod')) {
-    $schedule->command('solana:poll-solana-tokens')->everyThirtySeconds();
-    $schedule->command('solana:buy-new-solana-tokens')->everyThirtySeconds();
-    $schedule->command('solana:auto-sell')->everyFiveSeconds();
-    $schedule->command('solana:clean-failed-calls')->everyMinute();
+//    $schedule->command('solana:poll-solana-tokens')->everyThirtySeconds();
+//    $schedule->command('solana:buy-new-solana-tokens')->everyThirtySeconds();
+//    $schedule->command('solana:auto-sell')->everyFiveSeconds();
+//    $schedule->command('solana:clean-failed-calls')->everyMinute();
 }
