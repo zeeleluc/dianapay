@@ -81,31 +81,29 @@ class SolanaContractScanner
 
     public function checkMarketMetrics($tokenData): bool
     {
+        // Extract metrics with null coalescing for safety
         $marketCap     = $tokenData['marketCap'] ?? 0;
         $liquidity     = $tokenData['liquidity']['usd'] ?? 0;
         $volumeH1      = $tokenData['volume']['h1'] ?? 0;
-        $priceChangeH1 = $tokenData['priceChange']['h1'] ?? 0;
-
-        // Last 5-minute change from pairData (assume already fetched)
         $priceChangeM5 = $this->pairData[0]['priceChange']['m5'] ?? 0;
+        $priceChangeH1 = $tokenData['priceChange']['h1'] ?? 0;
         $priceChangeH6 = $tokenData['priceChange']['h6'] ?? 0;
         $priceChangeH24 = $tokenData['priceChange']['h24'] ?? 0;
 
         // --- Thresholds ---
-        $minLiquidity   = 1000;
-        $minMarketCap   = 2000;
-        $maxMarketCap   = 20000000;
-        $minVolumeH1    = 500;
-        $minVolLiqRatio = 0.2;
-        $maxH1Loss      = -10;
-        $minM5Gain      = 0.1;  // ✅ Relaxed to any positive momentum (> 0%)
-        $maxM5Gain      = 50;
-        $maxH1Downtrend = -0.1; // Small downtrend in prior 1-hour
+        $minLiquidity   = 5000;          // Increased to ensure more robust liquidity
+        $minMarketCap   = 5000;          // Slightly higher to avoid micro-caps
+        $maxMarketCap   = 50000000;      // Increased to capture more growth potential
+        $minVolumeH1    = 1000;          // Higher volume for stronger trading activity
+        $minVolLiqRatio = 0.3;           // Slightly higher to ensure active trading
+        $minM5Gain      = 0.5;           // Require stronger short-term momentum
+        $maxM5Gain      = 100;           // Allow larger pumps for new listings
+        $maxH1Loss      = -15;           // Allow slightly larger 1h dips
+        $minH6Gain      = 0;             // New: Ensure non-negative 6h trend
+        $rugThreshold   = -50;           // Unchanged: Reject extreme drops
 
-        // 🚨 Rug filter: reject if any timeframe is -50% or worse
-        $rugThreshold = -50;
+        // --- Rug filter: reject if any timeframe has extreme drop ---
         $allDrops = [$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24];
-
         foreach ($allDrops as $drop) {
             if (!is_numeric($drop) || $drop <= $rugThreshold) {
                 Log::warning("Skipping {$this->tokenAddress}: potential rug detected ({$drop}% change <= {$rugThreshold}% or invalid)");
@@ -113,26 +111,29 @@ class SolanaContractScanner
             }
         }
 
-        // --- Normal checks ---
+        // --- Liquidity check ---
         if (!is_numeric($liquidity) || $liquidity < $minLiquidity) {
             Log::info("Skipping {$this->tokenAddress}: liquidity \${$liquidity} < \${$minLiquidity} or invalid");
             return false;
         }
 
+        // --- Market cap check ---
         if (!is_numeric($marketCap) || $marketCap < $minMarketCap || $marketCap > $maxMarketCap) {
             Log::info("Skipping {$this->tokenAddress}: marketCap \${$marketCap} outside range \${$minMarketCap}-\${$maxMarketCap} or invalid");
             return false;
         }
 
+        // --- Volume and volume-to-liquidity ratio check ---
         $volLiqRatio = ($liquidity > 0) ? ($volumeH1 / $liquidity) : 0;
         if (!is_numeric($volumeH1) || $volumeH1 < $minVolumeH1 || $volLiqRatio < $minVolLiqRatio) {
             Log::info("Skipping {$this->tokenAddress}: volumeH1 \${$volumeH1}, vol/liq ratio={$volLiqRatio} below threshold {$minVolLiqRatio} or invalid");
             return false;
         }
 
-        // Check for prior downtrend in H1 (small decline before M5 peak)
-        if (!is_numeric($priceChangeH1) || $priceChangeH1 > $maxH1Downtrend || $priceChangeH1 < $maxH1Loss) {
-            Log::info("Skipping {$this->tokenAddress}: H1 change {$priceChangeH1}% not in desired downtrend range ({$maxH1Loss}% to {$maxH1Downtrend}%) or invalid");
+        // --- Price trend checks ---
+        // Allow tokens with positive or slightly negative 1-hour trend
+        if (!is_numeric($priceChangeH1) || $priceChangeH1 < $maxH1Loss) {
+            Log::info("Skipping {$this->tokenAddress}: H1 change {$priceChangeH1}% < {$maxH1Loss}% or invalid");
             return false;
         }
 
@@ -142,7 +143,14 @@ class SolanaContractScanner
             return false;
         }
 
-        Log::info("✅ Market metrics passed for {$this->tokenAddress}: MC=\${$marketCap}, Liq=\${$liquidity}, Vol=\${$volumeH1}, H1={$priceChangeH1}%, M5={$priceChangeM5}%");
+        // New: Ensure 6-hour trend is non-negative to confirm longer-term stability
+        if (!is_numeric($priceChangeH6) || $priceChangeH6 < $minH6Gain) {
+            Log::info("Skipping {$this->tokenAddress}: H6 change {$priceChangeH6}% < {$minH6Gain}% or invalid");
+            return false;
+        }
+
+        // Optional: Log successful checks
+        Log::info("✅ Market metrics passed for {$this->tokenAddress}: MC=\${$marketCap}, Liq=\${$liquidity}, Vol=\${$volumeH1}, M5={$priceChangeM5}%, H1={$priceChangeH1}%, H6={$priceChangeH6}%");
 
         return true;
     }

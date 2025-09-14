@@ -14,7 +14,7 @@ class SolanaAutoSell extends Command
     protected $description = 'Automatically sell tokens based on momentum and time';
 
     protected float $minLiquidity        = 1000;  // Minimum liquidity for sell
-    protected float $m5Threshold         = -2.0;  // Default: Sell if 5-minute price change < -2%
+    protected float $m5Threshold         = -25.0;  // Default: Sell if 5-minute price change < -22%
     protected float $h1Threshold         = 0.0;   // Confirm M5 sell with H1 trend
     protected int $maxHoldMinutes        = 60;    // Sell after 60 minutes if no other conditions
 
@@ -123,7 +123,7 @@ class SolanaAutoSell extends Command
 
                 // Adjust m5Threshold based on 24-hour volatility
                 $volatility = abs($priceChangeH24);
-                $m5Threshold = $volatility > 20 ? -3.0 : -2.0; // Looser for high volatility
+                $m5Threshold = $volatility > 20 ? -10.0 : -5.0; // Looser for high volatility
 
                 // Check hold time
                 $holdTime = now()->diffInMinutes($buyOrder->created_at);
