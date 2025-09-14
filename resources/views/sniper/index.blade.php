@@ -25,7 +25,6 @@
             <th class="border border-gray-700 px-2 py-1 text-left">Name</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Contract</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Market Cap</th>
-            <th class="border border-gray-700 px-2 py-1 text-left">Volume 24h</th>
             <th class="border border-gray-700 px-2 py-1 text-left">DS</th>
             <th class="border border-gray-700 px-2 py-1 text-left">DP</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Strategy</th>
@@ -77,7 +76,6 @@
                     </a>
                 </td>
                 <td class="border border-gray-700 px-2 py-1">{{ number_format($call->market_cap, 0) }}</td>
-                <td class="border border-gray-700 px-2 py-1">{{ number_format($call->volume_24h, 0) }}</td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->dev_sold ? 'Y' : 'N' }}</td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->dex_paid ? 'Y' : 'N' }}</td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->strategy ?: '-' }}</td>
