@@ -16,7 +16,7 @@ use App\Services\SolanaContractScanner;
 
 class PollSolanaTokens extends Command
 {
-    protected $signature = 'poll-solana-tokens
+    protected $signature = 'solana:poll-solana-tokens
                             {--testing=0 : If 1, use tiny buy amounts for testing}';
 
     protected $description = 'Poll trending + boosted Solana tokens, detect pump potential, and buy them';
@@ -120,7 +120,7 @@ class PollSolanaTokens extends Command
                     'market_cap' => $currentMarketCap,
                     'volume_24h' => $volume24h,
                     'liquidity_pool' => $liquidityUsd,
-                    'strategy' => $isBoosted ? 'BOOSTED-BUY' : 'TRENDING-BUY',
+                    'strategy' => 'TRENDING-TRADE',
                     'dev_sold' => $devSold,
                     'dex_paid_status' => $token['dexPaidStatus'] ?? false,
                 ]);

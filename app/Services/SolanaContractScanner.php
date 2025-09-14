@@ -11,11 +11,13 @@ class SolanaContractScanner
     protected string $tokenAddress;
     protected string $chain;
     protected bool $isBoosted = false;
+    protected bool $trimmedChecks = false;
 
-    public function __construct(string $tokenAddress, string $chain = 'solana')
+    public function __construct(string $tokenAddress, string $chain = 'solana', $trimmedChecks = false)
     {
         $this->tokenAddress = $tokenAddress;
         $this->chain = $chain;
+        $this->trimmedChecks = $trimmedChecks;
     }
 
     public function setBoosted(bool $boosted): void
@@ -25,12 +27,18 @@ class SolanaContractScanner
 
     public function canTrade(array $tokenData): bool
     {
-        $checks = [
-            'checkMarketMetrics',
-            'checkRugProof',
-            'checkBirdseye',
-            'checkSocials',
-        ];
+        if ($this->trimmedChecks) {
+            $checks = [
+                'checkMarketMetrics',
+            ];
+        } else {
+            $checks = [
+                'checkMarketMetrics',
+                'checkRugProof',
+                'checkBirdseye',
+                'checkSocials',
+            ];
+        }
 
         foreach ($checks as $check) {
             try {
