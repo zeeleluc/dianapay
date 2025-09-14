@@ -91,12 +91,24 @@ class SolanaAutoSell extends Command
                     continue;
                 }
 
+                // Validate arguments for solana-sell.js
+                if (!is_numeric($call->id) || empty($tokenAddress) || !is_numeric($buyOrder->amount_foreign)) {
+                    $this->error("Invalid arguments for SolanaCall ID {$call->id}: id={$call->id}, token={$tokenAddress}, amount={$buyOrder->amount_foreign}");
+                    Log::error('[AutoSell Command] Invalid arguments for sell', [
+                        'call_id' => $call->id,
+                        'token' => $tokenAddress,
+                        'amount_foreign' => $buyOrder->amount_foreign,
+                    ]);
+                    SlackNotifier::error("Invalid arguments for SolanaCall #{$call->id} ({$tokenAddress}): id={$call->id}, amount={$buyOrder->amount_foreign}");
+                    continue;
+                }
+
                 // Fetch latest data from QuickNode
                 Log::info('[AutoSell Command] Fetching token data', [
                     'call_id' => $call->id,
                     'token' => $tokenAddress,
                 ]);
-                $data = $tokenDataHelper->getTokenData($tokenAddress);
+                $data = $tokenDataHelper->getTokenData($tokenAddress, $call->created_at);
 
                 if ($data === null) {
                     SlackNotifier::error("QuickNode API failed or token not indexed for {$tokenAddress}.");
@@ -112,8 +124,8 @@ class SolanaAutoSell extends Command
                         'node',
                         base_path('scripts/solana-sell.js'),
                         '--identifier=' . $call->id,
-                        '--token' => $tokenAddress,
-                        '--amount' => $tokenAmount,
+                        '--token=' . $tokenAddress,
+                        '--amount=' . $tokenAmount,
                     ]);
 
                     $process->setTimeout(360);
@@ -205,6 +217,7 @@ class SolanaAutoSell extends Command
                     'hold_time' => $holdTime,
                     'max_hold_minutes' => $this->maxHoldMinutes,
                     'current_price' => $currentPrice,
+                    'created_at' => $buyOrder->created_at->toDateTimeString(),
                 ]);
 
                 // Sell conditions
@@ -221,6 +234,7 @@ class SolanaAutoSell extends Command
                         'call_id' => $call->id,
                         'token' => $tokenAddress,
                         'reason' => $sellReason,
+                        'command' => ['node', base_path('scripts/solana-sell.js'), "--identifier={$call->id}", "--token={$tokenAddress}", "--amount={$buyOrder->amount_foreign}"],
                     ]);
 
                     $tokenAmount = $buyOrder->amount_foreign;
@@ -228,9 +242,9 @@ class SolanaAutoSell extends Command
                     $process = new Process([
                         'node',
                         base_path('scripts/solana-sell.js'),
-                        '--identifier=' . $call->id,
-                        '--token' => $tokenAddress,
-                        '--amount' => $tokenAmount,
+                        "--identifier={$call->id}",
+                        "--token={$tokenAddress}",
+                        "--amount={$tokenAmount}",
                     ]);
 
                     $process->setTimeout(360);
@@ -243,6 +257,7 @@ class SolanaAutoSell extends Command
                             'call_id' => $call->id,
                             'token' => $tokenAddress,
                             'error' => $process->getErrorOutput(),
+                            'command' => ['node', base_path('scripts/solana-sell.js'), "--identifier={$call->id}", "--token={$tokenAddress}", "--amount={$tokenAmount}"],
                         ]);
                         SlackNotifier::error("Sell failed for SolanaCall #{$call->id} ({$tokenAddress}): " . $process->getErrorOutput());
                     } else {
@@ -269,6 +284,7 @@ class SolanaAutoSell extends Command
                         'h1_change' => $priceChangeH1,
                         'hold_time' => $holdTime,
                         'current_price' => $currentPrice,
+                        'created_at' => $buyOrder->created_at->toDateTimeString(),
                     ]);
                 }
 
