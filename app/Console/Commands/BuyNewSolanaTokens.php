@@ -79,10 +79,14 @@ class BuyNewSolanaTokens extends Command
                 $liquidityUsd = $pair['liquidity']['usd'] ?? 0;
                 $volume24h = $pair['volume']['h24'] ?? 0;
                 $pairCreatedAtMs = $pair['pairCreatedAt'] ?? 0;
-                $pairCreatedAt = $pairCreatedAtMs > 0 ? (int) ($pairCreatedAtMs / 1000) : time();
-                $ageMinutes = max(0, round((time() - $pairCreatedAt) / 60));
 
-                if ($ageMinutes > 1) continue; // skip tokens older than 1 minute
+                $pairCreatedAtMs = $pair['pairCreatedAt'] ?? 0;
+                $nowMs = round(microtime(true) * 1000); // current time in ms
+                $ageSeconds = ($nowMs - $pairCreatedAtMs) / 1000; // age in seconds
+
+                if ($ageSeconds > 60) {
+                    continue; // skip tokens older than 1 minute
+                }
 
                 $call = SolanaCall::create([
                     'token_name'    => substr($tokenName, 0, 100),
