@@ -28,8 +28,8 @@ class SolanaContractScanner
         $checks = [
             'checkMarketMetrics',
             'checkRugProof',
-            'checkBirdseye',
-            'checkSocials',
+//            'checkBirdseye',
+//            'checkSocials',
         ];
 
         foreach ($checks as $check) {
