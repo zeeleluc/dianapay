@@ -177,6 +177,9 @@
             $closedCalls = $solanaCalls->filter(function ($call) {
                 return $call->orders->where('type', 'buy')->isNotEmpty() &&
                        $call->orders->where('type', 'sell')->isNotEmpty();
+            })->sortByDesc(function ($call) {
+                $sellOrder = $call->orders->where('type', 'sell')->first();
+                return $sellOrder ? $sellOrder->created_at->timestamp : 0;
             });
         @endphp
         @foreach($closedCalls as $call)
@@ -186,9 +189,10 @@
                 $failures = $call->orders->where('type', 'failed')->count();
                 $profitSol = $hasBuy && $hasSell ? number_format($call->profit(), 6) : '-';
                 $profitPct = $hasBuy && $hasSell ? $call->profitPercentage().'%' : '-';
+                $sellOrder = $call->orders->where('type', 'sell')->first();
             @endphp
 
-            <tr class="hover:bg-gray-800">
+            <tr class="hover:bg-gray-800 cursor-pointer" data-id="{{ $call->id }}" role="button" aria-expanded="false" aria-controls="details-{{ $call->id }}">
                 <td class="border border-gray-700 px-2 py-1">{{ $call->token_name }}</td>
                 <td class="border border-gray-700 px-2 py-1">
                     <a target="_blank" class="underline" href="https://www.defined.fi/sol/{{ $call->token_address }}">
@@ -212,6 +216,55 @@
                 </td>
                 <td class="border border-gray-700 px-2 py-1 text-right {{ $profitPct !== '-' && $call->profitPercentage() < 0 ? 'text-red-400' : 'text-green-400' }}">
                     {{ $profitPct }}
+                </td>
+            </tr>
+            <tr id="details-{{ $call->id }}" class="hidden">
+                <td colspan="12" class="border border-gray-700 px-2 py-1 bg-gray-900 transition-all duration-300">
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold mb-2">Order Details</h3>
+                        @if($call->orders->isNotEmpty())
+                            <table class="w-full border-collapse border border-gray-600 text-white">
+                                <thead>
+                                <tr class="bg-gray-700">
+                                    <th class="border border-gray-600 px-2 py-1 text-left">ID</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-left">Type</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-right">Amount (Tokens)</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-right">Amount (SOL)</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-left">DEX Used</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-left">Error</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-left">Tx Signature</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-left">Created At</th>
+                                    <th class="border border-gray-600 px-2 py-1 text-left">Updated At</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach($call->orders as $order)
+                                    <tr>
+                                        <td class="border border-gray-600 px-2 py-1">{{ $order->id }}</td>
+                                        <td class="border border-gray-600 px-2 py-1 capitalize">{{ $order->type }}</td>
+                                        <td class="border border-gray-600 px-2 py-1 text-right">{{ number_format($order->amount_foreign, 8) }}</td>
+                                        <td class="border border-gray-600 px-2 py-1 text-right">{{ number_format($order->amount_sol, 9) }}</td>
+                                        <td class="border border-gray-600 px-2 py-1">{{ $order->dex_used ?: '-' }}</td>
+                                        <td class="border border-gray-600 px-2 py-1">{{ $order->error ?: '-' }}</td>
+                                        <td class="border border-gray-600 px-2 py-1">
+                                            @if($order->tx_signature)
+                                                <a target="_blank" class="underline" href="https://solscan.io/tx/{{ $order->tx_signature }}">
+                                                    {{ \Illuminate\Support\Str::limit($order->tx_signature, 10, '…') }}
+                                                </a>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        <td class="border border-gray-600 px-2 py-1">{{ $order->created_at->format('Y-m-d H:i:s') }}</td>
+                                        <td class="border border-gray-600 px-2 py-1">{{ $order->updated_at->format('Y-m-d H:i:s') }}</td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        @else
+                            <p class="text-gray-400">No orders found.</p>
+                        @endif
+                    </div>
                 </td>
             </tr>
         @endforeach
