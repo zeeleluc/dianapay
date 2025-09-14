@@ -1,5 +1,5 @@
 import { Connection, Keypair, PublicKey, VersionedTransaction, TransactionMessage, ComputeBudgetProgram } from '@solana/web3.js';
-import { getAssociatedTokenAddress, getAccount, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { getAssociatedTokenAddress, getAccount, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getMint } from '@solana/spl-token';
 import { BN } from 'bn.js';
 import fetch from 'node-fetch';
 import https from 'node:https';
@@ -10,15 +10,14 @@ dotenv.config();
 
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 const LARAVEL_LOG_PATH = './storage/logs/laravel.log';
-const PUMP_FUN_PROGRAM = new PublicKey('6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P');
 const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
 
+// ----- Logging -----
 async function logToLaravel(level, message) {
     const timestamp = new Date().toISOString();
     const line = `[${timestamp}] ${level.toUpperCase()}: ${message}\n`;
     try { fs.appendFileSync(LARAVEL_LOG_PATH, line); } catch (_) {}
     console.log(line.trim());
-
     if (process.env.APP_URL) {
         try {
             await fetch(`${process.env.APP_URL}/api/logs`, {
@@ -30,6 +29,7 @@ async function logToLaravel(level, message) {
     }
 }
 
+// ----- Create Order Record -----
 async function createSolanaCallOrder({ solana_call_id, type, tx_signature=null, dex_used=null, amount_sol=null, amount_foreign=null, error=null }) {
     try {
         await fetch(`${process.env.APP_URL}/api/solana-call-orders`, {
@@ -42,6 +42,7 @@ async function createSolanaCallOrder({ solana_call_id, type, tx_signature=null, 
     }
 }
 
+// ----- BN Helpers -----
 function toBN(value){
     if(BN.isBN(value)) return value;
     if(typeof value==='bigint') return new BN(value.toString());
@@ -57,11 +58,7 @@ function bnToNumberSafe(bn){
     return bn.toNumber();
 }
 
-function deriveBondingCurve(mint){ return PublicKey.findProgramAddressSync([Buffer.from('bonding-curve'), mint.toBuffer()], PUMP_FUN_PROGRAM)[0]; }
-function deriveAssociatedBondingCurve(bondingCurve,mint){ return PublicKey.findProgramAddressSync([bondingCurve.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()], ASSOCIATED_TOKEN_PROGRAM_ID)[0]; }
-
-// ----- Real Jupiter Swap -----
-// ----- Real Jupiter Swap with retry -----
+// ----- Jupiter Swap -----
 async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, slippageBps=500) {
     const quoteUrl = 'https://quote-api.jup.ag/v6/quote';
     const swapUrl  = 'https://quote-api.jup.ag/v6/swap';
@@ -99,50 +96,57 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
     return sig;
 }
 
+// ----- Execute Sell -----
 async function executeSell(connection, wallet, mint, amountTokens, solanaCallId) {
     try {
-        // Get token decimals
         const mintInfo = await getMint(connection, mint);
-        const amountRaw = new BN(Math.floor(amountTokens * 10 ** mintInfo.decimals).toString());
+        const decimals = mintInfo?.decimals ?? 0;
+        const tokenAmountBN = new BN(Math.floor(amountTokens * Math.pow(10, decimals)).toString());
 
-        // Track SOL before
-        const solBefore = await connection.getBalance(wallet.publicKey);
+        const txSig = await jupiterSwap(connection, wallet, mint, SOL_MINT, tokenAmountBN);
+        const tx = await connection.getTransaction(txSig, { commitment: 'confirmed', maxSupportedTransactionVersion: 0 });
 
-        // Jupiter swap to SOL
-        const txSig = await jupiterSwap(connection, wallet, mint, SOL_MINT, amountRaw);
+        if (!tx) throw new Error('Transaction not found: ' + txSig);
 
-        const solAfter = await connection.getBalance(wallet.publicKey);
-        const receivedSol = (solAfter - solBefore) / 1e9;
+        // Compute SOL received
+        const preSol = tx.meta.preTokenBalances?.find(b => b.mint === SOL_MINT.toBase58() && b.owner === wallet.publicKey.toBase58());
+        const postSol = tx.meta.postTokenBalances?.find(b => b.mint === SOL_MINT.toBase58() && b.owner === wallet.publicKey.toBase58());
+        let amountSolReceived = 0;
+        if(preSol && postSol){
+            amountSolReceived = parseFloat(postSol.uiTokenAmount.uiAmountString || "0") - parseFloat(preSol.uiTokenAmount.uiAmountString || "0");
+        } else {
+            // fallback: lamport difference
+            const acctIndex = tx.transaction.message.accountKeys.findIndex(k => k.toBase58() === wallet.publicKey.toBase58());
+            amountSolReceived = (tx.meta.postBalances[acctIndex] - tx.meta.preBalances[acctIndex]) / 1e9;
+        }
 
         await createSolanaCallOrder({
             solana_call_id: solanaCallId,
             type: 'sell',
-            tx_signature: txSig,
+            amount_foreign: bnToNumberSafe(tokenAmountBN),
+            amount_sol: amountSolReceived,
             dex_used: 'jupiter',
-            amount_foreign: amountTokens,
-            amount_sol: receivedSol,
+            tx_signature: txSig
         });
 
-        logToLaravel('info', `Sold ${amountTokens} tokens for ${receivedSol} SOL, tx: ${txSig}`);
-        return { txSig, receivedSol };
+        logToLaravel('info', `Sell complete: ${amountTokens} tokens => ${amountSolReceived} SOL, tx ${txSig}`);
+        return { txSig, amountSolReceived };
 
-    } catch (e) {
-        const msg = e.message || String(e);
-        logToLaravel('error', `Sell failed: ${msg}`);
-        await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: msg });
-        return { txSig: null, receivedSol: 0 };
+    } catch(e){
+        const errorMsg = e.logs?.join('\n') || e.message || String(e);
+        logToLaravel('error', 'Sell failed: ' + errorMsg);
+        await createSolanaCallOrder({ solana_call_id: solanaCallId, type: 'failed', error: errorMsg });
+        return { txSig: null, amountSolReceived: 0 };
     }
 }
 
-
-
-// CLI
+// ----- CLI -----
 if(import.meta.url === `file://${process.argv[1]}`){
     (async()=>{
         const args = process.argv.slice(2);
         const tokenAddress = args.find(a => a.startsWith('--token='))?.split('=')[1];
         const solanaCallId = args.find(a => a.startsWith('--identifier='))?.split('=')[1];
-        const amount = args.find(a => a.startsWith('--amount='))?.split('=')[1];
+        const amount = parseFloat(args.find(a => a.startsWith('--amount='))?.split('=')[1] || "0");
 
         if(!tokenAddress || !solanaCallId || !amount){
             console.error('Usage: node solana-auto-sell.js --identifier=ID --token=ADDRESS --amount=NUMBER');
@@ -150,13 +154,12 @@ if(import.meta.url === `file://${process.argv[1]}`){
         }
 
         const keyString = process.env.SOLANA_PRIVATE_KEY.trim();
-        const secretKey = keyString.length>50 ? bs58.decode(keyString) : Uint8Array.from(JSON.parse(keyString));
+        const secretKey = keyString.length > 50 ? bs58.decode(keyString) : Uint8Array.from(JSON.parse(keyString));
         const wallet = Keypair.fromSecretKey(secretKey);
         const connection = new Connection(process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com','confirmed');
         const mint = new PublicKey(tokenAddress);
-        const tokenAmountBN = toBN(amount);
 
-        await executeSell(connection,wallet,mint,tokenAmountBN,solanaCallId);
+        await executeSell(connection, wallet, mint, amount, solanaCallId);
     })();
 }
 
