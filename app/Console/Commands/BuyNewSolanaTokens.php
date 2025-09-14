@@ -99,7 +99,7 @@ class BuyNewSolanaTokens extends Command
                 }
 
                 // Fetch market data using SolanaTokenData
-                $marketData = $this->tokenDataHelper->getTokenData($tokenAddress, $createdAt);
+                $marketData = $this->tokenDataHelper->getTokenData($tokenAddress);
                 if ($marketData === null) {
                     $this->warn("QuickNode API failed for {$tokenAddress}, falling back to DexScreener");
 

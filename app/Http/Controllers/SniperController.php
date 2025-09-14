@@ -30,7 +30,8 @@ class SniperController extends Controller
         foreach ($openCalls as $call) {
             try {
                 // Fetch market cap using SolanaTokenData
-                $marketData = $this->tokenDataHelper->getTokenData($call->token_address, $call->created_at);
+                $marketData = $this->tokenDataHelper->getTokenData($call->token_address);
+//                var_dump($marketData);exit;
 
                 if ($marketData === null) {
                     Log::warning("QuickNode API failed or token not indexed for {$call->token_address}, falling back to DexScreener");
