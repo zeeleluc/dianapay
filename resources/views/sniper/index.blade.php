@@ -1,4 +1,5 @@
 <x-guest-layout>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <h1 class="text-2xl font-bold mb-4 text-center">Solana Calls</h1>
 
     {{-- Total Profits (for closed positions) --}}
@@ -49,15 +50,15 @@
                 $failures = $call->orders->where('type', 'failed')->count();
                 $buyOrder = $call->orders->where('type', 'buy')->first();
 
-                // Fetch current price for unrealized profit
-                $currentPrice = $call->current_price ?? 0;
+                // Calculate unrealized profit using market cap
                 $profitSol = '-';
                 $profitPct = '-';
-                if ($buyOrder && $buyOrder->price && $currentPrice > 0) {
-                    $profitPct = (($currentPrice - $buyOrder->price) / $buyOrder->price) * 100;
-                    $profitSol = ($currentPrice - $buyOrder->price) * $buyOrder->amount_foreign;
-                    $profitPct = number_format($profitPct, 2) . '%';
+                if ($buyOrder && $call->market_cap > 0 && $call->current_market_cap > 0 && $buyOrder->amount_sol > 0 && $buyOrder->amount_foreign > 0) {
+                    $priceRatio = $call->current_market_cap / $call->market_cap;
+                    $profitSol = ($priceRatio * $buyOrder->amount_sol) - $buyOrder->amount_sol;
+                    $profitPct = ($priceRatio - 1) * 100;
                     $profitSol = number_format($profitSol, 6);
+                    $profitPct = number_format($profitPct, 2) . '%';
                 }
             @endphp
 
@@ -97,7 +98,6 @@
                                 <tr class="bg-gray-700">
                                     <th class="border border-gray-600 px-2 py-1 text-left">ID</th>
                                     <th class="border border-gray-600 px-2 py-1 text-left">Type</th>
-                                    <th class="border border-gray-600 px-2 py-1 text-right">Price (USD)</th>
                                     <th class="border border-gray-600 px-2 py-1 text-right">Amount (Tokens)</th>
                                     <th class="border border-gray-600 px-2 py-1 text-right">Amount (SOL)</th>
                                     <th class="border border-gray-600 px-2 py-1 text-left">DEX Used</th>
@@ -112,7 +112,6 @@
                                     <tr>
                                         <td class="border border-gray-600 px-2 py-1">{{ $order->id }}</td>
                                         <td class="border border-gray-600 px-2 py-1 capitalize">{{ $order->type }}</td>
-                                        <td class="border border-gray-600 px-2 py-1 text-right">{{ number_format($order->price, 6) }}</td>
                                         <td class="border border-gray-600 px-2 py-1 text-right">{{ number_format($order->amount_foreign, 8) }}</td>
                                         <td class="border border-gray-600 px-2 py-1 text-right">{{ number_format($order->amount_sol, 9) }}</td>
                                         <td class="border border-gray-600 px-2 py-1">{{ $order->dex_used ?: '-' }}</td>
