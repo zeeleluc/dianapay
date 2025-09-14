@@ -79,7 +79,7 @@ class SolanaContractScanner
         $tokenData = $this->tokenDataHelper->getTokenData($this->tokenAddress);
 
         if ($tokenData === null) {
-            Log::warning("Skipping {$this->tokenAddress}: Failed to fetch token data from QuickNode");
+            $this->warn("Skipping {$this->tokenAddress}: Failed to fetch token data from QuickNode");
             return false;
         }
 
@@ -89,70 +89,68 @@ class SolanaContractScanner
         $volumeH1 = $tokenData['volume']['h1'] ?? 0;
         $priceChangeM5 = $tokenData['priceChange']['m5'] ?? 0;
         $priceChangeH1 = $tokenData['priceChange']['h1'] ?? 0;
-        $priceChangeH6 = $tokenData['priceChange']['h6'] ?? 0; // Compute or adjust if API doesn't provide
+        $priceChangeH6 = $tokenData['priceChange']['h6'] ?? 0;
         $priceChangeH24 = $tokenData['priceChange']['h24'] ?? 0;
 
         // --- Thresholds ---
-        $minLiquidity = 5000;          // Increased to ensure more robust liquidity
-        $minMarketCap = 5000;          // Slightly higher to avoid micro-caps
-        $maxMarketCap = 50000000;      // Increased to capture more growth potential
-        $minVolumeH1 = 1000;           // Higher volume for stronger trading activity
-        $minVolLiqRatio = 0.3;         // Slightly higher to ensure active trading
-        $minM5Gain = 0.5;              // Require stronger short-term momentum
-        $maxM5Gain = 100;              // Allow larger pumps for new listings
-        $maxH1Loss = -15;              // Allow slightly larger 1h dips
-        $minH6Gain = 0;                // New: Ensure non-negative 6h trend
-        $rugThreshold = -50;           // Unchanged: Reject extreme drops
+        $minLiquidity = 10000;         // Increased to ensure robust liquidity
+        $minMarketCap = 5000;          // Avoid micro-caps
+        $maxMarketCap = 50000000;      // Capture growth potential
+        $minVolumeH1 = 2000;           // Stronger trading activity
+        $minVolLiqRatio = 0.5;         // Higher ratio for active trading
+        $minM5Gain = 0.5;              // Positive short-term momentum
+        $maxM5Gain = 50;               // Tightened to avoid extreme pumps
+        $minH1Gain = -10;              // Allow smaller dips
+        $maxH1Gain = 50;               // New: Avoid large 1h pumps
+        $minH6Gain = 5;                // Require positive 6h trend
+        $rugThreshold = -50;           // Reject extreme drops
 
         // --- Rug filter: reject if any timeframe has extreme drop ---
         $allDrops = [$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24];
         foreach ($allDrops as $drop) {
             if (!is_numeric($drop) || $drop <= $rugThreshold) {
-                Log::warning("Skipping {$this->tokenAddress}: potential rug detected ({$drop}% change <= {$rugThreshold}% or invalid)");
+                $this->warn("Skipping {$this->tokenAddress}: potential rug detected ({$drop}% change <= {$rugThreshold}% or invalid)");
                 return false;
             }
         }
 
         // --- Liquidity check ---
         if (!is_numeric($liquidity) || $liquidity < $minLiquidity) {
-            Log::info("Skipping {$this->tokenAddress}: liquidity \${$liquidity} < \${$minLiquidity} or invalid");
+            $this->info("Skipping {$this->tokenAddress}: liquidity \${$liquidity} < \${$minLiquidity} or invalid");
             return false;
         }
 
         // --- Market cap check ---
         if (!is_numeric($marketCap) || $marketCap < $minMarketCap || $marketCap > $maxMarketCap) {
-            Log::info("Skipping {$this->tokenAddress}: marketCap \${$marketCap} outside range \${$minMarketCap}-\${$maxMarketCap} or invalid");
+            $this->info("Skipping {$this->tokenAddress}: marketCap \${$marketCap} outside range \${$minMarketCap}-\${$maxMarketCap} or invalid");
             return false;
         }
 
         // --- Volume and volume-to-liquidity ratio check ---
         $volLiqRatio = ($liquidity > 0) ? ($volumeH1 / $liquidity) : 0;
         if (!is_numeric($volumeH1) || $volumeH1 < $minVolumeH1 || $volLiqRatio < $minVolLiqRatio) {
-            Log::info("Skipping {$this->tokenAddress}: volumeH1 \${$volumeH1}, vol/liq ratio={$volLiqRatio} below threshold {$minVolLiqRatio} or invalid");
+            $this->info("Skipping {$this->tokenAddress}: volumeH1 \${$volumeH1}, vol/liq ratio={$volLiqRatio} below threshold {$minVolLiqRatio} or invalid");
             return false;
         }
 
         // --- Price trend checks ---
-        // Allow tokens with positive or slightly negative 1-hour trend
-        if (!is_numeric($priceChangeH1) || $priceChangeH1 < $maxH1Loss) {
-            Log::info("Skipping {$this->tokenAddress}: H1 change {$priceChangeH1}% < {$maxH1Loss}% or invalid");
+        // Avoid tokens with large 1-hour pumps or significant losses
+        if (!is_numeric($priceChangeH1) || $priceChangeH1 < $minH1Gain || $priceChangeH1 > $maxH1Gain) {
+            $this->info("Skipping {$this->tokenAddress}: H1 change {$priceChangeH1}% outside range {$minH1Gain}% to {$maxH1Gain}% or invalid");
             return false;
         }
 
-        // Ensure positive 5-minute momentum
+        // Ensure positive 5-minute momentum, avoid extreme pumps
         if (!is_numeric($priceChangeM5) || $priceChangeM5 < $minM5Gain || $priceChangeM5 > $maxM5Gain) {
-            Log::info("Skipping {$this->tokenAddress}: M5 change {$priceChangeM5}% outside desired range ({$minM5Gain}% → {$maxM5Gain}%) or invalid");
+            $this->info("Skipping {$this->tokenAddress}: M5 change {$priceChangeM5}% outside range {$minM5Gain}% to {$maxM5Gain}% or invalid");
             return false;
         }
 
-        // New: Ensure 6-hour trend is non-negative to confirm longer-term stability
+        // Ensure positive 6-hour trend for longer-term stability
         if (!is_numeric($priceChangeH6) || $priceChangeH6 < $minH6Gain) {
-            Log::info("Skipping {$this->tokenAddress}: H6 change {$priceChangeH6}% < {$minH6Gain}% or invalid");
+            $this->info("Skipping {$this->tokenAddress}: H6 change {$priceChangeH6}% < {$minH6Gain}% or invalid");
             return false;
         }
-
-        // Optional: Log successful checks
-        Log::info("✅ Market metrics passed for {$this->tokenAddress}: MC=\${$marketCap}, Liq=\${$liquidity}, Vol=\${$volumeH1}, M5={$priceChangeM5}%, H1={$priceChangeH1}%, H6={$priceChangeH6}%");
 
         return true;
     }
