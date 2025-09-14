@@ -16,7 +16,7 @@ class SolanaAutoSell extends Command
     protected float $profitThreshold = 10.0;  // Sell if profit > 10% and momentum slows
     protected float $lossThreshold   = -7.0;  // Hard stop-loss
     protected float $minLiquidity    = 1000;  // Minimum liquidity for sell
-    protected float $m5Threshold     = -1.0;  // Sell if 5-minute price change < -1%
+    protected float $m5Threshold     = -2.0;  // Sell if 5-minute price change < -2%
     protected float $m5SlowThreshold = 2.0;   // Momentum considered "slow" for TP
     protected float $trailingStop     = -3.0;  // Trailing stop: sell if drops 3% from peak
     protected float $h1Threshold      = 0.0;   // Confirm M5 sell with H1 trend
