@@ -4,18 +4,18 @@
     <table class="w-full border-collapse border border-gray-700 text-white">
         <thead>
         <tr class="bg-gray-800">
-            <th class="border border-gray-700 px-2 py-1">Name</th>
-            <th class="border border-gray-700 px-2 py-1">Contract</th>
-            <th class="border border-gray-700 px-2 py-1">Market Cap</th>
-            <th class="border border-gray-700 px-2 py-1">Volume 24h</th>
-            <th class="border border-gray-700 px-2 py-1">Dev Sold</th>
-            <th class="border border-gray-700 px-2 py-1">Dex Paid</th>
-            <th class="border border-gray-700 px-2 py-1">Strategy</th>
-            <th class="border border-gray-700 px-2 py-1">Bought</th>
-            <th class="border border-gray-700 px-2 py-1">Sold</th>
-            <th class="border border-gray-700 px-2 py-1">Failures</th>
-            <th class="border border-gray-700 px-2 py-1">Profit (SOL)</th>
-            <th class="border border-gray-700 px-2 py-1">Profit (%)</th>
+            <th class="border border-gray-700 px-2 py-1 text-left">Name</th>
+            <th class="border border-gray-700 px-2 py-1 text-left">Contract</th>
+            <th class="border border-gray-700 px-2 py-1 text-left">Market Cap</th>
+            <th class="border border-gray-700 px-2 py-1 text-left">Volume 24h</th>
+            <th class="border border-gray-700 px-2 py-1 text-left">DS</th>
+            <th class="border border-gray-700 px-2 py-1 text-left">DP</th>
+            <th class="border border-gray-700 px-2 py-1 text-left">Strategy</th>
+            <th class="border border-gray-700 px-2 py-1 text-center">Bought</th>
+            <th class="border border-gray-700 px-2 py-1 text-center">Sold</th>
+            <th class="border border-gray-700 px-2 py-1 text-center">Failures</th>
+            <th class="border border-gray-700 px-2 py-1 text-right">Profit (SOL)</th>
+            <th class="border border-gray-700 px-2 py-1 text-right">Profit (%)</th>
         </tr>
         </thead>
         <tbody>
