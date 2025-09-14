@@ -61,69 +61,78 @@ function deriveBondingCurve(mint){ return PublicKey.findProgramAddressSync([Buff
 function deriveAssociatedBondingCurve(bondingCurve,mint){ return PublicKey.findProgramAddressSync([bondingCurve.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()], ASSOCIATED_TOKEN_PROGRAM_ID)[0]; }
 
 // ----- Real Jupiter Swap -----
-async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, slippageBps=500){
-    const quoteUrl='https://quote-api.jup.ag/v6/quote';
-    const swapUrl='https://quote-api.jup.ag/v6/swap';
+// ----- Real Jupiter Swap with retry -----
+async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, slippageBps=500) {
+    const quoteUrl = 'https://quote-api.jup.ag/v6/quote';
+    const swapUrl  = 'https://quote-api.jup.ag/v6/swap';
     const amountStr = BN.isBN(amount) ? amount.toString() : String(amount);
-    const qParams = new URLSearchParams({inputMint:inputMint.toString(), outputMint:outputMint.toString(), amount:amountStr, slippageBps:String(slippageBps)});
-    const qRes = await fetch(`${quoteUrl}?${qParams}`,{agent:httpsAgent});
+
+    const qParams = new URLSearchParams({
+        inputMint: inputMint.toString(),
+        outputMint: outputMint.toString(),
+        amount: amountStr,
+        slippageBps: String(slippageBps)
+    });
+
+    const qRes = await fetch(`${quoteUrl}?${qParams}`, { agent: httpsAgent });
     const qData = await qRes.json();
-    if(!qRes.ok) throw new Error('Jupiter quote failed: '+JSON.stringify(qData));
-    const sRes = await fetch(swapUrl,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({quoteResponse:qData,userPublicKey:wallet.publicKey.toString(),wrapAndUnwrapSol:true,computeUnitPriceMicroLamports:1000000}),
-        agent:httpsAgent
+    if (!qRes.ok) throw new Error('Jupiter quote failed: ' + JSON.stringify(qData));
+
+    const sRes = await fetch(swapUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            quoteResponse: qData,
+            userPublicKey: wallet.publicKey.toString(),
+            wrapAndUnwrapSol: true,
+            computeUnitPriceMicroLamports: 1000000
+        }),
+        agent: httpsAgent
     });
     const sData = await sRes.json();
-    if(!sRes.ok) throw new Error('Jupiter swap failed: '+JSON.stringify(sData));
+    if (!sRes.ok) throw new Error('Jupiter swap failed: ' + JSON.stringify(sData));
 
-    const tx = VersionedTransaction.deserialize(Buffer.from(sData.swapTransaction,'base64'));
+    const tx = VersionedTransaction.deserialize(Buffer.from(sData.swapTransaction, 'base64'));
     tx.sign([wallet]);
-    const sig = await connection.sendTransaction(tx,{skipPreflight:false,maxRetries:3});
-    await connection.confirmTransaction(sig,'finalized');
+    const sig = await connection.sendTransaction(tx, { skipPreflight: false, maxRetries: 3 });
+    await connection.confirmTransaction(sig, 'finalized');
     return sig;
 }
 
 // ----- Execute Sell -----
-// ----- Execute Sell -----
 async function executeSell(connection, wallet, mint, tokenAmountBN, solanaCallId) {
     try {
-        const bc = deriveBondingCurve(mint);
-        const abc = deriveAssociatedBondingCurve(bc, mint);
-        const userATA = await getAssociatedTokenAddress(mint, wallet.publicKey);
+        let txSig, dexUsed = 'jupiter';
 
-        let txSig, dexUsed;
-
-        // Check bonding curve state (skipped here, fallback to Jupiter)
-        const state = null;
-
-        if (!state || state.complete) {
-            dexUsed = 'jupiter';
-            txSig = await jupiterSwap(connection, wallet, mint, SOL_MINT, tokenAmountBN);
-        } else {
-            // TODO: implement bonding curve sell
+        // Try with 5% slippage first, retry with 20% if failed
+        try {
+            txSig = await jupiterSwap(connection, wallet, mint, SOL_MINT, tokenAmountBN, 500); // 5%
+        } catch (err) {
+            if (err.message.includes('0x1788') || err.message.toLowerCase().includes('slippage')) {
+                logToLaravel('warn', `Retrying Jupiter swap with higher slippage (20%) due to: ${err.message}`);
+                txSig = await jupiterSwap(connection, wallet, mint, SOL_MINT, tokenAmountBN, 2000); // 20%
+            } else {
+                throw err;
+            }
         }
 
-        // ✅ Fetch transaction details to compute SOL actually received
+        // ✅ Fetch transaction details
         const tx = await connection.getTransaction(txSig, {
             commitment: 'confirmed',
             maxSupportedTransactionVersion: 0
         });
+        if (!tx || !tx.meta) throw new Error(`Transaction not found or missing meta: ${txSig}`);
 
-        if (!tx) throw new Error(`Transaction not found: ${txSig}`);
-
-        // Pre- and post-balance arrays contain lamports for each account
-        const acctIndex = tx.transaction.message.accountKeys.findIndex(
-            k => k.toBase58() === wallet.publicKey.toBase58()
+        const accountKeys = tx.transaction.message.accountKeys.map(k =>
+            typeof k === 'string' ? new PublicKey(k) : k
         );
+        const acctIndex = accountKeys.findIndex(k => k.toBase58() === wallet.publicKey.toBase58());
         if (acctIndex === -1) throw new Error('Wallet pubkey not found in tx keys');
 
         const lamportsBefore = tx.meta.preBalances[acctIndex];
         const lamportsAfter  = tx.meta.postBalances[acctIndex];
         const amountSolReceived = (lamportsAfter - lamportsBefore) / 1e9;
 
-        // Store in Laravel
         await createSolanaCallOrder({
             solana_call_id: solanaCallId,
             type: 'sell',
@@ -133,12 +142,9 @@ async function executeSell(connection, wallet, mint, tokenAmountBN, solanaCallId
             tx_signature: txSig
         });
 
-        logToLaravel(
-            'info',
-            `Sell complete: ${bnToNumberSafe(tokenAmountBN)} tokens, received ${amountSolReceived} SOL via ${dexUsed}, tx ${txSig}`
-        );
-
+        logToLaravel('info', `Sell complete: ${bnToNumberSafe(tokenAmountBN)} tokens, received ${amountSolReceived} SOL via ${dexUsed}, tx ${txSig}`);
         return { txSig, dexUsed };
+
     } catch (e) {
         const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
         logToLaravel('error', 'Sell failed: ' + errorMsg);
@@ -146,6 +152,7 @@ async function executeSell(connection, wallet, mint, tokenAmountBN, solanaCallId
         return { txSig: null, dexUsed: null };
     }
 }
+
 
 // CLI
 if(import.meta.url === `file://${process.argv[1]}`){
