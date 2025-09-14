@@ -88,18 +88,31 @@ class SolanaContractScanner
 
         // Last 5-minute change from pairData (assume already fetched)
         $priceChangeM5 = $this->pairData[0]['priceChange']['m5'] ?? 0;
+        $priceChangeH6 = $tokenData['priceChange']['h6'] ?? 0;   // ✅ extra timeframe
+        $priceChangeH24 = $tokenData['priceChange']['h24'] ?? 0; // ✅ extra timeframe
 
-        // --- Thresholds for short-wave trades ---
-        $minLiquidity   = 1000;     // allow smaller pools
+        // --- Thresholds ---
+        $minLiquidity   = 1000;
         $minMarketCap   = 2000;
         $maxMarketCap   = 20000000;
-        $minVolumeH1    = 500;      // smaller but active tokens
-        $minVolLiqRatio = 0.2;      // volume/liquidity ratio
-        $maxH1Loss      = -10;      // allow up to 10% loss last hour
-        $minM5Gain      = 0.1;      // require at least 0.1% gain last 5 minutes
-        $maxM5Gain      = 50;       // sanity cap
+        $minVolumeH1    = 500;
+        $minVolLiqRatio = 0.2;
+        $maxH1Loss      = -10;
+        $minM5Gain      = 0.1;
+        $maxM5Gain      = 50;
 
-        // --- Checks with logs ---
+        // 🚨 Rug filter: reject if any timeframe is -50% or worse
+        $rugThreshold = -50;
+        $allDrops = [$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24];
+
+        foreach ($allDrops as $drop) {
+            if ($drop <= $rugThreshold) {
+                Log::warning("Skipping {$this->tokenAddress}: potential rug detected ({$drop}% change <= {$rugThreshold}%)");
+                return false;
+            }
+        }
+
+        // --- Normal checks ---
         if ($liquidity < $minLiquidity) {
             Log::info("Skipping {$this->tokenAddress}: liquidity \${$liquidity} < \${$minLiquidity}");
             return false;
