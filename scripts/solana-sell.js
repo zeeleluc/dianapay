@@ -100,39 +100,50 @@ async function jupiterSwap(connection, wallet, inputMint, outputMint, amount, sl
 }
 
 // ----- Execute Sell -----
+// ----- Execute Sell -----
 async function executeSell(connection, wallet, mint, tokenAmountBN, solanaCallId) {
     try {
-        let txSig, dexUsed = 'jupiter';
+        let txSig, dexUsed;
 
-        // Try with 5% slippage first, retry with 20% if failed
-        try {
-            txSig = await jupiterSwap(connection, wallet, mint, SOL_MINT, tokenAmountBN, 500); // 5%
-        } catch (err) {
-            if (err.message.includes('0x1788') || err.message.toLowerCase().includes('slippage')) {
-                logToLaravel('warn', `Retrying Jupiter swap with higher slippage (20%) due to: ${err.message}`);
-                txSig = await jupiterSwap(connection, wallet, mint, SOL_MINT, tokenAmountBN, 2000); // 20%
-            } else {
-                throw err;
-            }
-        }
+        dexUsed = 'jupiter';
+        txSig = await jupiterSwap(connection, wallet, mint, SOL_MINT, tokenAmountBN);
 
         // ✅ Fetch transaction details
         const tx = await connection.getTransaction(txSig, {
             commitment: 'confirmed',
             maxSupportedTransactionVersion: 0
         });
-        if (!tx || !tx.meta) throw new Error(`Transaction not found or missing meta: ${txSig}`);
 
-        const accountKeys = tx.transaction.message.accountKeys.map(k =>
-            typeof k === 'string' ? new PublicKey(k) : k
+        if (!tx) throw new Error(`Transaction not found: ${txSig}`);
+
+        let amountSolReceived = 0;
+
+        // 1) Try to read from token balances
+        const preSol = tx.meta.preTokenBalances?.find(
+            b => b.mint === SOL_MINT.toBase58() && b.owner === wallet.publicKey.toBase58()
         );
-        const acctIndex = accountKeys.findIndex(k => k.toBase58() === wallet.publicKey.toBase58());
-        if (acctIndex === -1) throw new Error('Wallet pubkey not found in tx keys');
+        const postSol = tx.meta.postTokenBalances?.find(
+            b => b.mint === SOL_MINT.toBase58() && b.owner === wallet.publicKey.toBase58()
+        );
 
-        const lamportsBefore = tx.meta.preBalances[acctIndex];
-        const lamportsAfter  = tx.meta.postBalances[acctIndex];
-        const amountSolReceived = (lamportsAfter - lamportsBefore) / 1e9;
+        if (preSol && postSol) {
+            const preUi = parseFloat(preSol.uiTokenAmount.uiAmountString || "0");
+            const postUi = parseFloat(postSol.uiTokenAmount.uiAmountString || "0");
+            amountSolReceived = postUi - preUi;
+        }
 
+        // 2) Fallback: use wallet lamport diff
+        if (!amountSolReceived || amountSolReceived <= 0) {
+            const acctIndex = tx.transaction.message.accountKeys.findIndex(
+                k => k.toBase58() === wallet.publicKey.toBase58()
+            );
+            if (acctIndex === -1) throw new Error('Wallet pubkey not found in tx keys');
+            const lamportsBefore = tx.meta.preBalances[acctIndex];
+            const lamportsAfter  = tx.meta.postBalances[acctIndex];
+            amountSolReceived = (lamportsAfter - lamportsBefore) / 1e9;
+        }
+
+        // Store in Laravel
         await createSolanaCallOrder({
             solana_call_id: solanaCallId,
             type: 'sell',
@@ -142,9 +153,12 @@ async function executeSell(connection, wallet, mint, tokenAmountBN, solanaCallId
             tx_signature: txSig
         });
 
-        logToLaravel('info', `Sell complete: ${bnToNumberSafe(tokenAmountBN)} tokens, received ${amountSolReceived} SOL via ${dexUsed}, tx ${txSig}`);
-        return { txSig, dexUsed };
+        logToLaravel(
+            'info',
+            `Sell complete: ${bnToNumberSafe(tokenAmountBN)} tokens, received ${amountSolReceived} SOL via ${dexUsed}, tx ${txSig}`
+        );
 
+        return { txSig, dexUsed };
     } catch (e) {
         const errorMsg = e.logs ? e.logs.join('\n') : e.message || String(e);
         logToLaravel('error', 'Sell failed: ' + errorMsg);
@@ -152,6 +166,7 @@ async function executeSell(connection, wallet, mint, tokenAmountBN, solanaCallId
         return { txSig: null, dexUsed: null };
     }
 }
+
 
 
 // CLI
