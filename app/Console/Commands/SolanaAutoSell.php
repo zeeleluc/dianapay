@@ -12,11 +12,13 @@ use Symfony\Component\Process\Process;
 class SolanaAutoSell extends Command
 {
     protected $signature = 'solana:auto-sell';
-    protected $description = 'Automatically sell tokens based on 5-minute price drop or time';
+    protected $description = 'Automatically sell tokens based on profit/loss, 5-minute price drop, or time';
 
     protected float $minLiquidity = 1000;  // Minimum liquidity for sell
     protected float $m5Threshold = -5.0;   // Sell if 5-minute price change < -5%
     protected int $maxHoldMinutes = 120;   // Sell after 120 minutes
+    protected float $profitThreshold = 10.0; // Sell if profit >= 10%
+    protected float $lossThreshold = -3.0;  // Sell if loss <= -3%
 
     public function handle()
     {
@@ -159,12 +161,14 @@ class SolanaAutoSell extends Command
                 $priceChangeM5 = $data['priceChange']['m5'] ?? 0;
                 $priceChangeH1 = $data['priceChange']['h1'] ?? 0;
                 $priceChangeH24 = $data['priceChange']['h24'] ?? 0;
+                $currentMarketCap = $data['marketCap'] ?? 0;
 
                 Log::info('[AutoSell Command] Fetched token data', [
                     'call_id' => $call->id,
                     'token' => $tokenAddress,
                     'price' => $currentPrice,
                     'liquidity_usd' => $currentLiquidity,
+                    'market_cap' => $currentMarketCap,
                     'priceChange' => [
                         'm5' => $priceChangeM5,
                         'h1' => $priceChangeH1,
@@ -203,10 +207,42 @@ class SolanaAutoSell extends Command
                     continue;
                 }
 
-                // Check hold time (handle negative values)
+                // Calculate profit/loss
+                $tokenAmount = $buyOrder->amount_foreign;
+
+                // Estimate buy price
+                $buyPrice = null;
+                if (isset($buyOrder->price) && is_numeric($buyOrder->price)) {
+                    $buyPrice = $buyOrder->price;
+                } elseif (isset($buyOrder->amount_spent) && is_numeric($buyOrder->amount_spent)) {
+                    $buyPrice = $buyOrder->amount_spent / $tokenAmount;
+                } elseif ($call->market_cap && is_numeric($call->market_cap) && $currentMarketCap && is_numeric($currentMarketCap)) {
+                    // Use market cap ratio to estimate price change
+                    // Assume same total supply; calculate buy price relative to current price
+                    $buyPrice = $currentPrice * ($call->market_cap / $currentMarketCap);
+                }
+
+                if (!$buyPrice || !is_numeric($buyPrice) || $buyPrice <= 0) {
+                    $this->warn("Cannot calculate buy price for token {$tokenAddress}");
+                    Log::warning('[AutoSell Command] Skipping due to invalid buy price', [
+                        'call_id' => $call->id,
+                        'token' => $tokenAddress,
+                        'buy_price' => $buyPrice,
+                        'market_cap_at_buy' => $call->market_cap,
+                        'current_market_cap' => $currentMarketCap,
+                    ]);
+                    continue;
+                }
+
+                // Calculate profit/loss percentage
+                $currentValue = $tokenAmount * $currentPrice;
+                $buyValue = $tokenAmount * $buyPrice;
+                $profitPercent = (($currentValue - $buyValue) / $buyValue) * 100;
+
+                // Check hold time
                 $holdTime = max(0, now()->diffInMinutes($buyOrder->created_at));
 
-                $this->info("Token {$tokenAddress} M5: {$priceChangeM5}%, H1: {$priceChangeH1}%, Volatility: {$priceChangeH24}%, Hold Time: {$holdTime} minutes");
+                $this->info("Token {$tokenAddress} M5: {$priceChangeM5}%, H1: {$priceChangeH1}%, Volatility: {$priceChangeH24}%, Hold Time: {$holdTime} minutes, Profit/Loss: {$profitPercent}%");
                 Log::info('[AutoSell Command] Evaluating sell conditions', [
                     'call_id' => $call->id,
                     'token' => $tokenAddress,
@@ -217,27 +253,36 @@ class SolanaAutoSell extends Command
                     'hold_time' => $holdTime,
                     'max_hold_minutes' => $this->maxHoldMinutes,
                     'current_price' => $currentPrice,
+                    'buy_price' => $buyPrice,
+                    'profit_percent' => $profitPercent,
+                    'profit_threshold' => $this->profitThreshold,
+                    'loss_threshold' => $this->lossThreshold,
+                    'market_cap_at_buy' => $call->market_cap,
+                    'current_market_cap' => $currentMarketCap,
                     'created_at' => $buyOrder->created_at->toDateTimeString(),
                 ]);
 
                 // Sell conditions
                 $sellReason = null;
-                if ($priceChangeM5 < $this->m5Threshold) {
+                if ($profitPercent >= $this->profitThreshold) {
+                    $sellReason = "profit threshold reached ({$profitPercent}% >= {$this->profitThreshold}%)";
+                } elseif ($profitPercent <= $this->lossThreshold) {
+                    $sellReason = "loss threshold reached ({$profitPercent}% <= {$this->lossThreshold}%)";
+                } elseif ($priceChangeM5 < $this->m5Threshold) {
                     $sellReason = "negative M5 ({$priceChangeM5}% < {$this->m5Threshold}%)";
                 } elseif ($holdTime > $this->maxHoldMinutes) {
                     $sellReason = "maximum hold time exceeded ({$holdTime} minutes)";
                 }
 
                 if ($sellReason) {
-                    $this->info("Triggering sell for SolanaCall ID {$call->id} (M5: {$priceChangeM5}%, Reason: {$sellReason})");
+                    $this->info("Triggering sell for SolanaCall ID {$call->id} (M5: {$priceChangeM5}%, Profit/Loss: {$profitPercent}%, Reason: {$sellReason})");
                     Log::info('[AutoSell Command] Triggering sell', [
                         'call_id' => $call->id,
                         'token' => $tokenAddress,
                         'reason' => $sellReason,
-                        'command' => ['node', base_path('scripts/solana-sell.js'), "--identifier={$call->id}", "--token={$tokenAddress}", "--amount={$buyOrder->amount_foreign}"],
+                        'profit_percent' => $profitPercent,
+                        'command' => ['node', base_path('scripts/solana-sell.js'), "--identifier={$call->id}", "--token={$tokenAddress}", "--amount={$tokenAmount}"],
                     ]);
-
-                    $tokenAmount = $buyOrder->amount_foreign;
 
                     $process = new Process([
                         'node',
@@ -267,8 +312,10 @@ class SolanaAutoSell extends Command
                             'call_id' => $call->id,
                             'token' => $tokenAddress,
                             'sell_price' => $currentPrice,
+                            'buy_price' => $buyPrice,
                             'amount_foreign' => $tokenAmount,
                             'reason' => $sellReason,
+                            'profit_percent' => $profitPercent,
                             'm5_change' => $priceChangeM5,
                             'h1_change' => $priceChangeH1,
                             'hold_time' => $holdTime,
@@ -276,7 +323,7 @@ class SolanaAutoSell extends Command
                         SlackNotifier::success("Sell completed for SolanaCall #{$call->id} ({$tokenAddress}): {$output}");
                     }
                 } else {
-                    $this->info("Holding token {$tokenAddress}: M5 ({$priceChangeM5}% >= {$this->m5Threshold}%)");
+                    $this->info("Holding token {$tokenAddress}: M5 ({$priceChangeM5}% >= {$this->m5Threshold}%), Profit/Loss ({$profitPercent}% between {$this->lossThreshold}% and {$this->profitThreshold}%)");
                     Log::info('[AutoSell Command] Holding token', [
                         'call_id' => $call->id,
                         'token' => $tokenAddress,
@@ -284,6 +331,8 @@ class SolanaAutoSell extends Command
                         'h1_change' => $priceChangeH1,
                         'hold_time' => $holdTime,
                         'current_price' => $currentPrice,
+                        'buy_price' => $buyPrice,
+                        'profit_percent' => $profitPercent,
                         'created_at' => $buyOrder->created_at->toDateTimeString(),
                     ]);
                 }
