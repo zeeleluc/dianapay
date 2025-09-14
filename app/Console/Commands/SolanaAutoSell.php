@@ -14,7 +14,7 @@ class SolanaAutoSell extends Command
     protected $signature = 'solana:auto-sell';
     protected $description = 'Automatically sell tokens based on 5-minute price drop or time';
 
-    protected float $minLiquidity = 5000;  // Minimum liquidity for sell
+    protected float $minLiquidity = 1000;  // Minimum liquidity for sell
     protected float $m5Threshold = -5.0;   // Sell if 5-minute price change < -5%
     protected int $maxHoldMinutes = 120;   // Sell after 120 minutes
 
