@@ -82,7 +82,7 @@ class PollSolanaTokens extends Command
                     // Skip if ANY sell exists within the last 2 hours for this token
                     continue;
                 }
-
+continue;
 
                 // 🔍 Run scanner
                 $scanner = new SolanaContractScanner($tokenAddress, $chain);
