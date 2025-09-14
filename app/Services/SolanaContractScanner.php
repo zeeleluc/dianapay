@@ -98,46 +98,47 @@ class SolanaContractScanner
         $minVolumeH1    = 500;
         $minVolLiqRatio = 0.2;
         $maxH1Loss      = -10;
-        $minM5Gain      = 5.0;  // Small peak in 5-minute timeframe
+        $minM5Gain      = 0.1;  // ✅ Relaxed to any positive momentum (> 0%)
         $maxM5Gain      = 50;
-        $maxH1Downtrend = -0.1; // ✅ Small downtrend in prior 1-hour (e.g., -0.1% to -10%)
+        $maxH1Downtrend = -0.1; // Small downtrend in prior 1-hour
 
         // 🚨 Rug filter: reject if any timeframe is -50% or worse
         $rugThreshold = -50;
         $allDrops = [$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24];
 
         foreach ($allDrops as $drop) {
-            if ($drop <= $rugThreshold) {
-                Log::warning("Skipping {$this->tokenAddress}: potential rug detected ({$drop}% change <= {$rugThreshold}%)");
+            if (!is_numeric($drop) || $drop <= $rugThreshold) {
+                Log::warning("Skipping {$this->tokenAddress}: potential rug detected ({$drop}% change <= {$rugThreshold}% or invalid)");
                 return false;
             }
         }
 
         // --- Normal checks ---
-        if ($liquidity < $minLiquidity) {
-            Log::info("Skipping {$this->tokenAddress}: liquidity \${$liquidity} < \${$minLiquidity}");
+        if (!is_numeric($liquidity) || $liquidity < $minLiquidity) {
+            Log::info("Skipping {$this->tokenAddress}: liquidity \${$liquidity} < \${$minLiquidity} or invalid");
             return false;
         }
 
-        if ($marketCap < $minMarketCap || $marketCap > $maxMarketCap) {
-            Log::info("Skipping {$this->tokenAddress}: marketCap \${$marketCap} outside range \${$minMarketCap}-\${$maxMarketCap}");
+        if (!is_numeric($marketCap) || $marketCap < $minMarketCap || $marketCap > $maxMarketCap) {
+            Log::info("Skipping {$this->tokenAddress}: marketCap \${$marketCap} outside range \${$minMarketCap}-\${$maxMarketCap} or invalid");
             return false;
         }
 
         $volLiqRatio = ($liquidity > 0) ? ($volumeH1 / $liquidity) : 0;
-        if ($volumeH1 < $minVolumeH1 || $volLiqRatio < $minVolLiqRatio) {
-            Log::info("Skipping {$this->tokenAddress}: volumeH1 \${$volumeH1}, vol/liq ratio={$volLiqRatio} below threshold {$minVolLiqRatio}");
+        if (!is_numeric($volumeH1) || $volumeH1 < $minVolumeH1 || $volLiqRatio < $minVolLiqRatio) {
+            Log::info("Skipping {$this->tokenAddress}: volumeH1 \${$volumeH1}, vol/liq ratio={$volLiqRatio} below threshold {$minVolLiqRatio} or invalid");
             return false;
         }
 
         // Check for prior downtrend in H1 (small decline before M5 peak)
-        if ($priceChangeH1 > $maxH1Downtrend || $priceChangeH1 < $maxH1Loss) {
-            Log::info("Skipping {$this->tokenAddress}: H1 change {$priceChangeH1}% not in desired downtrend range ({$maxH1Loss}% to {$maxH1Downtrend}%)");
+        if (!is_numeric($priceChangeH1) || $priceChangeH1 > $maxH1Downtrend || $priceChangeH1 < $maxH1Loss) {
+            Log::info("Skipping {$this->tokenAddress}: H1 change {$priceChangeH1}% not in desired downtrend range ({$maxH1Loss}% to {$maxH1Downtrend}%) or invalid");
             return false;
         }
 
-        if ($priceChangeM5 < $minM5Gain || $priceChangeM5 > $maxM5Gain) {
-            Log::info("Skipping {$this->tokenAddress}: M5 change {$priceChangeM5}% outside desired range ({$minM5Gain}% → {$maxM5Gain}%)");
+        // Ensure positive 5-minute momentum
+        if (!is_numeric($priceChangeM5) || $priceChangeM5 < $minM5Gain || $priceChangeM5 > $maxM5Gain) {
+            Log::info("Skipping {$this->tokenAddress}: M5 change {$priceChangeM5}% outside desired range ({$minM5Gain}% → {$maxM5Gain}%) or invalid");
             return false;
         }
 

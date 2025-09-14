@@ -11,10 +11,11 @@ use Illuminate\Support\Facades\Http;
 class SolanaAutoSell extends Command
 {
     protected $signature = 'solana:auto-sell';
-    protected $description = 'Automatically sell tokens that reached market cap profit/loss thresholds';
+    protected $description = 'Automatically sell tokens based on 5-minute momentum and price thresholds';
 
-    protected float $profitThreshold = 5.0; // 2% profit
-    protected float $lossThreshold   = -10.0; // -1% loss
+    protected float $lossThreshold   = -7.0;  // Hard stop-loss for significant losses
+    protected float $minLiquidity    = 1000;  // Minimum liquidity for sell (from checkMarketMetrics)
+    protected float $m5Threshold     = 0.0;   // Sell if 5-minute price change is negative
 
     public function handle()
     {
@@ -28,38 +29,53 @@ class SolanaAutoSell extends Command
 
         foreach ($calls as $call) {
             try {
-                // 🚨 Check failures first
+                // Check failures first
                 $failures = $call->orders->where('type', 'failed')->count();
                 if ($failures >= 10) {
                     $this->warn("Deleting SolanaCall ID {$call->id}: {$failures} failed attempts.");
-                    $call->delete(); // This will also delete orders if you set up cascade in DB/migration
+                    $call->delete();
                     continue;
                 }
 
                 $buyOrder = $call->orders->where('type', 'buy')->first();
                 $tokenAddress = $call->token_address;
-                $originalMarketCap = $call->market_cap;
 
-                if (!$buyOrder || !$buyOrder->amount_foreign) {
-                    $this->warn("Skipping SolanaCall ID {$call->id}: no buy order or amount is 0");
+                if (!$buyOrder || !$buyOrder->amount_foreign || !$buyOrder->price) {
+                    $this->warn("Skipping SolanaCall ID {$call->id}: no buy order, amount, or price");
                     continue;
                 }
 
-                // Fetch latest market cap
+                // Fetch latest data
                 $res = Http::timeout(5)->get("https://api.dexscreener.com/latest/dex/tokens/{$tokenAddress}");
                 if (!$res->successful() || empty($res->json('pairs'))) {
-                    $this->warn("Failed to fetch market cap for token {$tokenAddress}");
+                    $this->warn("Failed to fetch data for token {$tokenAddress}");
                     continue;
                 }
 
-                $currentMarketCap = $res->json('pairs.0.marketCap');
-                $profitPct = (($currentMarketCap - $originalMarketCap) / $originalMarketCap) * 100;
+                $currentPrice = $res->json('pairs.0.priceUsd') ?? 0;
+                $currentLiquidity = $res->json('pairs.0.liquidity.usd') ?? 0;
+                $priceChangeM5 = $res->json('pairs.0.priceChange.m5') ?? 0;
 
-                $this->info("Token {$tokenAddress} PnL (via market cap): {$profitPct}%");
+                if (!is_numeric($currentPrice) || $currentPrice <= 0) {
+                    $this->warn("Invalid price for token {$tokenAddress}");
+                    continue;
+                }
 
-                // Check thresholds
-                if ($profitPct >= $this->profitThreshold || $profitPct <= $this->lossThreshold) {
-                    $this->info("Triggering sell for SolanaCall ID {$call->id} (PnL: {$profitPct}%)");
+                if ($currentLiquidity < $this->minLiquidity) {
+                    $this->warn("Skipping sell for {$tokenAddress}: liquidity \${$currentLiquidity} < \${$this->minLiquidity}");
+                    continue;
+                }
+
+                // Calculate profit/loss based on price
+                $buyPrice = $buyOrder->price;
+                $profitPct = (($currentPrice - $buyPrice) / $buyPrice) * 100;
+
+                $this->info("Token {$tokenAddress} PnL: {$profitPct}%, M5: {$priceChangeM5}%");
+
+                // Sell conditions: negative M5 or significant loss
+                if ($priceChangeM5 < $this->m5Threshold || $profitPct <= $this->lossThreshold) {
+                    $reason = $priceChangeM5 < $this->m5Threshold ? "negative M5 ({$priceChangeM5}%)" : "hit stop-loss ({$profitPct}%)";
+                    $this->info("Triggering sell for SolanaCall ID {$call->id} (PnL: {$profitPct}%, M5: {$priceChangeM5}%, Reason: {$reason})");
 
                     $tokenAmount = $buyOrder->amount_foreign;
 
@@ -81,9 +97,8 @@ class SolanaAutoSell extends Command
                         $output = trim($process->getOutput());
                         $this->info("Sell completed for SolanaCall ID {$call->id}: {$output}");
                     }
-
                 } else {
-                    $this->info("Skipping token {$tokenAddress}: PnL ({$profitPct}%) not within thresholds");
+                    $this->info("Holding token {$tokenAddress}: PnL ({$profitPct}%), M5 ({$priceChangeM5}%) still positive");
                 }
 
             } catch (\Exception $e) {
@@ -94,5 +109,4 @@ class SolanaAutoSell extends Command
 
         $this->info('SolanaAutoSell run completed.');
     }
-
 }
