@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Helpers\SolanaTokenData;
+use App\Models\SolanaBlacklistContract;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -151,10 +152,15 @@ class SolanaContractScanner
     {
         $rugCheck = Http::get("https://api.rugcheck.xyz/v1/tokens/{$this->tokenAddress}/report")->json();
         $riskScore = $rugCheck['score_normalised'] ?? 100;
-        $rugged = $rugCheck['rugged'];
+        $rugged = $rugCheck['rugged'] ?? false;
 
-        if ($riskScore >= 50) return false;
-        if ($rugged) return false;
+        if ($riskScore >= 50 || $rugged) {
+            // Blacklist the token if it fails the rug check
+            SolanaBlacklistContract::create(['contract' => $this->tokenAddress]);
+            Log::info("Added {$this->tokenAddress} to solana_blacklist_contracts due to failed rug check (Risk Score: {$riskScore}, Rugged: {$rugged})");
+            return false;
+        }
+
         return true;
     }
 

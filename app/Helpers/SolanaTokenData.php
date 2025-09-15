@@ -10,15 +10,15 @@ class SolanaTokenData
 {
     protected string $quickNodeEndpoint;
     protected string $addonPath = '/addon/912/networks/solana';
-    protected int $maxRetries = 2;
-    protected int $retryDelaySeconds = 2;
+    protected int $maxRetries = 3; // Increased from 2 for more resilience
+    protected int $retryDelaySeconds = 5; // Increased from 2 to avoid rate limits
 
     public function __construct()
     {
         $this->quickNodeEndpoint = config('services.quicknode.endpoint');
         if (empty($this->quickNodeEndpoint)) {
-            Log::error("QuickNode endpoint not configured in services.quicknode.endpoint");
-            throw new \Exception("QuickNode endpoint configuration missing");
+            Log::error('QuickNode endpoint not configured in services.quicknode.endpoint');
+            throw new \Exception('QuickNode endpoint configuration missing');
         }
     }
 
@@ -31,6 +31,12 @@ class SolanaTokenData
      */
     public function getTokenData(string $tokenAddress, ?\DateTime $createdAt = null): ?array
     {
+        // Validate token address format (base58, 44 characters)
+        if (!preg_match('/^[1-9A-HJ-NP-Za-km-z]{44}$/', $tokenAddress)) {
+            Log::warning("Invalid token address: {$tokenAddress}");
+            return null;
+        }
+
         // Skip new tokens (less than 10 minutes old) to allow indexing
         if ($createdAt && now()->diffInMinutes($createdAt) < 10) {
             Log::info("Skipping token {$tokenAddress}: too new, created at {$createdAt->toDateTimeString()}");
@@ -38,24 +44,49 @@ class SolanaTokenData
         }
 
         $cacheKey = "token_data_{$tokenAddress}";
-        return Cache::remember($cacheKey, 30, function () use ($tokenAddress) {
+        return Cache::remember($cacheKey, 300, function () use ($tokenAddress) {
             $attempt = 0;
+            $tokenUrl = "{$this->quickNodeEndpoint}{$this->addonPath}/tokens/{$tokenAddress}";
+
             while ($attempt <= $this->maxRetries) {
                 try {
-                    // Fetch token overview
-                    $tokenUrl = "{$this->quickNodeEndpoint}{$this->addonPath}/tokens/{$tokenAddress}";
-                    $response = Http::timeout(5)->get($tokenUrl);
+                    // Track request count for monitoring
+                    Cache::increment("quicknode_requests_" . now()->format('YmdHi'));
+
+                    // Fetch token overview with increased timeout
+                    $response = Http::timeout(10)->get($tokenUrl);
+
+                    if ($response->status() === 429) {
+                        Log::warning("QuickNode /tokens API rate limit hit for {$tokenAddress} (attempt " . ($attempt + 1) . ")", [
+                            'url' => $tokenUrl,
+                            'status' => $response->status(),
+                        ]);
+                        $attempt++;
+                        if ($attempt <= $this->maxRetries) {
+                            sleep($this->retryDelaySeconds * pow(2, $attempt)); // Exponential backoff
+                            continue;
+                        }
+                        return null;
+                    }
+
+                    if ($response->status() === 404) {
+                        Log::info("Token {$tokenAddress} not found or not indexed by QuickNode", [
+                            'url' => $tokenUrl,
+                            'status' => $response->status(),
+                        ]);
+                        return null;
+                    }
 
                     if (!$response->successful()) {
                         Log::warning("QuickNode /tokens API failed for {$tokenAddress} (attempt " . ($attempt + 1) . ")", [
                             'url' => $tokenUrl,
                             'status' => $response->status(),
-                            'response' => $response->body(),
+                            'response' => $response->body() ?: 'Empty response',
                             'error' => $response->json('error') ?? 'Unknown error',
                         ]);
                         $attempt++;
                         if ($attempt <= $this->maxRetries) {
-                            sleep($this->retryDelaySeconds);
+                            sleep($this->retryDelaySeconds * pow(2, $attempt)); // Exponential backoff
                             continue;
                         }
                         return null;
@@ -63,9 +94,10 @@ class SolanaTokenData
 
                     $data = $response->json();
                     if (null === $data || !isset($data['summary'])) {
-                        Log::warning("QuickNode /tokens API invalid response for {$tokenAddress}", [
+                        Log::warning("QuickNode /tokens API returned invalid response for {$tokenAddress}", [
                             'url' => $tokenUrl,
-                            'response' => $response->body(),
+                            'response' => $response->body() ?: 'Empty response',
+                            'data' => $data ?? 'No data',
                         ]);
                         return null;
                     }
@@ -106,11 +138,11 @@ class SolanaTokenData
                         'url' => $tokenUrl,
                         'message' => $e->getMessage(),
                         'code' => $e->getCode(),
-                        'response' => $response ? $response->body() : 'No response',
+                        'response' => isset($response) ? ($response->body() ?: 'Empty response') : 'No response',
                     ]);
                     $attempt++;
                     if ($attempt <= $this->maxRetries) {
-                        sleep($this->retryDelaySeconds);
+                        sleep($this->retryDelaySeconds * pow(2, $attempt)); // Exponential backoff
                         continue;
                     }
                     return null;

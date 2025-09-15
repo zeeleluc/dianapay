@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Helpers\SolanaTokenData;
+use App\Models\SolanaBlacklistContract;
 use App\Models\SolanaCallOrder;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
 use Throwable;
 use App\Models\SolanaCall;
@@ -163,6 +165,11 @@ class PollSolanaTokens extends Command
 
     private function shouldSkipToken(string $tokenAddress): bool
     {
+        if (SolanaBlacklistContract::isBlacklisted($tokenAddress)) {
+            Log::info("Skipping blacklisted token: {$tokenAddress}");
+            return true;
+        }
+
         $call = SolanaCall::where('token_address', $tokenAddress)
             ->latest('id')
             ->with('orders')
