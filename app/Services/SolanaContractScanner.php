@@ -96,26 +96,26 @@ class SolanaContractScanner
         }
 
         // Extract metrics with null coalescing for safety
-        $marketCap = $this->tokenData['marketCap'] ?? 0;
-        $liquidity = $this->tokenData['liquidity']['usd'] ?? 0;
-        $volumeH1 = $this->tokenData['volume']['h1'] ?? 0;
-        $priceChangeM5 = $this->tokenData['priceChange']['m5'] ?? 0;
-        $priceChangeH1 = $this->tokenData['priceChange']['h1'] ?? 0;
-        $priceChangeH6 = $this->tokenData['priceChange']['h6'] ?? 0;
+        $marketCap      = $this->tokenData['marketCap'] ?? 0;
+        $liquidity      = $this->tokenData['liquidity']['usd'] ?? 0;
+        $volumeH1       = $this->tokenData['volume']['h1'] ?? 0;
+        $priceChangeM5  = $this->tokenData['priceChange']['m5'] ?? 0;
+        $priceChangeH1  = $this->tokenData['priceChange']['h1'] ?? 0;
+        $priceChangeH6  = $this->tokenData['priceChange']['h6'] ?? 0;
         $priceChangeH24 = $this->tokenData['priceChange']['h24'] ?? 0;
 
-        // --- Thresholds ---
-        $minLiquidity = 10000;         // Increased to ensure robust liquidity
-        $minMarketCap = 5000;          // Avoid micro-caps
-        $maxMarketCap = 50000000;      // Capture growth potential
-        $minVolumeH1 = 2000;           // Stronger trading activity
-        $minVolLiqRatio = 0.5;         // Higher ratio for active trading
-        $minM5Gain = 0.5;              // Positive short-term momentum
-        $maxM5Gain = 50;               // Tightened to avoid extreme pumps
-        $minH1Gain = -10;              // Allow smaller dips
-        $maxH1Gain = 50;               // New: Avoid large 1h pumps
-        $minH6Gain = 5;                // Require positive 6h trend
-        $rugThreshold = -50;           // Reject extreme drops
+        // --- Thresholds (refined) ---
+        $minLiquidity   = 20000;        // Safer liquidity floor
+        $minMarketCap   = 10000;        // Avoid micro-caps
+        $maxMarketCap   = 20000000;     // Capture growth potential, avoid overheated
+        $minVolumeH1    = 5000;         // Require stronger trading activity
+        $minVolLiqRatio = 0.5;          // Volume/liquidity ratio for active trading
+        $minM5Gain      = 1;            // Require at least +1% in 5m
+        $maxM5Gain      = 8;            // Avoid extreme short-term pumps
+        $minH1Gain      = -5;           // Allow mild dips in 1h
+        $maxH1Gain      = 20;           // Avoid overheated 1h spikes
+        $minH6Gain      = 3;            // Require healthy 6h trend
+        $rugThreshold   = -40;          // Reject tokens with extreme drops
 
         // --- Rug filter: reject if any timeframe has extreme drop ---
         $allDrops = [$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24];
@@ -142,18 +142,28 @@ class SolanaContractScanner
         }
 
         // --- Price trend checks ---
-        // Avoid tokens with large 1-hour pumps or significant losses
+        // Ensure 1h trend is within bounds
         if (!is_numeric($priceChangeH1) || $priceChangeH1 < $minH1Gain || $priceChangeH1 > $maxH1Gain) {
             return false;
         }
 
-        // Ensure positive 5-minute momentum, avoid extreme pumps
+        // Ensure positive but controlled 5-minute momentum
         if (!is_numeric($priceChangeM5) || $priceChangeM5 < $minM5Gain || $priceChangeM5 > $maxM5Gain) {
             return false;
         }
 
-        // Ensure positive 6-hour trend for longer-term stability
+        // Consistency check: reject if 5m is up but 1h is still negative
+        if ($priceChangeM5 > 0 && $priceChangeH1 < 0) {
+            return false;
+        }
+
+        // Ensure healthy 6-hour trend for stability
         if (!is_numeric($priceChangeH6) || $priceChangeH6 < $minH6Gain) {
+            return false;
+        }
+
+        // Optional: reject fake pumps (big 5m change with weak volume)
+        if ($priceChangeM5 > 2 && $volumeH1 < ($liquidity * 0.8)) {
             return false;
         }
 
