@@ -317,6 +317,6 @@
         // Auto-refresh the page every 60 seconds (60000 milliseconds)
         setInterval(function () {
             window.location.reload();
-        }, 10000);
+        }, 60000);
     </script>
 </x-guest-layout>
