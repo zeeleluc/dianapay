@@ -100,7 +100,7 @@ class PollSolanaTokens extends Command
                 $this->info("Saved SolanaCall ID: {$call->id} - Token: {$tokenName} ({$tokenAddress}){$boostLabel}");
 
                 // --- Node buy process ---
-                $buyAmount = 0.002;
+                $buyAmount = 0.005;
                 SlackNotifier::info("Launching buy for SolanaCall #{$call->id}: {$tokenName} ({$buyAmount} SOL){$boostLabel}");
 
                 $process = new Process([
