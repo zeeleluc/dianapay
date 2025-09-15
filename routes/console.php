@@ -16,7 +16,7 @@ if (app()->environment('prod')) {
 
 // ========== Testing/High-Frequency Poll ==========
 if (app()->environment('prod')) {
-    $schedule->command('solana:poll-solana-tokens')->everyFiveMinutes();
+//    $schedule->command('solana:poll-solana-tokens')->everyFiveMinutes();
     $schedule->command('solana:auto-sell')->everyTenSeconds();
     $schedule->command('solana:clean-failed-calls')->everyMinute();
 }
