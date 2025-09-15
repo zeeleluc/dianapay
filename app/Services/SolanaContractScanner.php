@@ -79,7 +79,6 @@ class SolanaContractScanner
         $tokenData = $this->tokenDataHelper->getTokenData($this->tokenAddress);
 
         if ($tokenData === null) {
-            $this->warn("Skipping {$this->tokenAddress}: Failed to fetch token data from QuickNode");
             return false;
         }
 
@@ -109,46 +108,39 @@ class SolanaContractScanner
         $allDrops = [$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24];
         foreach ($allDrops as $drop) {
             if (!is_numeric($drop) || $drop <= $rugThreshold) {
-                $this->warn("Skipping {$this->tokenAddress}: potential rug detected ({$drop}% change <= {$rugThreshold}% or invalid)");
                 return false;
             }
         }
 
         // --- Liquidity check ---
         if (!is_numeric($liquidity) || $liquidity < $minLiquidity) {
-            $this->info("Skipping {$this->tokenAddress}: liquidity \${$liquidity} < \${$minLiquidity} or invalid");
             return false;
         }
 
         // --- Market cap check ---
         if (!is_numeric($marketCap) || $marketCap < $minMarketCap || $marketCap > $maxMarketCap) {
-            $this->info("Skipping {$this->tokenAddress}: marketCap \${$marketCap} outside range \${$minMarketCap}-\${$maxMarketCap} or invalid");
             return false;
         }
 
         // --- Volume and volume-to-liquidity ratio check ---
         $volLiqRatio = ($liquidity > 0) ? ($volumeH1 / $liquidity) : 0;
         if (!is_numeric($volumeH1) || $volumeH1 < $minVolumeH1 || $volLiqRatio < $minVolLiqRatio) {
-            $this->info("Skipping {$this->tokenAddress}: volumeH1 \${$volumeH1}, vol/liq ratio={$volLiqRatio} below threshold {$minVolLiqRatio} or invalid");
             return false;
         }
 
         // --- Price trend checks ---
         // Avoid tokens with large 1-hour pumps or significant losses
         if (!is_numeric($priceChangeH1) || $priceChangeH1 < $minH1Gain || $priceChangeH1 > $maxH1Gain) {
-            $this->info("Skipping {$this->tokenAddress}: H1 change {$priceChangeH1}% outside range {$minH1Gain}% to {$maxH1Gain}% or invalid");
             return false;
         }
 
         // Ensure positive 5-minute momentum, avoid extreme pumps
         if (!is_numeric($priceChangeM5) || $priceChangeM5 < $minM5Gain || $priceChangeM5 > $maxM5Gain) {
-            $this->info("Skipping {$this->tokenAddress}: M5 change {$priceChangeM5}% outside range {$minM5Gain}% to {$maxM5Gain}% or invalid");
             return false;
         }
 
         // Ensure positive 6-hour trend for longer-term stability
         if (!is_numeric($priceChangeH6) || $priceChangeH6 < $minH6Gain) {
-            $this->info("Skipping {$this->tokenAddress}: H6 change {$priceChangeH6}% < {$minH6Gain}% or invalid");
             return false;
         }
 
