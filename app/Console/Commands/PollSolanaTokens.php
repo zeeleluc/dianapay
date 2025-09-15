@@ -41,9 +41,11 @@ class PollSolanaTokens extends Command
             }
 
             foreach ($allTokens as &$token) {
-                $info = $this->getTokenInfo($token['tokenAddress'], $token['chainId']);
-                $token['tokenName'] = substr($info['name'] ?? 'Unknown Token', 0, 100);
-                $token['ticker'] = $info['symbol'] ?? null;
+                if (!SolanaBlacklistContract::isBlacklisted($token['tokenAddress'])) {
+                    $info = $this->getTokenInfo($token['tokenAddress'], $token['chainId']);
+                    $token['tokenName'] = substr($info['name'] ?? 'Unknown Token', 0, 100);
+                    $token['ticker'] = $info['symbol'] ?? null;
+                }
             }
 
             $matchesFound = 0;
