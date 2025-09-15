@@ -52,7 +52,7 @@ class PollSolanaTokens extends Command
             $skippedTokens = [];
 
             foreach ($allTokens as $token) {
-                if ($matchesFound >= 10) break;
+//                if ($matchesFound >= 10) break;
 
                 $tokenAddress = $token['tokenAddress'] ?? null;
                 $chain = $token['chainId'] ?? 'solana';
@@ -62,17 +62,15 @@ class PollSolanaTokens extends Command
                 if (!$tokenAddress || $chain !== 'solana') continue;
                 if ($this->shouldSkipToken($tokenAddress)) continue;
 
-                // ✅ Fetch token-pair data once
-                $pairResponse = Http::get("https://api.dexscreener.com/token-pairs/v1/{$chain}/{$tokenAddress}")->json();
-                $pair = is_array($pairResponse) && !empty($pairResponse[0]) ? $pairResponse[0] : [];
-
                 // 🔍 Run scanner with fetched pair
                 $scanner = new SolanaContractScanner($tokenAddress, $chain);
                 $scanner->setBoosted($isBoosted);
-                if (!$scanner->canTrade($pair)) {
-                    $skippedTokens[] = "Scanner rejected {$tokenName} ({$tokenAddress})";
+                if (!$scanner->canTrade()) {
                     continue;
                 }
+
+                $pairData = $scanner->getPairData();
+                $pair = !empty($pairData[0]) ? $pairData[0] : [];
 
                 $marketCap = $pair['marketCap'] ?? 0;
                 $liquidityUsd = $pair['liquidity']['usd'] ?? 0;
@@ -104,34 +102,34 @@ class PollSolanaTokens extends Command
                 $this->info("Saved SolanaCall ID: {$call->id} - Token: {$tokenName} ({$tokenAddress}){$boostLabel}");
 
                 // --- Node buy process ---
-                $buyAmount = 0.005;
+                $buyAmount = 0.001;
                 SlackNotifier::info("Launching buy for SolanaCall #{$call->id}: {$tokenName} ({$buyAmount} SOL){$boostLabel}");
 
-                $process = new Process([
-                    'node',
-                    base_path('scripts/solana-buy.js'),
-                    '--identifier=' . $call->id,
-                    '--token=' . $tokenAddress,
-                    '--amount=' . $buyAmount,
-                ]);
-                $process->setTimeout(360);
-                $process->run();
-                $process->wait();
-
-                $exitCode = $process->getExitCode();
-                $output = trim($process->getOutput());
-                $errorOutput = trim($process->getErrorOutput());
-
-                if ($exitCode === 0 && !empty($output)) {
-                    SlackNotifier::success("✅ Buy completed for #{$call->id} ({$tokenName}): Exit 0\n```{$output}```");
-                    $this->info("Buy success for #{$call->id}");
-                } elseif ($exitCode !== 0 || !empty($errorOutput)) {
-                    $errorMsg = $errorOutput ?: $output ?: 'Unknown error (exit ' . $exitCode . ')';
-                    SlackNotifier::error("❌ Buy failed for #{$call->id} ({$tokenName}): {$errorMsg}");
-                    $this->error("Buy failed for #{$call->id}: {$errorMsg}");
-                } else {
-                    SlackNotifier::info("Buy completed for #{$call->id} ({$tokenName}) (no output)");
-                }
+//                $process = new Process([
+//                    'node',
+//                    base_path('scripts/solana-buy.js'),
+//                    '--identifier=' . $call->id,
+//                    '--token=' . $tokenAddress,
+//                    '--amount=' . $buyAmount,
+//                ]);
+//                $process->setTimeout(360);
+//                $process->run();
+//                $process->wait();
+//
+//                $exitCode = $process->getExitCode();
+//                $output = trim($process->getOutput());
+//                $errorOutput = trim($process->getErrorOutput());
+//
+//                if ($exitCode === 0 && !empty($output)) {
+//                    SlackNotifier::success("✅ Buy completed for #{$call->id} ({$tokenName}): Exit 0\n```{$output}```");
+//                    $this->info("Buy success for #{$call->id}");
+//                } elseif ($exitCode !== 0 || !empty($errorOutput)) {
+//                    $errorMsg = $errorOutput ?: $output ?: 'Unknown error (exit ' . $exitCode . ')';
+//                    SlackNotifier::error("❌ Buy failed for #{$call->id} ({$tokenName}): {$errorMsg}");
+//                    $this->error("Buy failed for #{$call->id}: {$errorMsg}");
+//                } else {
+//                    SlackNotifier::info("Buy completed for #{$call->id} ({$tokenName}) (no output)");
+//                }
 
                 $matchesFound++;
             }

@@ -56,6 +56,11 @@ class SolanaContractScanner
         return true; // all checks passed
     }
 
+    public function getPairData(): array
+    {
+        return $this->pairData;
+    }
+
     // ---------------- PRIVATE CHECKS ---------------- //
 
     protected function fetchPairData(): void
