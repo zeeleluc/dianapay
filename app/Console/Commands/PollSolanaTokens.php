@@ -46,6 +46,7 @@ class PollSolanaTokens extends Command
                     $token['ticker'] = $info['symbol'] ?? null;
                 }
             }
+            unset($token); // <-- FIX applied
 
             $matchesFound = 0;
             $skippedTokens = [];
@@ -61,7 +62,6 @@ class PollSolanaTokens extends Command
                 if (!$tokenAddress || $chain !== 'solana') continue;
                 if ($this->shouldSkipToken($tokenAddress)) continue;
 
-                // 🔍 Run scanner with fetched pair
                 $scanner = new SolanaContractScanner($tokenAddress, $chain);
                 $scanner->setBoosted($isBoosted);
                 if (!$scanner->canTrade()) {
@@ -86,7 +86,6 @@ class PollSolanaTokens extends Command
 
                 $data = $scanner->getTokenData();
 
-                // Save call in DB
                 $call = SolanaCall::create([
                     'token_name' => substr($tokenName, 0, 100),
                     'token_address' => $tokenAddress,
@@ -101,8 +100,7 @@ class PollSolanaTokens extends Command
 
                 $this->info("Saved SolanaCall ID: {$call->id} - Token: {$tokenName} ({$tokenAddress}){$boostLabel}");
 
-                // --- Node buy process ---
-                $buyAmount = 0.001;
+                $buyAmount = 0.01;
                 SlackNotifier::info("Launching buy for SolanaCall #{$call->id}: {$tokenName} ({$buyAmount} SOL){$boostLabel}");
 
                 $process = new Process([
