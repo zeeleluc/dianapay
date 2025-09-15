@@ -17,6 +17,8 @@ class SolanaContractScanner
     protected array $pairData = [];
     protected SolanaTokenData $tokenDataHelper;
 
+    protected $tokenData;
+
     public function __construct(string $tokenAddress, string $chain = 'solana', $trimmedChecks = false)
     {
         $this->tokenAddress = $tokenAddress;
@@ -61,6 +63,11 @@ class SolanaContractScanner
         return $this->pairData;
     }
 
+    public function getTokenData()
+    {
+        return $this->tokenData;
+    }
+
     // ---------------- PRIVATE CHECKS ---------------- //
 
     protected function fetchPairData(): void
@@ -82,20 +89,20 @@ class SolanaContractScanner
     protected function checkMarketMetrics(): bool
     {
         // Fetch token data using SolanaTokenData helper
-        $tokenData = $this->tokenDataHelper->getTokenData($this->tokenAddress);
+        $this->tokenData = $this->tokenDataHelper->getTokenData($this->tokenAddress);
 
-        if ($tokenData === null) {
+        if ($this->tokenData === null) {
             return false;
         }
 
         // Extract metrics with null coalescing for safety
-        $marketCap = $tokenData['marketCap'] ?? 0;
-        $liquidity = $tokenData['liquidity']['usd'] ?? 0;
-        $volumeH1 = $tokenData['volume']['h1'] ?? 0;
-        $priceChangeM5 = $tokenData['priceChange']['m5'] ?? 0;
-        $priceChangeH1 = $tokenData['priceChange']['h1'] ?? 0;
-        $priceChangeH6 = $tokenData['priceChange']['h6'] ?? 0;
-        $priceChangeH24 = $tokenData['priceChange']['h24'] ?? 0;
+        $marketCap = $this->tokenData['marketCap'] ?? 0;
+        $liquidity = $this->tokenData['liquidity']['usd'] ?? 0;
+        $volumeH1 = $this->tokenData['volume']['h1'] ?? 0;
+        $priceChangeM5 = $this->tokenData['priceChange']['m5'] ?? 0;
+        $priceChangeH1 = $this->tokenData['priceChange']['h1'] ?? 0;
+        $priceChangeH6 = $this->tokenData['priceChange']['h6'] ?? 0;
+        $priceChangeH24 = $this->tokenData['priceChange']['h24'] ?? 0;
 
         // --- Thresholds ---
         $minLiquidity = 10000;         // Increased to ensure robust liquidity

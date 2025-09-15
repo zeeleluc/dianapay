@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Helpers\SolanaTokenData;
 use App\Models\SolanaBlacklistContract;
 use App\Models\SolanaCallOrder;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\Process\Process;
 use Throwable;
 use App\Models\SolanaCall;
 use App\Helpers\SlackNotifier;
@@ -66,8 +64,10 @@ class PollSolanaTokens extends Command
                 $scanner = new SolanaContractScanner($tokenAddress, $chain);
                 $scanner->setBoosted($isBoosted);
                 if (!$scanner->canTrade()) {
+                    echo 'cannot trade' . PHP_EOL;
                     continue;
                 }
+                echo '- CAN trade' . PHP_EOL;
 
                 $pairData = $scanner->getPairData();
                 $pair = !empty($pairData[0]) ? $pairData[0] : [];
@@ -83,8 +83,7 @@ class PollSolanaTokens extends Command
                 $boostLabel = $isBoosted ? ' [BOOSTED]' : '';
                 SlackNotifier::success("Found trending{$boostLabel} Solana token: {$tokenName} (MC: \${$marketCap}, Liq: \${$liquidityUsd}, Age: {$ageMinutes}m)");
 
-                $tokenDataHelper = new SolanaTokenData();
-                $data = $tokenDataHelper->getTokenData($tokenAddress);
+                $data = $scanner->getTokenData();
 
                 // Save call in DB
                 $call = SolanaCall::create([
@@ -105,31 +104,31 @@ class PollSolanaTokens extends Command
                 $buyAmount = 0.001;
                 SlackNotifier::info("Launching buy for SolanaCall #{$call->id}: {$tokenName} ({$buyAmount} SOL){$boostLabel}");
 
-//                $process = new Process([
-//                    'node',
-//                    base_path('scripts/solana-buy.js'),
-//                    '--identifier=' . $call->id,
-//                    '--token=' . $tokenAddress,
-//                    '--amount=' . $buyAmount,
-//                ]);
-//                $process->setTimeout(360);
-//                $process->run();
-//                $process->wait();
-//
-//                $exitCode = $process->getExitCode();
-//                $output = trim($process->getOutput());
-//                $errorOutput = trim($process->getErrorOutput());
-//
-//                if ($exitCode === 0 && !empty($output)) {
-//                    SlackNotifier::success("✅ Buy completed for #{$call->id} ({$tokenName}): Exit 0\n```{$output}```");
-//                    $this->info("Buy success for #{$call->id}");
-//                } elseif ($exitCode !== 0 || !empty($errorOutput)) {
-//                    $errorMsg = $errorOutput ?: $output ?: 'Unknown error (exit ' . $exitCode . ')';
-//                    SlackNotifier::error("❌ Buy failed for #{$call->id} ({$tokenName}): {$errorMsg}");
-//                    $this->error("Buy failed for #{$call->id}: {$errorMsg}");
-//                } else {
-//                    SlackNotifier::info("Buy completed for #{$call->id} ({$tokenName}) (no output)");
-//                }
+                $process = new Process([
+                    'node',
+                    base_path('scripts/solana-buy.js'),
+                    '--identifier=' . $call->id,
+                    '--token=' . $tokenAddress,
+                    '--amount=' . $buyAmount,
+                ]);
+                $process->setTimeout(360);
+                $process->run();
+                $process->wait();
+
+                $exitCode = $process->getExitCode();
+                $output = trim($process->getOutput());
+                $errorOutput = trim($process->getErrorOutput());
+
+                if ($exitCode === 0 && !empty($output)) {
+                    SlackNotifier::success("✅ Buy completed for #{$call->id} ({$tokenName}): Exit 0\n```{$output}```");
+                    $this->info("Buy success for #{$call->id}");
+                } elseif ($exitCode !== 0 || !empty($errorOutput)) {
+                    $errorMsg = $errorOutput ?: $output ?: 'Unknown error (exit ' . $exitCode . ')';
+                    SlackNotifier::error("❌ Buy failed for #{$call->id} ({$tokenName}): {$errorMsg}");
+                    $this->error("Buy failed for #{$call->id}: {$errorMsg}");
+                } else {
+                    SlackNotifier::info("Buy completed for #{$call->id} ({$tokenName}) (no output)");
+                }
 
                 $matchesFound++;
             }
