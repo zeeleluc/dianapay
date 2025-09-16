@@ -61,6 +61,9 @@ class PollSolanaTokens extends Command
 
             // --- 3. Process all tokens ---
             foreach ($allTokens as $token) {
+                $info = $this->getTokenInfo($token['tokenAddress'], $token['chainId']);
+                $token['tokenName'] = substr($info['name'] ?? 'Unknown Token', 0, 100);
+                $token['ticker'] = $info['symbol'] ?? null;
                 $tokenAddress = $token['tokenAddress'] ?? $token['baseToken']['address'] ?? null;
                 if (!$tokenAddress || SolanaBlacklistContract::isBlacklisted($tokenAddress)) continue;
 
@@ -70,10 +73,9 @@ class PollSolanaTokens extends Command
                 if (!$scanner->canTrade()) continue;
 
                 $data = $scanner->getTokenData();
-                $tokenName = substr($token['name'] ?? $token['baseToken']['name'] ?? 'Unknown', 0, 100);
 
                 $call = SolanaCall::create([
-                    'token_name' => $tokenName,
+                    'token_name' => $token['ticker'] . ' ' . $token['tokenName'],
                     'token_address' => $tokenAddress,
                     'market_cap' => $data['marketCap'] ?? 0,
                     'liquidity_pool' => $data['liquidity']['usd'] ?? 0,
