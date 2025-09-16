@@ -77,28 +77,21 @@ class SolanaCall extends Model
 
     public function profitPercentage(): string
     {
-        $totalBought = 0.0;
-        $totalSold   = 0.0;
+        // Get the latest unrealized profit record
+        $latestProfit = SolanaCallUnrealizedProfit::where('solana_call_id', $this->id)
+            ->latest('created_at')
+            ->first();
 
-        foreach ($this->orders as $order) {
-            $type = strtolower($order->type);
-            if ($type === 'buy') {
-                $totalBought += $order->amount_sol;
-            } elseif ($type === 'sell') {
-                $totalSold += $order->amount_sol;
-            }
+        if (!$latestProfit || $this->market_cap == 0) {
+            return '0.00'; // avoid division by zero or missing data
         }
 
-        if ($totalBought == 0) {
-            return '0.00'; // avoid division by zero
-        }
+        // Calculate percentage based on current market cap vs original market cap
+        $percentage = (($latestProfit->current_market_cap - $this->market_cap) / $this->market_cap) * 100;
 
-        $percentage = (($totalSold - $totalBought) / $totalBought) * 100;
-
-        // Format to 2 decimals, no scientific notation
         return number_format($percentage, 2, '.', '');
     }
-
+    
     /**
      * Get total profit of all SolanaCalls in SOL,
      * only including calls with both buy and sell orders.
