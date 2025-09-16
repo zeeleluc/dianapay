@@ -26,7 +26,6 @@ class Translator
     protected static array $customWordOverrides = [
         'crypto' => [
             'en'    => 'crypto',
-            'en' => 'crypto',
             'es'    => 'cripto',
             'zh-CN' => '加密货币',     // jiāmì huòbì (crypto currency)
             'zh-TW' => '加密貨幣',

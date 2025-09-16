@@ -23,6 +23,7 @@
     <table class="min-w-full border-collapse border border-gray-700 text-white text-sm md:text-base" id="open-positions-table">
         <thead>
         <tr class="bg-gray-800">
+            <th class="border border-gray-700 px-2 py-1 text-left">Unrealized Profit</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Name</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Contract</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Market Cap</th>
@@ -34,8 +35,7 @@
             <th class="border border-gray-700 px-2 py-1 text-center">Bought</th>
             <th class="border border-gray-700 px-2 py-1 text-center">Sold</th>
             <th class="border border-gray-700 px-2 py-1 text-center">Failures</th>
-            <th class="border border-gray-700 px-2 py-1 text-right">Unrealized Profit</th>
-            <th class="border border-gray-700 px-2 py-1 text-right">Current MC</th>
+            <th></th>
         </tr>
         </thead>
         <tbody>
@@ -54,18 +54,43 @@
             @endphp
 
             <tr class="hover:bg-gray-800 cursor-pointer" data-id="{{ $call->id }}" role="button" aria-expanded="false" aria-controls="details-{{ $call->id }}">
+                <td class="border border-gray-700 px-2 py-1 text-right {{ $call->unrealized_profit_sol !== '-' && $call->unrealized_profit_sol < 0 ? 'text-red-400' : 'text-green-400' }}">
+                    {{ $call->unrealized_profit_sol }}%
+                    ({{ human_readable_number($call->current_market_cap) }})
+                </td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->token_name }}</td>
                 <td class="border border-gray-700 px-2 py-1">
                     <a target="_blank" class="underline" href="https://www.defined.fi/sol/{{ $call->token_address }}">
                         {{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}
                     </a>
                 </td>
-                <td class="border border-gray-700 px-2 py-1">{{ number_format($call->market_cap, 0) }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ human_readable_number($call->market_cap) }}</td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->dev_sold ? 'Y' : 'N' }}</td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->dex_paid ? 'Y' : 'N' }}</td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->strategy ?: '-' }}</td>
-                <td class="border border-gray-700 px-2 py-1">{{ $call->reason_buy ?: '-' }}</td>
-                <td class="border border-gray-700 px-2 py-1">{{ $call->reason_sell ?: '-' }}</td>
+                <td class="border border-gray-700 px-2 py-1 text-center">
+                    @if($call->reason_buy)
+                        <button
+                            onclick="openReasonModal('buy', '{{ $call->reason_buy }}')"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">
+                            View
+                        </button>
+                    @else
+                        -
+                    @endif
+                </td>
+
+                <td class="border border-gray-700 px-2 py-1 text-center">
+                    @if($call->reason_sell)
+                        <button
+                            onclick="openReasonModal('sell', '{{ $call->reason_sell }}')"
+                            class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded">
+                            View
+                        </button>
+                    @else
+                        -
+                    @endif
+                </td>
                 <td class="border border-gray-700 px-2 py-1 text-center">
                     <span class="text-green-500 font-semibold">✓</span>
                 </td>
@@ -73,10 +98,13 @@
                     <span class="text-red-500 font-semibold">✗</span>
                 </td>
                 <td class="border border-gray-700 px-2 py-1 text-center">{{ $failures }}</td>
-                <td class="border border-gray-700 px-2 py-1 text-right {{ $call->unrealized_profit_sol !== '-' && $call->unrealized_profit_sol < 0 ? 'text-red-400' : 'text-green-400' }}">
-                    {{ $call->unrealized_profit_sol }}%
+                <td class="border border-gray-700 px-2 py-1 text-center">
+                    <button
+                        onclick="toggleDetails({{ $call->id }})"
+                        class="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded">
+                        Details
+                    </button>
                 </td>
-                <td class="border border-gray-700 px-2 py-1 text-right">{{ $call->current_market_cap }}</td>
             </tr>
             <tr id="details-{{ $call->id }}" class="hidden">
                 <td colspan="12" class="border border-gray-700 px-2 py-1 bg-gray-900 transition-all duration-300">
@@ -143,6 +171,8 @@
         <table class="min-w-full border-collapse border border-gray-700 text-white text-sm md:text-base" id="open-positions-table">
         <thead>
         <tr class="bg-gray-800">
+            <th class="border border-gray-700 px-2 py-1 text-right">Realized Profit (SOL)</th>
+            <th class="border border-gray-700 px-2 py-1 text-right">Realized Profit (%)</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Name</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Contract</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Market Cap</th>
@@ -151,11 +181,7 @@
             <th class="border border-gray-700 px-2 py-1 text-left">Strategy</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Buy Reason</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Sell Reason</th>
-            <th class="border border-gray-700 px-2 py-1 text-center">Bought</th>
-            <th class="border border-gray-700 px-2 py-1 text-center">Sold</th>
             <th class="border border-gray-700 px-2 py-1 text-center">Failures</th>
-            <th class="border border-gray-700 px-2 py-1 text-right">Realized Profit (SOL)</th>
-            <th class="border border-gray-700 px-2 py-1 text-right">Realized Profit (%)</th>
         </tr>
         </thead>
         <tbody>
@@ -179,31 +205,46 @@
             @endphp
 
             <tr class="hover:bg-gray-800 cursor-pointer" data-id="{{ $call->id }}" role="button" aria-expanded="false" aria-controls="details-{{ $call->id }}">
+                <td class="border border-gray-700 px-2 py-1 text-right {{ $profitSol !== '-' && $profitSol < 0 ? 'text-red-400' : 'text-green-400' }}">
+                    {{ number_format($profitSol, 4) }}
+                </td>
+                <td class="border border-gray-700 px-2 py-1 text-right {{ $profitPct !== '-' && $call->profitPercentage() < 0 ? 'text-red-400' : 'text-green-400' }}">
+                    {{ $profitPct }}
+                </td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->token_name }}</td>
                 <td class="border border-gray-700 px-2 py-1">
                     <a target="_blank" class="underline" href="https://www.defined.fi/sol/{{ $call->token_address }}">
                         {{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}
                     </a>
                 </td>
-                <td class="border border-gray-700 px-2 py-1">{{ number_format($call->market_cap, 0) }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ human_readable_number($call->market_cap) }}</td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->dev_sold ? 'Y' : 'N' }}</td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->dex_paid ? 'Y' : 'N' }}</td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->strategy ?: '-' }}</td>
-                <td class="border border-gray-700 px-2 py-1">{{ $call->reason_buy ?: '-' }}</td>
-                <td class="border border-gray-700 px-2 py-1">{{ $call->reason_sell ?: '-' }}</td>
                 <td class="border border-gray-700 px-2 py-1 text-center">
-                    <span class="text-green-500 font-semibold">✓</span>
+                    @if($call->reason_buy)
+                        <button
+                            onclick="openReasonModal('buy', '{{ $call->reason_buy }}')"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">
+                            View
+                        </button>
+                    @else
+                        -
+                    @endif
                 </td>
+
                 <td class="border border-gray-700 px-2 py-1 text-center">
-                    <span class="text-green-500 font-semibold">✓</span>
+                    @if($call->reason_sell)
+                        <button
+                            onclick="openReasonModal('sell', '{{ $call->reason_sell }}')"
+                            class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded">
+                            View
+                        </button>
+                    @else
+                        -
+                    @endif
                 </td>
                 <td class="border border-gray-700 px-2 py-1 text-center">{{ $failures }}</td>
-                <td class="border border-gray-700 px-2 py-1 text-right {{ $profitSol !== '-' && $profitSol < 0 ? 'text-red-400' : 'text-green-400' }}">
-                    {{ $profitSol }}
-                </td>
-                <td class="border border-gray-700 px-2 py-1 text-right {{ $profitPct !== '-' && $call->profitPercentage() < 0 ? 'text-red-400' : 'text-green-400' }}">
-                    {{ $profitPct }}
-                </td>
             </tr>
             <tr id="details-{{ $call->id }}" class="hidden">
                 <td colspan="12" class="border border-gray-700 px-2 py-1 bg-gray-900 transition-all duration-300">
@@ -264,38 +305,48 @@
     </table>
     </div>
 
-    {{-- JavaScript for toggling order details --}}
+    <div id="reason-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-gray-900 text-white rounded-lg p-6 w-96 relative">
+            <h3 id="reason-modal-title" class="text-lg font-semibold mb-4"></h3>
+            <p id="reason-modal-content" class="text-sm"></p>
+            <button onclick="closeReasonModal()" class="absolute top-2 right-2 text-white font-bold">&times;</button>
+        </div>
+    </div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const table = document.getElementById('open-positions-table');
-            const rows = table.querySelectorAll('tr[data-id]');
+        function openReasonModal(type, reason) {
+            const modal = document.getElementById('reason-modal');
+            const title = document.getElementById('reason-modal-title');
+            const content = document.getElementById('reason-modal-content');
 
-            rows.forEach(row => {
-                row.addEventListener('click', function () {
-                    const callId = this.getAttribute('data-id');
-                    const detailsRow = document.getElementById(`details-${callId}`);
-                    const isExpanded = !detailsRow.classList.contains('hidden');
+            title.textContent = type === 'buy' ? 'Buy Reason' : 'Sell Reason';
+            content.textContent = reason;
 
-                    // Collapse all other details rows
-                    document.querySelectorAll('tr[id^="details-"]').forEach(otherRow => {
-                        if (otherRow !== detailsRow) {
-                            otherRow.classList.add('hidden');
-                            const otherRowParent = otherRow.previousElementSibling;
-                            if (otherRowParent) {
-                                otherRowParent.setAttribute('aria-expanded', 'false');
-                            }
-                        }
-                    });
+            modal.classList.remove('hidden');
+        }
 
-                    // Toggle the clicked details row
-                    detailsRow.classList.toggle('hidden');
-                    this.setAttribute('aria-expanded', !isExpanded);
-                });
-            });
-        });
+        function closeReasonModal() {
+            document.getElementById('reason-modal').classList.add('hidden');
+        }
     </script>
 
-    {{-- CSS for smooth transition --}}
+    <script>
+        function toggleDetails(callId) {
+            const detailsRow = document.getElementById(`details-${callId}`);
+            const isExpanded = !detailsRow.classList.contains('hidden');
+
+            // Collapse all other details rows
+            document.querySelectorAll('tr[id^="details-"]').forEach(otherRow => {
+                if (otherRow !== detailsRow) {
+                    otherRow.classList.add('hidden');
+                }
+            });
+
+            // Toggle the clicked details row
+            detailsRow.classList.toggle('hidden');
+        }
+    </script>
+
     <style>
         tr[id^="details-"] {
             transition: all 0.3s ease-in-out;
