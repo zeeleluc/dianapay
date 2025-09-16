@@ -91,7 +91,7 @@ class SolanaCall extends Model
 
         return number_format($percentage, 2, '.', '');
     }
-    
+
     /**
      * Get total profit of all SolanaCalls in SOL,
      * only including calls with both buy and sell orders.

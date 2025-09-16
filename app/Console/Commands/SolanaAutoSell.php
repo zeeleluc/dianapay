@@ -125,10 +125,19 @@ class SolanaAutoSell extends Command
                 $tokenAmount = $buyOrder->amount_foreign;
                 $holdTime = max(0, now()->diffInMinutes($buyOrder->created_at));
 
+                $profitPercent = $this->getCurrentProfit($call->market_cap, $currentMarketCap);
+
+                // --- always store snapshot ---
+                $call->unrealizedProfits()->create([
+                    'unrealized_profit' => $profitPercent,
+                    'buy_market_cap' => $call->market_cap,
+                    'current_market_cap' => $currentMarketCap,
+                ]);
+
                 $sellReason = null;
                 if ($this->hasSignificantPriceDrop($priceChangeM5)) {
                     $sellReason = "negative M5 ({$priceChangeM5}% < {$this->m5Threshold}%)";
-                } elseif ($this->hasReachedProfitThreshold($call, $call->market_cap, $currentMarketCap)) {
+                } elseif ($this->hasReachedProfitThreshold($call, $call->market_cap, $currentMarketCap, $profitPercent)) {
                     $sellReason = "profit threshold reached (>= {$this->profitThreshold}%)";
                 } elseif ($holdTime > $this->maxHoldMinutes) {
                     $sellReason = "maximum hold time exceeded ({$holdTime} minutes)";
@@ -184,20 +193,11 @@ class SolanaAutoSell extends Command
     /**
      * Check if the profit has reached or exceeded threshold, or other sell triggers.
      */
-    private function hasReachedProfitThreshold(SolanaCall $solanaCall, ?float $buyMarketCap, ?float $currentMarketCap): bool
+    private function hasReachedProfitThreshold(SolanaCall $solanaCall, ?float $buyMarketCap, ?float $currentMarketCap, ?float $profitPercent): bool
     {
         if (!is_numeric($buyMarketCap) || !is_numeric($currentMarketCap) || $currentMarketCap <= 0 || $buyMarketCap <= 0) {
             return false;
         }
-
-        $profitPercent = $this->getCurrentProfit($buyMarketCap, $currentMarketCap);
-
-        // --- always store snapshot ---
-        $solanaCall->unrealizedProfits()->create([
-            'unrealized_profit' => $profitPercent,
-            'buy_market_cap' => $buyMarketCap,
-            'current_market_cap' => $currentMarketCap,
-        ]);
 
         $minProfitToConsider = 3.0;   // Only track drops if previous profit was at least this
         $dropThreshold = 1.5;         // Only sell if drop from previous peak >= this
