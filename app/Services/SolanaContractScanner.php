@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Helpers\SolanaTokenData;
 use App\Models\SolanaBlacklistContract;
+use App\Models\SolanaCall;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -44,6 +45,16 @@ class SolanaContractScanner
 
     public function canTrade(): bool
     {
+        // 🔍 Check if this token already has a call with orders
+        $existingCall = SolanaCall::where('token_address', $this->tokenAddress)
+            ->with('orders')
+            ->first();
+
+        if ($existingCall && !$existingCall->orders->contains(fn($order) => strtolower($order->type) === 'sell')) {
+            Log::info("❌ Cannot trade {$this->tokenAddress} — previous call has no sell order.");
+            return false;
+        }
+
         if ($this->trimmedChecks) {
             $checks = ['checkMarketMetrics'];
         } else {
@@ -62,7 +73,7 @@ class SolanaContractScanner
             }
         }
 
-        return true; // all checks passed
+        return true; // ✅ all checks passed
     }
 
     public function getPairData(): array

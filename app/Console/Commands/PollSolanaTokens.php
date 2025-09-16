@@ -56,7 +56,7 @@ class PollSolanaTokens extends Command
 
                 $allTokens[$addr] = array_merge($pair, ['boosted' => false]);
             }
-            
+
             // --- 3. Process all tokens ---
             foreach ($allTokens as $token) {
                 $info = $this->getTokenInfo($token['tokenAddress'], $token['chainId']);
@@ -87,7 +87,7 @@ class PollSolanaTokens extends Command
                     base_path('scripts/solana-buy.js'),
                     '--identifier=' . $call->id,
                     '--token=' . $tokenAddress,
-                    '--amount=0.01',
+                    '--amount=0.05',
                 ]);
                 $process->setTimeout(360);
                 $process->run();
