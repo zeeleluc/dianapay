@@ -185,9 +185,9 @@ class SolanaCall extends Model
         $last = $records->first(); // most recent
 
         // Require profit to be at least 3% to consider "stable"
-        if ($average < 3.0) {
-            return false;
-        }
+//        if ($average < 3.0) {
+//            return false;
+//        }
 
         // If the difference between average and last is very small (stable trend)
         $diff = abs($average - $last);
