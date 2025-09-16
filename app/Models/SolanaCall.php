@@ -21,6 +21,7 @@ class SolanaCall extends Model
         'dev_sold',
         'dex_paid_status',
         'strategy',
+        'previous_unrealized_profits', // added
     ];
 
     protected $casts = [
@@ -31,6 +32,7 @@ class SolanaCall extends Model
         'top_10_holders_percent' => 'decimal:2',
         'dev_sold' => 'boolean',
         'dex_paid_status' => 'boolean',
+        'previous_unrealized_profits' => 'decimal:8', // added
     ];
 
     public static function createFromParsed(array $data): self

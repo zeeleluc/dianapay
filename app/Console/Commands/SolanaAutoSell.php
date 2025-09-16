@@ -128,7 +128,7 @@ class SolanaAutoSell extends Command
                 $sellReason = null;
                 if ($this->hasSignificantPriceDrop($priceChangeM5)) {
                     $sellReason = "negative M5 ({$priceChangeM5}% < {$this->m5Threshold}%)";
-                } elseif ($this->hasReachedProfitThreshold($call->market_cap, $currentMarketCap)) {
+                } elseif ($this->hasReachedProfitThreshold($call, $call->market_cap, $currentMarketCap)) {
                     $sellReason = "profit threshold reached (>= {$this->profitThreshold}%)";
                 } elseif ($holdTime > $this->maxHoldMinutes) {
                     $sellReason = "maximum hold time exceeded ({$holdTime} minutes)";
@@ -188,13 +188,48 @@ class SolanaAutoSell extends Command
      * @param float|null $currentMarketCap
      * @return bool
      */
-    private function hasReachedProfitThreshold(?float $buyMarketCap, ?float $currentMarketCap): bool
+    private function hasReachedProfitThreshold(SolanaCall $solanaCall, ?float $buyMarketCap, ?float $currentMarketCap): bool
     {
         if (!is_numeric($buyMarketCap) || !is_numeric($currentMarketCap) || $currentMarketCap <= 0 || $buyMarketCap <= 0) {
             return false;
         }
 
-        $profitPercent = (($currentMarketCap - $buyMarketCap) / $buyMarketCap) * 100;
-        return $profitPercent >= $this->profitThreshold;
+        $profitPercent = $this->getCurrentProfit($buyMarketCap, $currentMarketCap);
+
+        $minProfitToConsider = 3.0;   // Only track drops if previous profit was at least this
+        $dropThreshold = 1.5;         // Only sell if drop from previous peak >= this
+
+        // Initialize previous unrealized profits if not set
+        if (!$solanaCall->previous_unrealized_profits) {
+            $solanaCall->previous_unrealized_profits = $profitPercent;
+            $solanaCall->save();
+        }
+
+        // Check if profit dropped significantly from previous peak
+        if ($solanaCall->previous_unrealized_profits >= $minProfitToConsider) {
+            $dropFromPrevious = $solanaCall->previous_unrealized_profits - $profitPercent;
+            if ($dropFromPrevious >= $dropThreshold) {
+                return true; // Sell due to significant dip
+            }
+        }
+
+        // Update previous unrealized profits if current profit is higher
+        if ($profitPercent > $solanaCall->previous_unrealized_profits) {
+            $solanaCall->previous_unrealized_profits = $profitPercent;
+            $solanaCall->save();
+        }
+
+        // Check if profit reached the overall threshold
+        if ($profitPercent >= $this->profitThreshold) {
+            return true;
+        }
+
+        return false;
+
+    }
+
+    private function getCurrentProfit(?float $buyMarketCap, ?float $currentMarketCap)
+    {
+        return (($currentMarketCap - $buyMarketCap) / $buyMarketCap) * 100;
     }
 }
