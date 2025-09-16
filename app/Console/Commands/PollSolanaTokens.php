@@ -65,10 +65,8 @@ class PollSolanaTokens extends Command
                 $scanner = new SolanaContractScanner($tokenAddress, $chain);
                 $scanner->setBoosted($isBoosted);
                 if (!$scanner->canTrade()) {
-                    echo 'cannot trade' . PHP_EOL;
                     continue;
                 }
-                echo '- CAN trade' . PHP_EOL;
 
                 $pairData = $scanner->getPairData();
                 $pair = !empty($pairData[0]) ? $pairData[0] : [];

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Helpers\SlackNotifier;
 use App\Helpers\SolanaTokenData;
+use App\Models\SolanaBlacklistContract;
 use App\Models\SolanaCall;
 use Illuminate\Console\Command;
 use Symfony\Component\Process\Process;
@@ -135,7 +136,7 @@ class SolanaAutoSell extends Command
                 ]);
 
                 $sellReason = null;
-                if ($this->hasSignificantPriceDrop($priceChangeM5)) {
+                if ($this->hasSignificantPriceDrop($priceChangeM5, $tokenAddress)) {
                     $sellReason = "negative M5 ({$priceChangeM5}% < {$this->m5Threshold}%)";
                 } elseif ($this->hasReachedProfitThreshold($call, $call->market_cap, $currentMarketCap, $profitPercent)) {
                     $sellReason = "profit threshold reached (>= {$this->profitThreshold}%)";
@@ -185,9 +186,17 @@ class SolanaAutoSell extends Command
      * @param float $priceChangeM5
      * @return bool
      */
-    private function hasSignificantPriceDrop(float $priceChangeM5): bool
+    private function hasSignificantPriceDrop(float $priceChangeM5, string $tokenAddress): bool
     {
-        return is_numeric($priceChangeM5) && $priceChangeM5 < $this->m5Threshold;
+        if (is_numeric($priceChangeM5) && $priceChangeM5 < $this->m5Threshold) {
+            return true;
+        }
+
+        if ($priceChangeM5 < -20) {
+            SolanaBlacklistContract::create(['contract' => $tokenAddress]);
+        }
+
+        return false;
     }
 
     /**
