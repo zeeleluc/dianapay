@@ -95,86 +95,39 @@ class SolanaContractScanner
 
     protected function checkMarketMetrics(): bool
     {
-        // Fetch token data using SolanaTokenData helper
         $this->tokenData = $this->tokenDataHelper->getTokenData($this->tokenAddress);
+        if (!$this->tokenData) return false;
 
-        if ($this->tokenData === null) {
-            return false;
-        }
-
-        // Extract metrics with null coalescing for safety
         $marketCap      = $this->tokenData['marketCap'] ?? 0;
         $liquidity      = $this->tokenData['liquidity']['usd'] ?? 0;
         $volumeH1       = $this->tokenData['volume']['h1'] ?? 0;
+        $volumeM5       = $this->tokenData['volume']['m5'] ?? 0;
         $priceChangeM5  = $this->tokenData['priceChange']['m5'] ?? 0;
         $priceChangeH1  = $this->tokenData['priceChange']['h1'] ?? 0;
         $priceChangeH6  = $this->tokenData['priceChange']['h6'] ?? 0;
-        $priceChangeH24 = $this->tokenData['priceChange']['h24'] ?? 0;
 
-        // --- Thresholds (refined) ---
-        $minLiquidity   = 20000;
-        $minMarketCap   = 10000;
-        $maxMarketCap   = 20000000;
-        $minVolumeH1    = 5000;
-        $minVolLiqRatio = 0.5;
-        $minM5Gain      = 1;
-        $maxM5Gain      = 8;
-        $minH1Gain      = -5;
-        $maxH1Gain      = 20;
-        $minH6Gain      = 3;
-        $rugThreshold   = -40;
+        // --- thresholds ---
+        if ($liquidity < 50000) return false;
+        if ($marketCap < 50000 || $marketCap > 20000000) return false;
+        if ($volumeH1 < 5000) return false;
 
-        // --- Rug filter ---
-        $allDrops = [$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24];
-        foreach ($allDrops as $drop) {
-            if (!is_numeric($drop) || $drop <= $rugThreshold) {
-                return false;
-            }
+        // Volume acceleration
+        $avgM5 = $this->tokenData['avgVolume']['m5'] ?? 1;
+        if ($volumeM5 / $avgM5 < 2) return false; // must be spiking
+
+        // Price trend
+        if ($priceChangeM5 < 1 || $priceChangeM5 > 8) return false; // small pump, avoid parabolic
+        if ($priceChangeH1 < 0 || $priceChangeH6 < 0) return false;  // overall trend up
+
+        // Rug proof
+        foreach ([$priceChangeM5, $priceChangeH1, $priceChangeH6] as $drop) {
+            if ($drop <= -40) return false;
         }
 
-        // --- Liquidity check ---
-        if (!is_numeric($liquidity) || $liquidity < $minLiquidity) {
-            return false;
-        }
-
-        // --- Market cap check ---
-        if (!is_numeric($marketCap) || $marketCap < $minMarketCap || $marketCap > $maxMarketCap) {
-            return false;
-        }
-
-        // --- Volume and volume-to-liquidity ratio check ---
-        $volLiqRatio = ($liquidity > 0) ? ($volumeH1 / $liquidity) : 0;
-        if (!is_numeric($volumeH1) || $volumeH1 < $minVolumeH1 || $volLiqRatio < $minVolLiqRatio) {
-            return false;
-        }
-
-        // --- Price trend checks ---
-        if (!is_numeric($priceChangeH1) || $priceChangeH1 < $minH1Gain || $priceChangeH1 > $maxH1Gain) {
-            return false;
-        }
-
-        if (!is_numeric($priceChangeM5) || $priceChangeM5 < $minM5Gain || $priceChangeM5 > $maxM5Gain) {
-            return false;
-        }
-
-        if ($priceChangeM5 > 0 && $priceChangeH1 < 0) {
-            return false;
-        }
-
-        if (!is_numeric($priceChangeH6) || $priceChangeH6 < $minH6Gain) {
-            return false;
-        }
-
-        if ($priceChangeM5 > 2 && $volumeH1 < ($liquidity * 0.8)) {
-            return false;
-        }
-
-        // ✅ Passed all checks → store reason
-        $this->buyReason = sprintf(
-            "Passed metrics: MarketCap %.0f, Liquidity %.0f, VolumeH1 %.0f, M5 %.2f%%, H1 %.2f%%, H6 %.2f%%",
-            $marketCap, $liquidity, $volumeH1, $priceChangeM5, $priceChangeH1, $priceChangeH6
-        );
-
+        // Passed all
+        $marketCapReadable = human_readable_number($marketCap);
+        $liquidityReadable = human_readable_number($liquidity);
+        $this->buyReason = "MarketCap {$marketCapReadable}, Liquidity {$liquidityReadable}, M5 {$priceChangeM5}%, H1 {$priceChangeH1}%, H6 {$priceChangeH6}%";
         return true;
     }
 
