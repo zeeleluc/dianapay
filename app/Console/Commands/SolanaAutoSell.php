@@ -16,7 +16,7 @@ class SolanaAutoSell extends Command
     protected float $minLiquidity = 1000;  // Minimum liquidity for sell
     protected float $m5Threshold = -1.0;   // Sell if 5-minute price change < -5%
     protected int $maxHoldMinutes = 120;   // Sell after 120 minutes
-    protected float $profitThreshold = 100.0; // Sell if profit >= 100%
+    protected float $profitThreshold = 25.0; // Sell if profit >= 100%
 
     public function handle()
     {
