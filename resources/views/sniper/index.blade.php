@@ -158,7 +158,7 @@
     </div>
 
     {{-- Closed Positions Table --}}
-    <h2 class="text-xl font-semibold mb-4">Closed Positions</h2>
+    <h2 class="text-xl font-semibold mb-4 mt-6">Closed Positions</h2>
     <div class="overflow-x-auto">
         <table class="min-w-full border-collapse border border-gray-700 text-white text-sm md:text-base" id="open-positions-table">
         <thead>
