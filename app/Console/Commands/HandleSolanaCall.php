@@ -73,6 +73,8 @@ class HandleSolanaCall extends Command
             // --- Determine buy amount based on metrics ---
             $buyAmount = 0.001; // default
 
+            SlackNotifier::error('Cant come here');
+
             if ($marketCap >= 100_000 && $liquidityUsd >= 50_000) {
                 $buyAmount = 0.03;
             } elseif ($marketCap >= 50_000 && $liquidityUsd >= 30_000) {
