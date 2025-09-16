@@ -133,37 +133,27 @@ class SolanaCall extends Model
      */
     public static function totalProfitPercentage(): string
     {
-        $totalBought = 0.0;
-        $totalSold   = 0.0;
+        $totalProfit = 0.0;
 
-        $calls = self::with('orders')->get();
+        // Get all calls
+        $calls = self::with(['latestUnrealizedProfit'])->get();
 
         foreach ($calls as $call) {
-            $hasBuy = $call->orders->where('type', 'buy')->isNotEmpty();
-            $hasSell = $call->orders->where('type', 'sell')->isNotEmpty();
-
-            if (!($hasBuy && $hasSell)) {
-                continue; // skip calls without both buy and sell
-            }
-
-            foreach ($call->orders as $order) {
-                $type = strtolower($order->type);
-                if ($type === 'buy') {
-                    $totalBought += $order->amount_sol ?? 0.0;
-                } elseif ($type === 'sell') {
-                    $totalSold += $order->amount_sol ?? 0.0;
-                }
+            $latestProfit = $call->latestUnrealizedProfit;
+            if ($latestProfit && is_numeric($latestProfit->unrealized_profit)) {
+                $totalProfit += $latestProfit->unrealized_profit;
             }
         }
 
-        if ($totalBought == 0.0) {
-            return '0.00';
-        }
-
-        $percentage = (($totalSold - $totalBought) / $totalBought) * 100;
-
-        return number_format($percentage, 2, '.', '');
+        return number_format($totalProfit, 2, '.', '');
     }
+
+    public function latestUnrealizedProfit()
+    {
+        return $this->hasOne(SolanaCallUnrealizedProfit::class)
+            ->latest('created_at');
+    }
+
 
     /**
      * Check if the last 50 unrealized profits are stable.
