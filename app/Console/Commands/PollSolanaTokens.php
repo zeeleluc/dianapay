@@ -24,90 +24,70 @@ class PollSolanaTokens extends Command
     public function handle(): int
     {
         try {
-            $boostedPairs = Http::get('https://api.dexscreener.com/token-boosts/latest/v1')->json() ?? [];
-            $topBoostedPairs = Http::get('https://api.dexscreener.com/token-boosts/top/v1')->json() ?? [];
-
             $allTokens = [];
-            foreach (array_merge($boostedPairs, $topBoostedPairs) as $b) {
-                if (!isset($b['tokenAddress']) || ($b['chainId'] ?? '') !== 'solana') continue;
 
-                $allTokens[] = [
-                    'tokenAddress' => $b['tokenAddress'],
-                    'chainId'      => $b['chainId'] ?? 'solana',
-                    'boosted'      => true,
-                    'extra'        => $b,
-                ];
+            // --- 1. Fetch boosted tokens (trending) ---
+            $boostedLatest = Http::get('https://api.dexscreener.com/token-boosts/latest/v1')->json() ?? [];
+            $boostedTop = Http::get('https://api.dexscreener.com/token-boosts/top/v1')->json() ?? [];
+            $boostedTokens = array_merge($boostedLatest, $boostedTop);
+
+            foreach ($boostedTokens as $token) {
+                if (($token['chainId'] ?? '') !== 'solana') continue;
+                $allTokens[$token['tokenAddress']] = array_merge($token, ['boosted' => true]);
             }
 
-            foreach ($allTokens as &$token) {
-                if (!SolanaBlacklistContract::isBlacklisted($token['tokenAddress'])) {
-                    $info = $this->getTokenInfo($token['tokenAddress'], $token['chainId']);
-                    $token['tokenName'] = substr($info['name'] ?? 'Unknown Token', 0, 100);
-                    $token['ticker'] = $info['symbol'] ?? null;
-                }
-            }
-            unset($token); // <-- FIX applied
+            // --- 2. Fetch recent pairs for early-mover detection ---
+            $recentPairs = Http::get('https://api.dexscreener.com/latest/dex/search?q=SOL/USDC')->json() ?? [];
+            foreach ($recentPairs as $pair) {
+                $addr = $pair['baseToken']['address'] ?? null;
+                if (!$addr || isset($allTokens[$addr])) continue;
 
-            $matchesFound = 0;
-            $skippedTokens = [];
-
-            foreach ($allTokens as $token) {
-//                if ($matchesFound >= 10) break;
-
-                $tokenAddress = $token['tokenAddress'] ?? null;
-                $chain = $token['chainId'] ?? 'solana';
-                $tokenName = $token['tokenName'] ?? 'Unknown Token';
-                $isBoosted = $token['boosted'] ?? false;
-
-                if (!$tokenAddress || $chain !== 'solana') continue;
-                if ($this->shouldSkipToken($tokenAddress)) continue;
-
-                $scanner = new SolanaContractScanner($tokenAddress, $chain);
-                $scanner->setBoosted($isBoosted);
-                if (!$scanner->canTrade()) {
-                    continue;
-                }
-
-                $pairData = $scanner->getPairData();
-                $pair = !empty($pairData[0]) ? $pairData[0] : [];
-
-                $marketCap = $pair['marketCap'] ?? 0;
-                $liquidityUsd = $pair['liquidity']['usd'] ?? 0;
-                $volume24h = $pair['volume']['h24'] ?? 0;
                 $pairCreatedAtMs = $pair['pairCreatedAt'] ?? 0;
                 $pairCreatedAt = $pairCreatedAtMs > 0 ? (int)($pairCreatedAtMs / 1000) : time();
                 $ageMinutes = max(0, round((time() - $pairCreatedAt) / 60));
-                $devSold = $token['devSold'] ?? false;
 
-                $boostLabel = $isBoosted ? ' [BOOSTED]' : '';
-                SlackNotifier::success("Found trending{$boostLabel} Solana token: {$tokenName} (MC: \${$marketCap}, Liq: \${$liquidityUsd}, Age: {$ageMinutes}m)");
+                $volume24h = $pair['volume']['h24'] ?? 0;
+                $priceChangeM5 = $pair['priceChange']['m5'] ?? 0;
+
+                // --- Early mover filters ---
+                if ($ageMinutes > 60) continue;           // young pairs only
+                if ($volume24h < 5000) continue;          // minimal 24h volume
+                if ($priceChangeM5 < 1) continue;         // minimal short-term gain
+
+                $allTokens[$addr] = array_merge($pair, ['boosted' => false]);
+            }
+
+            $matchesFound = 0;
+
+            // --- 3. Process all tokens ---
+            foreach ($allTokens as $token) {
+                $tokenAddress = $token['tokenAddress'] ?? $token['baseToken']['address'] ?? null;
+                if (!$tokenAddress || SolanaBlacklistContract::isBlacklisted($tokenAddress)) continue;
+
+                $scanner = new SolanaContractScanner($tokenAddress, 'solana');
+                $scanner->setBoosted($token['boosted'] ?? false);
+
+                if (!$scanner->canTrade()) continue;
 
                 $data = $scanner->getTokenData();
+                $tokenName = substr($token['name'] ?? $token['baseToken']['name'] ?? 'Unknown', 0, 100);
 
                 $call = SolanaCall::create([
-                    'token_name' => substr($tokenName, 0, 100),
+                    'token_name' => $tokenName,
                     'token_address' => $tokenAddress,
-                    'age_minutes' => $ageMinutes,
-                    'market_cap' => $data['marketCap'],
-                    'volume_24h' => $volume24h,
-                    'liquidity_pool' => $liquidityUsd,
-                    'strategy' => 'TRENDING-TRADE',
-                    'dev_sold' => $devSold,
-                    'dex_paid_status' => $token['dexPaidStatus'] ?? false,
+                    'market_cap' => $data['marketCap'] ?? 0,
+                    'liquidity_pool' => $data['liquidity']['usd'] ?? 0,
+                    'strategy' => $token['boosted'] ? 'TRENDING-TRADE' : 'EARLY-MOVER',
                     'reason_buy' => $scanner->getBuyReason(),
                 ]);
 
-                $this->info("Saved SolanaCall ID: {$call->id} - Token: {$tokenName} ({$tokenAddress}){$boostLabel}");
-
-                $buyAmount = 0.01;
-                SlackNotifier::info("Launching buy for SolanaCall #{$call->id}: {$tokenName} ({$buyAmount} SOL){$boostLabel}");
-
+                // --- Launch buy script ---
                 $process = new Process([
                     'node',
                     base_path('scripts/solana-buy.js'),
                     '--identifier=' . $call->id,
                     '--token=' . $tokenAddress,
-                    '--amount=' . $buyAmount,
+                    '--amount=0.01',
                 ]);
                 $process->setTimeout(360);
                 $process->run();
@@ -118,14 +98,10 @@ class PollSolanaTokens extends Command
                 $errorOutput = trim($process->getErrorOutput());
 
                 if ($exitCode === 0 && !empty($output)) {
-                    SlackNotifier::success("✅ Buy completed for #{$call->id} ({$tokenName}): Exit 0\n```{$output}```");
-                    $this->info("Buy success for #{$call->id}");
+                    SlackNotifier::success("✅ Buy completed for #{$call->id} ({$tokenName})\n```{$output}```");
                 } elseif ($exitCode !== 0 || !empty($errorOutput)) {
-                    $errorMsg = $errorOutput ?: $output ?: 'Unknown error (exit ' . $exitCode . ')';
+                    $errorMsg = $errorOutput ?: $output ?: 'Unknown error';
                     SlackNotifier::error("❌ Buy failed for #{$call->id} ({$tokenName}): {$errorMsg}");
-                    $this->error("Buy failed for #{$call->id}: {$errorMsg}");
-                } else {
-                    SlackNotifier::info("Buy completed for #{$call->id} ({$tokenName}) (no output)");
                 }
 
                 $matchesFound++;
@@ -142,6 +118,7 @@ class PollSolanaTokens extends Command
             return self::FAILURE;
         }
     }
+
 
     private function getTokenInfo(string $tokenAddress, string $chain): array
     {
