@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\SolanaCall;
+use App\Models\SolanaCallUnrealizedProfit;
 use App\Helpers\SolanaTokenData;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class SniperController extends Controller
 {
@@ -18,59 +17,29 @@ class SniperController extends Controller
 
     public function index()
     {
+        // Load Solana calls with their orders
         $solanaCalls = SolanaCall::with('orders')
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // Filter open positions
         $openCalls = $solanaCalls->filter(function ($call) {
             return $call->orders->where('type', 'buy')->isNotEmpty() &&
                 $call->orders->where('type', 'sell')->isEmpty();
         });
 
+        // Fetch latest unrealized profits for each open call
         foreach ($openCalls as $call) {
-            try {
-                // Fetch market cap using SolanaTokenData
-                $marketData = $this->tokenDataHelper->getTokenData($call->token_address);
-//                var_dump($marketData);exit;
+            $latestProfit = SolanaCallUnrealizedProfit::where('solana_call_id', $call->id)
+                ->latest('created_at')
+                ->first();
 
-                if ($marketData === null) {
-                    Log::warning("QuickNode API failed or token not indexed for {$call->token_address}, falling back to DexScreener");
-
-                    // Fallback to DexScreener
-                    $response = Http::timeout(5)->get("https://api.dexscreener.com/latest/dex/tokens/{$call->token_address}");
-                    if (!$response->successful()) {
-                        Log::warning("DexScreener API failed for {$call->token_address}", [
-                            'status' => $response->status(),
-                            'body' => $response->body(),
-                        ]);
-                        $call->current_market_cap = 0;
-                    } else {
-                        $data = $response->json();
-                        if (empty($data['pairs'][0])) {
-                            Log::warning("No pairs found for {$call->token_address}", ['response' => $data]);
-                            $call->current_market_cap = 0;
-                        } else {
-                            $marketCap = $data['pairs'][0]['marketCap'] ?? 0;
-                            if ($marketCap <= 0) {
-                                Log::warning("Invalid market cap for {$call->token_address}", ['marketCap' => $marketCap]);
-                            }
-                            $call->current_market_cap = $marketCap;
-                        }
-                    }
-                } else {
-                    $call->current_market_cap = $marketData['marketCap'] ?? 0;
-                }
-
-                // Log for debugging
-                Log::debug("Market cap for {$call->token_address}", [
-                    'current_market_cap' => $call->current_market_cap,
-                    'buy_market_cap' => $call->market_cap,
-                ]);
-            } catch (\Exception $e) {
-                Log::warning("Failed to fetch market cap for {$call->token_address}: {$e->getMessage()}", [
-                    'exception' => $e->getTraceAsString(),
-                ]);
-                $call->current_market_cap = 0;
+            if ($latestProfit) {
+                $call->unrealized_profit_sol = $latestProfit->unrealized_profit;
+                $call->current_market_cap = $latestProfit->current_market_cap;
+            } else {
+                $call->unrealized_profit_sol = null;
+                $call->current_market_cap = null;
             }
         }
 

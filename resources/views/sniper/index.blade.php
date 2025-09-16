@@ -34,8 +34,8 @@
             <th class="border border-gray-700 px-2 py-1 text-center">Bought</th>
             <th class="border border-gray-700 px-2 py-1 text-center">Sold</th>
             <th class="border border-gray-700 px-2 py-1 text-center">Failures</th>
-            <th class="border border-gray-700 px-2 py-1 text-right">Unrealized Profit (SOL)</th>
-            <th class="border border-gray-700 px-2 py-1 text-right">Unrealized Profit (%)</th>
+            <th class="border border-gray-700 px-2 py-1 text-right">Unrealized Profit</th>
+            <th class="border border-gray-700 px-2 py-1 text-right">Current MC</th>
         </tr>
         </thead>
         <tbody>
@@ -51,24 +51,6 @@
                 $hasSell = $call->orders->where('type', 'sell')->isNotEmpty();
                 $failures = $call->orders->where('type', 'failed')->count();
                 $buyOrder = $call->orders->where('type', 'buy')->first();
-
-                // Calculate unrealized profit using market cap
-                $profitSol = '-';
-                $profitPct = '-';
-                if ($buyOrder && $call->market_cap > 0 && $call->current_market_cap > 0 && $buyOrder->amount_sol > 0 && $buyOrder->amount_foreign > 0) {
-                    $priceRatio = $call->current_market_cap / $call->market_cap;
-                    $profitSol = ($priceRatio * $buyOrder->amount_sol) - $buyOrder->amount_sol;
-                    $profitPct = ($priceRatio - 1) * 100;
-                    $profitSol = number_format($profitSol, 6);
-                    $profitPct = number_format($profitPct, 2) . '%';
-                } else {
-                    \Illuminate\Support\Facades\Log::debug("Profit calculation skipped for SolanaCall ID {$call->id}", [
-                        'market_cap' => $call->market_cap,
-                        'current_market_cap' => $call->current_market_cap,
-                        'amount_sol' => $buyOrder ? $buyOrder->amount_sol : null,
-                        'amount_foreign' => $buyOrder ? $buyOrder->amount_foreign : null,
-                    ]);
-                }
             @endphp
 
             <tr class="hover:bg-gray-800 cursor-pointer" data-id="{{ $call->id }}" role="button" aria-expanded="false" aria-controls="details-{{ $call->id }}">
@@ -91,12 +73,10 @@
                     <span class="text-red-500 font-semibold">✗</span>
                 </td>
                 <td class="border border-gray-700 px-2 py-1 text-center">{{ $failures }}</td>
-                <td class="border border-gray-700 px-2 py-1 text-right {{ $profitSol !== '-' && $profitSol < 0 ? 'text-red-400' : 'text-green-400' }}">
-                    {{ $profitSol }}
+                <td class="border border-gray-700 px-2 py-1 text-right {{ $call->unrealized_profit_sol !== '-' && $call->unrealized_profit_sol < 0 ? 'text-red-400' : 'text-green-400' }}">
+                    {{ $call->unrealized_profit_sol }}%
                 </td>
-                <td class="border border-gray-700 px-2 py-1 text-right {{ $profitPct !== '-' && $profitPct < 0 ? 'text-red-400' : 'text-green-400' }}">
-                    {{ $profitPct }}
-                </td>
+                <td class="border border-gray-700 px-2 py-1 text-right">{{ $call->current_market_cap }}</td>
             </tr>
             <tr id="details-{{ $call->id }}" class="hidden">
                 <td colspan="12" class="border border-gray-700 px-2 py-1 bg-gray-900 transition-all duration-300">
