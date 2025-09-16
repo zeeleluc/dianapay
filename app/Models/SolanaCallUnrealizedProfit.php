@@ -12,6 +12,8 @@ class SolanaCallUnrealizedProfit extends Model
     protected $fillable = [
         'solana_call_id',
         'unrealized_profit',
+        'buy_market_cap',
+        'current_market_cap',
     ];
 
     public function solanaCall()

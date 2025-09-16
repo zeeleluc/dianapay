@@ -195,6 +195,8 @@ class SolanaAutoSell extends Command
         // --- always store snapshot ---
         $solanaCall->unrealizedProfits()->create([
             'unrealized_profit' => $profitPercent,
+            'buy_market_cap' => $buyMarketCap,
+            'current_market_cap' => $currentMarketCap,
         ]);
 
         $minProfitToConsider = 3.0;   // Only track drops if previous profit was at least this
