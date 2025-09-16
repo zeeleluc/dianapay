@@ -19,7 +19,8 @@
 
     {{-- Open Positions Table --}}
     <h2 class="text-xl font-semibold mb-4">Open Positions</h2>
-    <table class="w-full border-collapse border border-gray-700 text-white mb-8" id="open-positions-table">
+    <div class="overflow-x-auto">
+    <table class="min-w-full border-collapse border border-gray-700 text-white text-sm md:text-base" id="open-positions-table">
         <thead>
         <tr class="bg-gray-800">
             <th class="border border-gray-700 px-2 py-1 text-left">Name</th>
@@ -154,10 +155,12 @@
         @endif
         </tbody>
     </table>
+    </div>
 
     {{-- Closed Positions Table --}}
     <h2 class="text-xl font-semibold mb-4">Closed Positions</h2>
-    <table class="w-full border-collapse border border-gray-700 text-white">
+    <div class="overflow-x-auto">
+        <table class="min-w-full border-collapse border border-gray-700 text-white text-sm md:text-base" id="open-positions-table">
         <thead>
         <tr class="bg-gray-800">
             <th class="border border-gray-700 px-2 py-1 text-left">Name</th>
@@ -279,6 +282,7 @@
         @endif
         </tbody>
     </table>
+    </div>
 
     {{-- JavaScript for toggling order details --}}
     <script>
