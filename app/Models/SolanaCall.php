@@ -45,6 +45,11 @@ class SolanaCall extends Model
         return $this->hasMany(SolanaCallOrder::class);
     }
 
+    public function unrealizedProfits()
+    {
+        return $this->hasMany(SolanaCallUnrealizedProfit::class);
+    }
+
     /**
      * Calculate profit based on SOL.
      *
@@ -163,6 +168,32 @@ class SolanaCall extends Model
         $percentage = (($totalSold - $totalBought) / $totalBought) * 100;
 
         return number_format($percentage, 2, '.', '');
+    }
+
+    /**
+     * Check if the last 50 unrealized profits are stable.
+     *
+     * @return bool
+     */
+    public function hasStableUnrealizedProfits(): bool
+    {
+        $records = $this->unrealizedProfits()
+            ->latest() // order by created_at desc
+            ->take(50)
+            ->get()
+            ->reverse(); // so last is truly the newest
+
+        if ($records->count() < 50) {
+            return false; // not enough data
+        }
+
+        $average = $records->avg('unrealized_profit');
+        $last = $records->last()->unrealized_profit;
+
+        // Define "almost the same" (here ±1%)
+        $tolerance = 1.0;
+
+        return abs($average - $last) <= $tolerance;
     }
 
 }

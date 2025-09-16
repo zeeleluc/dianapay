@@ -196,6 +196,11 @@ class SolanaAutoSell extends Command
 
         $profitPercent = $this->getCurrentProfit($buyMarketCap, $currentMarketCap);
 
+        // --- always store snapshot ---
+        $solanaCall->unrealizedProfits()->create([
+            'unrealized_profit' => $profitPercent,
+        ]);
+
         $minProfitToConsider = 3.0;   // Only track drops if previous profit was at least this
         $dropThreshold = 1.5;         // Only sell if drop from previous peak >= this
 
@@ -219,14 +224,19 @@ class SolanaAutoSell extends Command
             $solanaCall->save();
         }
 
-        // Check if profit reached the overall threshold
+        // Sell if profit reached the configured threshold
         if ($profitPercent >= $this->profitThreshold) {
             return true;
         }
 
-        return false;
+        // --- NEW: Sell if stable for last 50 records ---
+        if ($solanaCall->hasStableUnrealizedProfits()) {
+            return true;
+        }
 
+        return false;
     }
+
 
     private function getCurrentProfit(?float $buyMarketCap, ?float $currentMarketCap)
     {
