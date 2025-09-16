@@ -138,21 +138,40 @@ class SolanaCall extends Model
      *
      * @return string
      */
+    /**
+     * Get total profit percentage of all SolanaCalls,
+     * only including calls with both buy and sell orders.
+     *
+     * @return string
+     */
     public static function totalProfitPercentage(): string
     {
-        $totalProfit = 0.0;
+        $totalBuy = 0.0;
+        $totalSell = 0.0;
 
-        // Get all calls
-        $calls = self::with(['latestUnrealizedProfit'])->get();
+        $calls = self::with('orders')->get();
 
         foreach ($calls as $call) {
-            $latestProfit = $call->latestUnrealizedProfit;
-            if ($latestProfit && is_numeric($latestProfit->unrealized_profit)) {
-                $totalProfit += $latestProfit->unrealized_profit;
+            $buySum = $call->orders->where('type', 'buy')->sum('amount_sol');
+            $sellSum = $call->orders->where('type', 'sell')->sum('amount_sol');
+
+            // Skip calls that don’t have both buy and sell
+            if ($buySum <= 0 || $sellSum <= 0) {
+                continue;
             }
+
+            $totalBuy += $buySum;
+            $totalSell += $sellSum;
         }
 
-        return number_format($totalProfit, 2, '.', '');
+        if ($totalBuy <= 0) {
+            return '0.00';
+        }
+
+        $totalProfit = $totalSell - $totalBuy;
+        $percentage = ($totalProfit / $totalBuy) * 100;
+
+        return number_format($percentage, 2, '.', '');
     }
 
     public function latestUnrealizedProfit()
