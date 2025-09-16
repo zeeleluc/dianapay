@@ -32,6 +32,11 @@ class SolanaContractScanner
         $this->fetchPairData();
     }
 
+    public function getBuyReason()
+    {
+        return $this->buyReason;
+    }
+
     public function setBoosted(bool $boosted): void
     {
         $this->isBoosted = $boosted;

@@ -96,6 +96,7 @@ class PollSolanaTokens extends Command
                     'strategy' => 'TRENDING-TRADE',
                     'dev_sold' => $devSold,
                     'dex_paid_status' => $token['dexPaidStatus'] ?? false,
+                    'buy_reason' => $scanner->getBuyReason(),
                 ]);
 
                 $this->info("Saved SolanaCall ID: {$call->id} - Token: {$tokenName} ({$tokenAddress}){$boostLabel}");
