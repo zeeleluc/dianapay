@@ -28,6 +28,8 @@
             <th class="border border-gray-700 px-2 py-1 text-left">DS</th>
             <th class="border border-gray-700 px-2 py-1 text-left">DP</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Strategy</th>
+            <th class="border border-gray-700 px-2 py-1 text-left">Buy Reason</th>
+            <th class="border border-gray-700 px-2 py-1 text-left">Sell Reason</th>
             <th class="border border-gray-700 px-2 py-1 text-center">Bought</th>
             <th class="border border-gray-700 px-2 py-1 text-center">Sold</th>
             <th class="border border-gray-700 px-2 py-1 text-center">Failures</th>
@@ -79,6 +81,8 @@
                 <td class="border border-gray-700 px-2 py-1">{{ $call->dev_sold ? 'Y' : 'N' }}</td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->dex_paid ? 'Y' : 'N' }}</td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->strategy ?: '-' }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ $call->reason_buy ?: '-' }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ $call->reason_sell ?: '-' }}</td>
                 <td class="border border-gray-700 px-2 py-1 text-center">
                     <span class="text-green-500 font-semibold">✓</span>
                 </td>
@@ -162,6 +166,8 @@
             <th class="border border-gray-700 px-2 py-1 text-left">DS</th>
             <th class="border border-gray-700 px-2 py-1 text-left">DP</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Strategy</th>
+            <th class="border border-gray-700 px-2 py-1 text-left">Buy Reason</th>
+            <th class="border border-gray-700 px-2 py-1 text-left">Sell Reason</th>
             <th class="border border-gray-700 px-2 py-1 text-center">Bought</th>
             <th class="border border-gray-700 px-2 py-1 text-center">Sold</th>
             <th class="border border-gray-700 px-2 py-1 text-center">Failures</th>
@@ -200,6 +206,8 @@
                 <td class="border border-gray-700 px-2 py-1">{{ $call->dev_sold ? 'Y' : 'N' }}</td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->dex_paid ? 'Y' : 'N' }}</td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->strategy ?: '-' }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ $call->reason_buy ?: '-' }}</td>
+                <td class="border border-gray-700 px-2 py-1">{{ $call->reason_sell ?: '-' }}</td>
                 <td class="border border-gray-700 px-2 py-1 text-center">
                     <span class="text-green-500 font-semibold">✓</span>
                 </td>
