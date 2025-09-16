@@ -22,6 +22,8 @@ class SolanaCall extends Model
         'dex_paid_status',
         'strategy',
         'previous_unrealized_profits', // added
+        'reason_buy',
+        'reason_sell',
     ];
 
     protected $casts = [

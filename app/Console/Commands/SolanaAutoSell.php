@@ -182,11 +182,7 @@ class SolanaAutoSell extends Command
     }
 
     /**
-     * Check if the profit has reached or exceeded 100% based on market cap.
-     *
-     * @param float|null $buyMarketCap
-     * @param float|null $currentMarketCap
-     * @return bool
+     * Check if the profit has reached or exceeded threshold, or other sell triggers.
      */
     private function hasReachedProfitThreshold(SolanaCall $solanaCall, ?float $buyMarketCap, ?float $currentMarketCap): bool
     {
@@ -214,7 +210,9 @@ class SolanaAutoSell extends Command
         if ($solanaCall->previous_unrealized_profits >= $minProfitToConsider) {
             $dropFromPrevious = $solanaCall->previous_unrealized_profits - $profitPercent;
             if ($dropFromPrevious >= $dropThreshold) {
-                return true; // Sell due to significant dip
+                $solanaCall->reason_sell = "Significant dip detected (drop of {$dropFromPrevious}% from peak)";
+                $solanaCall->save();
+                return true;
             }
         }
 
@@ -226,11 +224,15 @@ class SolanaAutoSell extends Command
 
         // Sell if profit reached the configured threshold
         if ($profitPercent >= $this->profitThreshold) {
+            $solanaCall->reason_sell = "Profit threshold reached ({$profitPercent}% >= {$this->profitThreshold}%)";
+            $solanaCall->save();
             return true;
         }
 
         // --- NEW: Sell if stable for last 50 records ---
         if ($solanaCall->hasStableUnrealizedProfits()) {
+            $solanaCall->reason_sell = "Unrealized profits stabilized around {$profitPercent}% over last 50 records";
+            $solanaCall->save();
             return true;
         }
 

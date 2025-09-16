@@ -17,6 +17,8 @@ class SolanaContractScanner
     protected array $pairData = [];
     protected SolanaTokenData $tokenDataHelper;
 
+    protected ?string $buyReason = null;
+
     protected $tokenData;
 
     public function __construct(string $tokenAddress, string $chain = 'solana', $trimmedChecks = false)
@@ -105,19 +107,19 @@ class SolanaContractScanner
         $priceChangeH24 = $this->tokenData['priceChange']['h24'] ?? 0;
 
         // --- Thresholds (refined) ---
-        $minLiquidity   = 20000;        // Safer liquidity floor
-        $minMarketCap   = 10000;        // Avoid micro-caps
-        $maxMarketCap   = 20000000;     // Capture growth potential, avoid overheated
-        $minVolumeH1    = 5000;         // Require stronger trading activity
-        $minVolLiqRatio = 0.5;          // Volume/liquidity ratio for active trading
-        $minM5Gain      = 1;            // Require at least +1% in 5m
-        $maxM5Gain      = 8;            // Avoid extreme short-term pumps
-        $minH1Gain      = -5;           // Allow mild dips in 1h
-        $maxH1Gain      = 20;           // Avoid overheated 1h spikes
-        $minH6Gain      = 3;            // Require healthy 6h trend
-        $rugThreshold   = -40;          // Reject tokens with extreme drops
+        $minLiquidity   = 20000;
+        $minMarketCap   = 10000;
+        $maxMarketCap   = 20000000;
+        $minVolumeH1    = 5000;
+        $minVolLiqRatio = 0.5;
+        $minM5Gain      = 1;
+        $maxM5Gain      = 8;
+        $minH1Gain      = -5;
+        $maxH1Gain      = 20;
+        $minH6Gain      = 3;
+        $rugThreshold   = -40;
 
-        // --- Rug filter: reject if any timeframe has extreme drop ---
+        // --- Rug filter ---
         $allDrops = [$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24];
         foreach ($allDrops as $drop) {
             if (!is_numeric($drop) || $drop <= $rugThreshold) {
@@ -142,33 +144,35 @@ class SolanaContractScanner
         }
 
         // --- Price trend checks ---
-        // Ensure 1h trend is within bounds
         if (!is_numeric($priceChangeH1) || $priceChangeH1 < $minH1Gain || $priceChangeH1 > $maxH1Gain) {
             return false;
         }
 
-        // Ensure positive but controlled 5-minute momentum
         if (!is_numeric($priceChangeM5) || $priceChangeM5 < $minM5Gain || $priceChangeM5 > $maxM5Gain) {
             return false;
         }
 
-        // Consistency check: reject if 5m is up but 1h is still negative
         if ($priceChangeM5 > 0 && $priceChangeH1 < 0) {
             return false;
         }
 
-        // Ensure healthy 6-hour trend for stability
         if (!is_numeric($priceChangeH6) || $priceChangeH6 < $minH6Gain) {
             return false;
         }
 
-        // Optional: reject fake pumps (big 5m change with weak volume)
         if ($priceChangeM5 > 2 && $volumeH1 < ($liquidity * 0.8)) {
             return false;
         }
 
+        // ✅ Passed all checks → store reason
+        $this->buyReason = sprintf(
+            "Passed metrics: MarketCap %.0f, Liquidity %.0f, VolumeH1 %.0f, M5 %.2f%%, H1 %.2f%%, H6 %.2f%%",
+            $marketCap, $liquidity, $volumeH1, $priceChangeM5, $priceChangeH1, $priceChangeH6
+        );
+
         return true;
     }
+
 
     private function checkRugProof(): bool
     {
