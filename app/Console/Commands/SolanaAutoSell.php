@@ -15,7 +15,7 @@ class SolanaAutoSell extends Command
     protected $description = 'Automatically sell tokens based on profit, 5-minute price drop, or time';
 
     protected float $minLiquidity = 1000;  // Minimum liquidity for sell
-    protected float $m5Threshold = -1.0;   // Sell if 5-minute price change < -5%
+    protected float $m5Threshold = -5.0;   // Sell if 5-minute price change < -5%
     protected int $maxHoldMinutes = 120;   // Sell after 120 minutes
     protected float $profitThreshold = 4.0; // Sell if profit >= 100%
 
