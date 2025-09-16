@@ -136,7 +136,7 @@ class SolanaAutoSell extends Command
                 ]);
 
                 $sellReason = null;
-                if ($this->hasSignificantPriceDrop($priceChangeM5, $tokenAddress)) {
+                if ($this->hasSignificantPriceDrop($call, $priceChangeM5, $tokenAddress)) {
                     $sellReason = "negative M5 ({$priceChangeM5}% < {$this->m5Threshold}%)";
                 } elseif ($this->hasReachedProfitThreshold($call, $call->market_cap, $currentMarketCap, $profitPercent)) {
                     $sellReason = "profit threshold reached (>= {$this->profitThreshold}%)";
@@ -186,9 +186,13 @@ class SolanaAutoSell extends Command
      * @param float $priceChangeM5
      * @return bool
      */
-    private function hasSignificantPriceDrop(float $priceChangeM5, string $tokenAddress): bool
+    private function hasSignificantPriceDrop(SolanaCall $solanaCall, float $priceChangeM5, string $tokenAddress): bool
     {
         if (is_numeric($priceChangeM5) && $priceChangeM5 < $this->m5Threshold) {
+            $drop = $priceChangeM5 < $this->m5Threshold;
+            $solanaCall->reason_sell = "Significant dip detected (drop of {$drop}%)";
+            $solanaCall->save();
+
             return true;
         }
 
