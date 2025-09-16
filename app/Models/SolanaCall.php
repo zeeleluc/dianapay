@@ -178,22 +178,26 @@ class SolanaCall extends Model
     public function hasStableUnrealizedProfits(): bool
     {
         $records = $this->unrealizedProfits()
-            ->latest() // order by created_at desc
+            ->latest()
             ->take(50)
-            ->get()
-            ->reverse(); // so last is truly the newest
+            ->pluck('unrealized_profit');
 
         if ($records->count() < 50) {
-            return false; // not enough data
+            return false; // Not enough data yet
         }
 
-        $average = $records->avg('unrealized_profit');
-        $last = $records->last()->unrealized_profit;
+        $average = $records->avg();
+        $last = $records->first(); // most recent
 
-        // Define "almost the same" (here ±1%)
-        $tolerance = 1.0;
+        // Require profit to be at least 3% to consider "stable"
+        if ($average < 3.0) {
+            return false;
+        }
 
-        return abs($average - $last) <= $tolerance;
+        // If the difference between average and last is very small (stable trend)
+        $diff = abs($average - $last);
+
+        return $diff <= 0.5; // within ±0.5% considered stable
     }
 
 }
