@@ -56,9 +56,7 @@ class PollSolanaTokens extends Command
 
                 $allTokens[$addr] = array_merge($pair, ['boosted' => false]);
             }
-
-            $matchesFound = 0;
-
+            
             // --- 3. Process all tokens ---
             foreach ($allTokens as $token) {
                 $info = $this->getTokenInfo($token['tokenAddress'], $token['chainId']);
@@ -106,11 +104,9 @@ class PollSolanaTokens extends Command
                     SlackNotifier::error("❌ Buy failed for #{$call->id} ({$tokenName}): {$errorMsg}");
                 }
 
-                $matchesFound++;
+                // stop when 1 trade found in current loop
+                return self::SUCCESS;
             }
-
-            $this->info("Poll complete: Processed {$matchesFound} tokens.");
-            return self::SUCCESS;
 
         } catch (Throwable $e) {
             $errorMsg = "Error polling tokens: " . $e->getMessage();
