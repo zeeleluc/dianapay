@@ -47,7 +47,7 @@ class SolanaContractScanner
         if ($this->trimmedChecks) {
             $checks = ['checkMarketMetrics'];
         } else {
-            $checks = ['checkMarketMetrics', 'checkRugProof', 'checkSocials'];
+            $checks = ['checkRugProof', 'checkSocials', 'checkMarketMetrics'];
         }
 
         foreach ($checks as $check) {
