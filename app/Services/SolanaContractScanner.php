@@ -125,7 +125,7 @@ class SolanaContractScanner
         $minVolumeH1    = 5000;
         $minVolLiqRatio = 0.5;
         $minM5Gain      = 1;
-        $maxM5Gain      = 8;
+        $maxM5Gain      = 4;
         $minH1Gain      = -5;
         $maxH1Gain      = 20;
         $minH6Gain      = 3;
