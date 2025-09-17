@@ -118,18 +118,20 @@ class SolanaContractScanner
         $priceChangeH6  = $this->tokenData['priceChange']['h6'] ?? 0;
         $priceChangeH24 = $this->tokenData['priceChange']['h24'] ?? 0;
 
-        // --- Thresholds ---
-        $minLiquidity   = 20000;
-        $minMarketCap   = 10000;
-        $maxMarketCap   = 20000000;
-        $minVolumeH1    = 5000;
-        $minVolLiqRatio = 0.5;
-        $minM5Gain      = 1;
-        $maxM5Gain      = 4;
-        $minH1Gain      = -5;
-        $maxH1Gain      = 20;
-        $minH6Gain      = 3;
-        $rugThreshold   = -40;
+        // --- Thresholds for 4% Scalps ---
+        $minLiquidity   = 4000000;   // avoid tiny pools, but still volatile enough
+        $maxLiquidity   = 20000000;  // cap it, too much liquidity = too slow
+        $minMarketCap   = 1000000;   // avoid micro-rugs
+        $maxMarketCap   = 50000000;  // mid-caps move fast enough for +4% pops
+        $minVolumeH1    = 20000;     // ensures enough hourly activity for entry/exit
+        $minVolLiqRatio = 0.5;       // volume must be healthy vs liquidity
+        $minM5Gain      = 1;         // show some momentum
+        $maxM5Gain      = 4;         // don’t chase pumps already past your target
+        $minH1Gain      = -1;        // tolerate a tiny dip
+        $maxH1Gain      = 10;        // filter out already mooning charts
+        $minH6Gain      = 2;         // prefer overall upward trend
+        $rugThreshold   = -20;       // hard stop if it nukes
+
 
         $allDrops = [$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24];
 
@@ -139,7 +141,11 @@ class SolanaContractScanner
         }
 
         // --- Liquidity check ---
-        if (!is_numeric($liquidity) || $liquidity < $minLiquidity) return false;
+        if (
+            !is_numeric($liquidity) ||
+            $liquidity < $minLiquidity ||
+            $liquidity > $maxLiquidity   // NEW: too much liquidity = too slow
+        ) return false;
 
         // --- Market cap check ---
         if (!is_numeric($marketCap) || $marketCap < $minMarketCap || $marketCap > $maxMarketCap) return false;
