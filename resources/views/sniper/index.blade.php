@@ -206,7 +206,7 @@
 
             <tr class="hover:bg-gray-800 cursor-pointer" data-id="{{ $call->id }}" role="button" aria-expanded="false" aria-controls="details-{{ $call->id }}">
                 <td class="border border-gray-700 px-2 py-1 text-right {{ $profitSol !== '-' && $profitSol < 0 ? 'text-red-400' : 'text-green-400' }}">
-                    {{ number_format($profitSol, 4) }}
+                    {{ number_format($profitSol, 6) }}
                 </td>
                 <td class="border border-gray-700 px-2 py-1 text-right {{ $profitPct !== '-' && $call->profitPercentage() < 0 ? 'text-red-400' : 'text-green-400' }}">
                     {{ $profitPct }}
