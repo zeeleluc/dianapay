@@ -117,7 +117,7 @@ class SolanaContractScanner
         $priceChangeH6   = $this->tokenData['priceChange']['h6'] ?? 0;
 
         // --- BONK-specific thresholds for larger swings ---
-        $minLiquidity    = 2_000_000;    // loosened for BONK
+        $minLiquidity    = 800_000;      // loosened for BONK
         $maxLiquidity    = 100_000_000;  // cap for very large pools
         $minVolH1        = 10_000;       // H1 volume threshold
         $minM5Gain       = 0.3;          // small 5-min momentum
