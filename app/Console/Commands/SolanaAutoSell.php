@@ -264,40 +264,17 @@ class SolanaAutoSell extends Command
 
     private function shouldSellBonk5M(SolanaCall $solanaCall, ?float $profitPercent): bool
     {
-        $dropThreshold = 0.5;       // Sell if drop from peak >= 0.5%
-        $stagnantThreshold = 3;     // Number of stable ticks before calling it "slowing down"
-
-        // Initialize peak if not set
-        if (!$solanaCall->previous_unrealized_profits) {
+        // Always update the peak if profit is increasing
+        if (!$solanaCall->previous_unrealized_profits || $profitPercent > $solanaCall->previous_unrealized_profits) {
             $solanaCall->previous_unrealized_profits = $profitPercent;
-            $solanaCall->stable_counter = 0;
             $solanaCall->save();
             return false;
         }
 
-        // Update peak if profit increased
-        if ($profitPercent > $solanaCall->previous_unrealized_profits) {
-            $solanaCall->previous_unrealized_profits = $profitPercent;
-            $solanaCall->stable_counter = 0; // reset stagnation counter
-            $solanaCall->save();
-            return false; // still climbing
-        }
-
-        // Detect stagnation
-        if (abs($profitPercent - $solanaCall->previous_unrealized_profits) < 0.2) {
-            $solanaCall->stable_counter = ($solanaCall->stable_counter ?? 0) + 1;
-            $solanaCall->save();
-            if ($solanaCall->stable_counter >= $stagnantThreshold) {
-                $solanaCall->reason_sell = "BONK-5M: profit momentum stagnated at {$profitPercent}%";
-                $solanaCall->save();
-                return true;
-            }
-        }
-
-        // Detect slowdown (drop from peak)
-        $dropFromPeak = $solanaCall->previous_unrealized_profits - $profitPercent;
-        if ($dropFromPeak >= $dropThreshold) {
-            $solanaCall->reason_sell = "BONK-5M: profit slowed (drop of {$dropFromPeak}% from peak)";
+        // If profit is positive but has dropped below previous peak → sell
+        if ($profitPercent > 0 && $profitPercent < $solanaCall->previous_unrealized_profits) {
+            $drop = $solanaCall->previous_unrealized_profits - $profitPercent;
+            $solanaCall->reason_sell = "BONK-5M: profit slowed (drop of {$drop}% from peak, still positive at {$profitPercent}%)";
             $solanaCall->save();
             return true;
         }
