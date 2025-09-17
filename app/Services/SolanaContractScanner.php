@@ -107,7 +107,10 @@ class SolanaContractScanner
     protected function checkBonkMetrics(): bool
     {
         $this->tokenData = $this->tokenDataHelper->getTokenData($this->tokenAddress);
-        if ($this->tokenData === null) return false;
+        if ($this->tokenData === null) {
+            $this->logFalse('Token data is null');
+            return false;
+        }
 
         $liquidity       = $this->tokenData['liquidity']['usd'] ?? 0;
         $volumeM5        = $this->tokenData['volume']['m5'] ?? 0;
@@ -116,27 +119,43 @@ class SolanaContractScanner
         $priceChangeH1   = $this->tokenData['priceChange']['h1'] ?? 0;
         $priceChangeH6   = $this->tokenData['priceChange']['h6'] ?? 0;
 
-        // --- BONK-specific thresholds for larger swings ---
-        $minLiquidity    = 800_000;      // loosened for BONK
-        $maxLiquidity    = 100_000_000;  // cap for very large pools
-        $minVolH1        = 10_000;       // H1 volume threshold
-        $minM5Gain       = 0.3;          // small 5-min momentum
-        $maxM5Gain       = 5;            // avoid chasing spikes
-        $minH1Gain       = 1;            // prefer upward momentum on H1
-        $maxH1Gain       = 10;           // avoid already-pumped H1 moves
-        $minH6Gain       = -3;           // tolerate slight dips over 6h
-        $maxH6Gain       = 15;           // avoid already-mooning H6 moves
+        $minLiquidity    = 800_000;
+        $maxLiquidity    = 100_000_000;
+        $minVolH1        = 10_000;
+        $minM5Gain       = 0.3;
+        $maxM5Gain       = 5;
+        $minH1Gain       = 1;
+        $maxH1Gain       = 10;
+        $minH6Gain       = -3;
+        $maxH6Gain       = 15;
 
         // --- Liquidity check ---
-        if (!is_numeric($liquidity) || $liquidity < $minLiquidity || $liquidity > $maxLiquidity) return false;
+        if (!is_numeric($liquidity) || $liquidity < $minLiquidity || $liquidity > $maxLiquidity) {
+            $this->logFalse(sprintf('Liquidity check failed: %.0f not in [%d, %d]', $liquidity, $minLiquidity, $maxLiquidity));
+            return false;
+        }
 
-        // --- Volume checks ---
-        if (!is_numeric($volumeH1) || $volumeH1 < $minVolH1) return false;
+        // --- Volume check ---
+        if (!is_numeric($volumeH1) || $volumeH1 < $minVolH1) {
+            $this->logFalse(sprintf('Volume H1 check failed: %.0f < %d', $volumeH1, $minVolH1));
+            return false;
+        }
 
         // --- Price change checks ---
-        if (!is_numeric($priceChangeM5) || $priceChangeM5 < $minM5Gain || $priceChangeM5 > $maxM5Gain) return false;
-        if (!is_numeric($priceChangeH1) || $priceChangeH1 < $minH1Gain || $priceChangeH1 > $maxH1Gain) return false;
-        if (!is_numeric($priceChangeH6) || $priceChangeH6 < $minH6Gain || $priceChangeH6 > $maxH6Gain) return false;
+        if (!is_numeric($priceChangeM5) || $priceChangeM5 < $minM5Gain || $priceChangeM5 > $maxM5Gain) {
+            $this->logFalse(sprintf('Price change M5 check failed: %.2f not in [%.2f, %.2f]', $priceChangeM5, $minM5Gain, $maxM5Gain));
+            return false;
+        }
+
+        if (!is_numeric($priceChangeH1) || $priceChangeH1 < $minH1Gain || $priceChangeH1 > $maxH1Gain) {
+            $this->logFalse(sprintf('Price change H1 check failed: %.2f not in [%.2f, %.2f]', $priceChangeH1, $minH1Gain, $maxH1Gain));
+            return false;
+        }
+
+        if (!is_numeric($priceChangeH6) || $priceChangeH6 < $minH6Gain || $priceChangeH6 > $maxH6Gain) {
+            $this->logFalse(sprintf('Price change H6 check failed: %.2f not in [%.2f, %.2f]', $priceChangeH6, $minH6Gain, $maxH6Gain));
+            return false;
+        }
 
         $this->buyReason = sprintf(
             "BONK check passed: Liquidity %.0f, VolH1 %.0f, M5 %.2f%%, H1 %.2f%%, H6 %.2f%%",
@@ -144,6 +163,18 @@ class SolanaContractScanner
         );
 
         return true;
+    }
+
+    /**
+     * Logs why checkBonkMetrics failed.
+     */
+    protected function logFalse(string $reason): void
+    {
+        // You can replace this with your preferred logging method
+        // e.g., Log::info(), fwrite(STDOUT, ...), or storing in a property
+        $this->buyReason = $reason;
+        // optional: echo or log to file
+        echo "[checkBonkMetrics] Failed: $reason\n";
     }
 
     public function canTradeWithBonkCheck(): bool

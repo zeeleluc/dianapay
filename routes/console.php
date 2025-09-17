@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\File;
 
 $schedule = app(Schedule::class);
 
@@ -21,3 +22,12 @@ if (app()->environment('prod')) {
     $schedule->command('solana:clean-failed-calls')->everyMinute();
     $schedule->command('solana:poll-bonk')->everyTenSeconds();
 }
+
+// ========== Delete Laravel Log Every Hour ==========
+$schedule->call(function () {
+    $logPath = storage_path('logs/laravel.log');
+    if (File::exists($logPath)) {
+        File::delete($logPath);
+        echo "[Schedule] Laravel log deleted successfully.\n";
+    }
+})->hourly();
