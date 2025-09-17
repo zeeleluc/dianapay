@@ -182,21 +182,35 @@ async function createBuyInstruction(connection, user, mint, bondingCurve, associ
     return new TransactionInstruction({ programId: PUMP_FUN_PROGRAM, keys, data });
 }
 
-async function getBondingCurveState(connection,bondingCurve){
-    try{
+async function getBondingCurveState(connection, bondingCurve){
+    try {
         const info = await connection.getAccountInfo(bondingCurve);
-        if(!info) return null;
+        if (!info) return null;
+
+        // ✅ NEW: skip if not owned by PumpFun
+        if (!info.owner.equals(PUMP_FUN_PROGRAM)) {
+            return null; // not a PumpFun bonding curve
+        }
+
         const d = info.data;
+        if (!d || d.length < 49) {
+            return null; // malformed account data
+        }
+
         return {
-            virtualTokenReserves:new BN(d.slice(8,16),'le'),
-            virtualSolReserves:new BN(d.slice(16,24),'le'),
-            realTokenReserves:new BN(d.slice(24,32),'le'),
-            realSolReserves:new BN(d.slice(32,40),'le'),
-            tokenTotalSupply:new BN(d.slice(40,48),'le'),
-            complete:d[48]===1
+            virtualTokenReserves: new BN(d.slice(8,16), 'le'),
+            virtualSolReserves:   new BN(d.slice(16,24), 'le'),
+            realTokenReserves:    new BN(d.slice(24,32), 'le'),
+            realSolReserves:      new BN(d.slice(32,40), 'le'),
+            tokenTotalSupply:     new BN(d.slice(40,48), 'le'),
+            complete: d[48] === 1
         };
-    }catch(e){ logToLaravel('error','Failed to parse bonding curve: '+e.message); return null; }
+    } catch (e) {
+        logToLaravel('error', 'Failed to parse bonding curve: ' + e.message);
+        return null;
+    }
 }
+
 
 async function fetchWithRateLimit(url,options={},retries=3){
     for(let i=0;i<retries;i++){
