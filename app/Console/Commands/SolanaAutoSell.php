@@ -136,12 +136,20 @@ class SolanaAutoSell extends Command
                 ]);
 
                 $sellReason = null;
-                if ($this->hasSignificantPriceDrop($call, $priceChangeM5, $tokenAddress)) {
-                    $sellReason = "negative M5 ({$priceChangeM5}% < {$this->m5Threshold}%)";
-                } elseif ($this->hasReachedProfitThreshold($call, $call->market_cap, $currentMarketCap, $profitPercent)) {
-                    $sellReason = "profit threshold reached (>= {$this->profitThreshold}%)";
-                } elseif ($holdTime > $this->maxHoldMinutes) {
-                    $sellReason = "maximum hold time exceeded ({$holdTime} minutes)";
+                if ($call->strategy === 'BONK-5M') {
+                    if ($this->shouldSellBonk5M($call, $profitPercent)) {
+                        $sellReason = $call->reason_sell ?? "BONK-5M sell trigger";
+                    } elseif ($this->hasSignificantPriceDrop($call, $priceChangeM5, $tokenAddress)) {
+                        $sellReason = "negative M5 ({$priceChangeM5}% < {$this->m5Threshold}%)";
+                    }
+                } else {
+                    if ($this->hasSignificantPriceDrop($call, $priceChangeM5, $tokenAddress)) {
+                        $sellReason = "negative M5 ({$priceChangeM5}% < {$this->m5Threshold}%)";
+                    } elseif ($this->hasReachedProfitThreshold($call, $call->market_cap, $currentMarketCap, $profitPercent)) {
+                        $sellReason = "profit threshold reached (>= {$this->profitThreshold}%)";
+                    } elseif ($holdTime > $this->maxHoldMinutes) {
+                        $sellReason = "maximum hold time exceeded ({$holdTime} minutes)";
+                    }
                 }
 
                 if ($sellReason) {
@@ -247,6 +255,49 @@ class SolanaAutoSell extends Command
         // --- NEW: Sell if stable for last 50 records ---
         if ($solanaCall->hasStableUnrealizedProfits()) {
             $solanaCall->reason_sell = "Unrealized profits stabilized around {$profitPercent}% over last 50 records";
+            $solanaCall->save();
+            return true;
+        }
+
+        return false;
+    }
+
+    private function shouldSellBonk5M(SolanaCall $solanaCall, ?float $profitPercent): bool
+    {
+        $dropThreshold = 0.5;       // Sell if drop from peak >= 0.5%
+        $stagnantThreshold = 3;     // Number of stable ticks before calling it "slowing down"
+
+        // Initialize peak if not set
+        if (!$solanaCall->previous_unrealized_profits) {
+            $solanaCall->previous_unrealized_profits = $profitPercent;
+            $solanaCall->stable_counter = 0;
+            $solanaCall->save();
+            return false;
+        }
+
+        // Update peak if profit increased
+        if ($profitPercent > $solanaCall->previous_unrealized_profits) {
+            $solanaCall->previous_unrealized_profits = $profitPercent;
+            $solanaCall->stable_counter = 0; // reset stagnation counter
+            $solanaCall->save();
+            return false; // still climbing
+        }
+
+        // Detect stagnation
+        if (abs($profitPercent - $solanaCall->previous_unrealized_profits) < 0.2) {
+            $solanaCall->stable_counter = ($solanaCall->stable_counter ?? 0) + 1;
+            $solanaCall->save();
+            if ($solanaCall->stable_counter >= $stagnantThreshold) {
+                $solanaCall->reason_sell = "BONK-5M: profit momentum stagnated at {$profitPercent}%";
+                $solanaCall->save();
+                return true;
+            }
+        }
+
+        // Detect slowdown (drop from peak)
+        $dropFromPeak = $solanaCall->previous_unrealized_profits - $profitPercent;
+        if ($dropFromPeak >= $dropThreshold) {
+            $solanaCall->reason_sell = "BONK-5M: profit slowed (drop of {$dropFromPeak}% from peak)";
             $solanaCall->save();
             return true;
         }
