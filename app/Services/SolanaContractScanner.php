@@ -170,12 +170,8 @@ class SolanaContractScanner
      */
     protected function logFalse(string $reason): void
     {
-        Log::info("[checkBonkMetrics] Failed: $reason");
-        // You can replace this with your preferred logging method
-        // e.g., Log::info(), fwrite(STDOUT, ...), or storing in a property
+        Log::info("Failed: $reason");
         $this->buyReason = $reason;
-        // optional: echo or log to file
-        echo "[checkBonkMetrics] Failed: $reason\n";
     }
 
     public function canTradeWithBonkCheck(): bool
