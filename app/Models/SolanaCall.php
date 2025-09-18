@@ -190,10 +190,10 @@ class SolanaCall extends Model
     {
         $records = $this->unrealizedProfits()
             ->latest()
-            ->take(50)
+            ->take(200)
             ->pluck('unrealized_profit');
 
-        if ($records->count() < 50) {
+        if ($records->count() < 200) {
             return false; // Not enough data yet
         }
 

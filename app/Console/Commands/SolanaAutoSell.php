@@ -254,7 +254,7 @@ class SolanaAutoSell extends Command
 
         // --- NEW: Sell if stable for last 50 records ---
         if ($solanaCall->hasStableUnrealizedProfits()) {
-            $solanaCall->reason_sell = "Unrealized profits stabilized around {$profitPercent}% over last 50 records";
+            $solanaCall->reason_sell = "Unrealized profits stabilized around {$profitPercent}% over last 200 records";
             $solanaCall->save();
             return true;
         }
@@ -271,10 +271,21 @@ class SolanaAutoSell extends Command
             return false;
         }
 
-        // If profit is positive but has dropped below previous peak → sell
+        // If profit is positive but has dropped below previous peak → sell (with tolerance)
         if ($profitPercent > 0 && $profitPercent < $solanaCall->previous_unrealized_profits) {
             $drop = $solanaCall->previous_unrealized_profits - $profitPercent;
-            $solanaCall->reason_sell = "BONK-5M: profit slowed (drop of {$drop}% from peak, still positive at {$profitPercent}%)";
+
+            // Only sell if the drop is greater than 0.5%
+            if ($drop > 0.5) {
+                $solanaCall->reason_sell = "BONK-5M: profit slowed (drop of {$drop}% from peak, still positive at {$profitPercent}%)";
+                $solanaCall->save();
+                return true;
+            }
+        }
+
+        // --- NEW: Sell if stable for last 50 records ---
+        if ($solanaCall->hasStableUnrealizedProfits()) {
+            $solanaCall->reason_sell = "Unrealized profits stabilized around {$profitPercent}% over last 200 records";
             $solanaCall->save();
             return true;
         }
