@@ -18,7 +18,7 @@ if (app()->environment('prod')) {
 // ========== Testing/High-Frequency Poll ==========
 if (app()->environment('prod')) {
     $schedule->command('solana:clean-failed-calls')->everyMinute();
-    $schedule->command('solana:poll-highend')->everyThirthySeconds()->withoutOverlapping();
+    $schedule->command('solana:poll-highend')->everyThirtySeconds()->withoutOverlapping();
     $schedule->command('solana:auto-sell')->everyTwoSeconds()->withoutOverlapping();
 }
 
