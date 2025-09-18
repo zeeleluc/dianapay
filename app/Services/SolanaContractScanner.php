@@ -187,6 +187,94 @@ class SolanaContractScanner
         }
     }
 
+    public function canTradeWithJlpCheck(): bool
+    {
+        try {
+            $this->tokenData = $this->tokenDataHelper->getTokenData($this->tokenAddress);
+            if ($this->tokenData === null) {
+                $this->logFalse('Token data is null');
+                return false;
+            }
+
+            $liquidity       = $this->tokenData['liquidity']['usd'] ?? 0;
+            $marketCap       = $this->tokenData['marketCap'] ?? 0;
+            $volumeH1        = $this->tokenData['volume']['h1'] ?? 0;
+            $priceChangeM5   = $this->tokenData['priceChange']['m5'] ?? 0;
+            $priceChangeH1   = $this->tokenData['priceChange']['h1'] ?? 0;
+            $priceChangeH6   = $this->tokenData['priceChange']['h6'] ?? 0;
+            $priceChangeH24  = $this->tokenData['priceChange']['h24'] ?? 0;
+
+            // --- JLP-specific thresholds ---
+            $minLiquidity   = 1_000_000;    // USD
+            $maxLiquidity   = 50_000_000;
+            $minMarketCap   = 10_000_000;   // mid/high cap
+            $maxMarketCap   = 5_000_000_000;
+            $minVolumeH1    = 50_000;       // hourly volume
+            $minM5Gain      = 0.5;          // short-term momentum
+            $maxM5Gain      = 5;
+            $minH1Gain      = 1;             // upward trend
+            $maxH1Gain      = 15;
+            $minH6Gain      = 2;             // sustained momentum
+            $rugThreshold   = -20;           // hard rug filter
+
+            $allDrops = [$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24];
+            foreach ($allDrops as $drop) {
+                if (!is_numeric($drop) || $drop <= $rugThreshold) {
+                    $this->logFalse("Rug filter triggered: {$drop}%");
+                    return false;
+                }
+            }
+
+            if (!is_numeric($liquidity) || $liquidity < $minLiquidity || $liquidity > $maxLiquidity) {
+                $this->logFalse("Liquidity check failed: {$liquidity}");
+                return false;
+            }
+
+            if (!is_numeric($marketCap) || $marketCap < $minMarketCap || $marketCap > $maxMarketCap) {
+                $this->logFalse("MarketCap check failed: {$marketCap}");
+                return false;
+            }
+
+            if (!is_numeric($volumeH1) || $volumeH1 < $minVolumeH1) {
+                $this->logFalse("Volume H1 check failed: {$volumeH1}");
+                return false;
+            }
+
+            if (!is_numeric($priceChangeM5) || $priceChangeM5 < $minM5Gain || $priceChangeM5 > $maxM5Gain) {
+                $this->logFalse("Price change M5 check failed: {$priceChangeM5}");
+                return false;
+            }
+
+            if (!is_numeric($priceChangeH1) || $priceChangeH1 < $minH1Gain || $priceChangeH1 > $maxH1Gain) {
+                $this->logFalse("Price change H1 check failed: {$priceChangeH1}");
+                return false;
+            }
+
+            if (!is_numeric($priceChangeH6) || $priceChangeH6 < $minH6Gain) {
+                $this->logFalse("Price change H6 check failed: {$priceChangeH6}");
+                return false;
+            }
+
+            // ✅ Passed all checks
+            $this->buyReason = sprintf(
+                "JLP check passed: MarketCap %.0f, Liquidity %.0f, VolumeH1 %.0f, M5 %.2f%%, H1 %.2f%%, H6 %.2f%%",
+                human_readable_number($marketCap),
+                human_readable_number($liquidity),
+                $volumeH1,
+                $priceChangeM5,
+                $priceChangeH1,
+                $priceChangeH6
+            );
+
+            return true;
+
+        } catch (Throwable $e) {
+            Log::warning("⚠️ canTradeWithJlpCheck exception for {$this->tokenAddress}: {$e->getMessage()}");
+            return false;
+        }
+    }
+
+
     protected function checkMarketMetrics(): bool
     {
         // Fetch token data
