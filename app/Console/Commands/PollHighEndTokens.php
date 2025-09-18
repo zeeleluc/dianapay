@@ -127,7 +127,7 @@ class PollHighEndTokens extends Command
                 $q->where('token_address', $tokenAddress);
             })->where('type', 'sell')->latest('created_at')->first();
 
-            if ($lastSell && $lastSell->created_at->gt(Carbon::now()->subMinutes(15))) return true;
+            if ($lastSell && $lastSell->created_at->gt(Carbon::now()->subMinutes(5))) return true;
         }
 
         return false;
