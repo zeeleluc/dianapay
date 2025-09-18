@@ -21,12 +21,3 @@ if (app()->environment('prod')) {
     $schedule->command('solana:poll-highend')->everyThirtySeconds()->withoutOverlapping();
     $schedule->command('solana:auto-sell')->everyTwoSeconds()->withoutOverlapping();
 }
-
-// ========== Delete Laravel Log Every Hour ==========
-$schedule->call(function () {
-    $logPath = storage_path('logs/laravel.log');
-    if (File::exists($logPath)) {
-        File::delete($logPath);
-        echo "[Schedule] Laravel log deleted successfully.\n";
-    }
-})->hourly();
