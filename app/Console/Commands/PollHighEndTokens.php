@@ -22,12 +22,6 @@ class PollHighEndTokens extends Command
 
     // ✅ High-end tokens list
     private const TOKENS = [
-        'BONK' => [
-            'address' => 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
-            'checker' => 'canTradeWithBonkCheck',
-            'strategy' => 'BONK-5M',
-            'amount' => 0.002,
-        ],
         'JLP' => [
             'address' => '27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4',
             'checker' => 'canTradeWithJlpCheck',
