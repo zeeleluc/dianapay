@@ -106,91 +106,114 @@ class SolanaContractScanner
 
     protected function checkBonkMetrics(): bool
     {
-        $this->tokenData = $this->tokenDataHelper->getTokenData($this->tokenAddress);
-        if ($this->tokenData === null) {
-            $this->logFalse('Token data is null');
-            return false;
-        }
-
-        $liquidity       = $this->tokenData['liquidity']['usd'] ?? 0;
-        $volumeH1        = $this->tokenData['volume']['h1'] ?? 0;
-        $priceChangeM5   = $this->tokenData['priceChange']['m5'] ?? 0;
-        $priceChangeH1   = $this->tokenData['priceChange']['h1'] ?? 0;
-        $priceChangeH6   = $this->tokenData['priceChange']['h6'] ?? 0;
-        $priceChangeH24  = $this->tokenData['priceChange']['h24'] ?? 0;
-
-        // --- Thresholds for memecoin scalps ---
-        $minLiquidity    = 300_000;      // Lowered to catch new pools (e.g., Pump.fun launches)
-        $maxLiquidity    = 50_000_000;   // Reduced to avoid slow movers
-        $minVolumeH1     = 5_000;        // Lowered for early-stage tokens
-        $minVolLiqRatio  = 0.4;          // Volume/liquidity ratio for exit liquidity
-        $minM5Gain       = 0.2;          // Lowered to catch early pumps
-        $maxM5Gain       = 6;            // Widened to allow bigger short-term moves
-        $minH1Gain       = 0.5;          // Lowered for slight dips
-        $maxH1Gain       = 12;           // Widened for breakout potential
-        $minH6Gain       = -5;           // Allow minor corrections
-        $maxH6Gain       = 20;           // Widened for memecoin pumps
-        $rugThreshold    = -20;          // Keep strict rug filter
-
-        // --- Rug filter ---
-        $allDrops = [$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24];
-        foreach ($allDrops as $drop) {
-            if (!is_numeric($drop) || $drop <= $rugThreshold) {
-                $this->logFalse(sprintf('Rug filter triggered: %.2f%% <= %.2f%%', $drop, $rugThreshold));
+        try {
+            $this->tokenData = $this->tokenDataHelper->getTokenData($this->tokenAddress);
+            if ($this->tokenData === null) {
+                $this->logFalse('Token data is null');
                 return false;
             }
-        }
 
-        // --- Liquidity check ---
-        if (!is_numeric($liquidity) || $liquidity < $minLiquidity || $liquidity > $maxLiquidity) {
-            $this->logFalse(sprintf('Liquidity check failed: %.0f not in [%d, %d]', $liquidity, $minLiquidity, $maxLiquidity));
-            return false;
-        }
+            // --- Extract values ---
+            $liquidity      = $this->tokenData['liquidity']['usd'] ?? 0;
+            $volumeH1       = $this->tokenData['volume']['h1'] ?? 0;
+            $priceChangeM5  = $this->tokenData['priceChange']['m5'] ?? 0;
+            $priceChangeH1  = $this->tokenData['priceChange']['h1'] ?? 0;
+            $priceChangeH6  = $this->tokenData['priceChange']['h6'] ?? 0;
+            $priceChangeH24 = $this->tokenData['priceChange']['h24'] ?? 0;
 
-        // --- Volume checks ---
-        $m5Momentum = $this->tokenData['priceChange']['m5'] ?? 0;
-        if ($m5Momentum < $minM5Gain) {
-            $this->logFalse(sprintf('M5 momentum check failed: %.2f < %.2f', $m5Momentum, $minM5Gain));
-            return false;
-        }
-        if (!is_numeric($volumeH1) || $volumeH1 < $minVolumeH1) {
-            $this->logFalse(sprintf('Volume H1 check failed: %.0f < %d', $volumeH1, $minVolumeH1));
-            return false;
-        }
-        $volLiqRatio = ($liquidity > 0) ? ($volumeH1 / $liquidity) : 0;
-        if ($volLiqRatio < $minVolLiqRatio) {
-            $this->logFalse(sprintf('Volume/Liquidity ratio check failed: %.2f < %.2f', $volLiqRatio, $minVolLiqRatio));
-            return false;
-        }
+            // --- Thresholds (memecoin scalps) ---
+            $minLiquidity    = 300_000;
+            $maxLiquidity    = 50_000_000;
+            $minVolumeH1     = 5_000;
+            $minVolLiqRatio  = 0.4;
 
-        // --- Price change checks ---
-        if (!is_numeric($priceChangeM5) || $priceChangeM5 < $minM5Gain || $priceChangeM5 > $maxM5Gain) {
-            $this->logFalse(sprintf('Price change M5 check failed: %.2f not in [%.2f, %.2f]', $priceChangeM5, $minM5Gain, $maxM5Gain));
-            return false;
-        }
-        if (!is_numeric($priceChangeH1) || $priceChangeH1 < $minH1Gain || $priceChangeH1 > $maxH1Gain) {
-            $this->logFalse(sprintf('Price change H1 check failed: %.2f not in [%.2f, %.2f]', $priceChangeH1, $minH1Gain, $maxH1Gain));
-            return false;
-        }
-        if (!is_numeric($priceChangeH6) || $priceChangeH6 < $minH6Gain || $priceChangeH6 > $maxH6Gain) {
-            $this->logFalse(sprintf('Price change H6 check failed: %.2f not in [%.2f, %.2f]', $priceChangeH6, $minH6Gain, $maxH6Gain));
-            return false;
-        }
+            $minM5Change     = 0.2;
+            $maxM5Change     = 6;
+            $minH1Change     = -1.0;   // allow tiny dips
+            $maxH1Change     = 12;
+            $minH6Change     = -5.0;   // allow corrections
+            $maxH6Change     = 20;
+            $rugThreshold    = -20;
 
-        // --- Trend consistency check ---
-        if ($priceChangeM5 > 0 && $priceChangeH1 < 0) {
-            $this->logFalse(sprintf('Trend inconsistency: M5 %.2f%% > 0 but H1 %.2f%% < 0', $priceChangeM5, $priceChangeH1));
+            // --- Rug filter ---
+            foreach ([$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24] as $drop) {
+                if (!is_numeric($drop) || $drop <= $rugThreshold) {
+                    $this->logFalse(sprintf("❌ Rug filter: %.2f%% <= %.2f%%", $drop, $rugThreshold));
+                    return false;
+                }
+            }
+
+            // --- Liquidity ---
+            if ($liquidity < $minLiquidity || $liquidity > $maxLiquidity) {
+                $this->logFalse(sprintf("❌ Liquidity: %.0f not in [%d, %d]", $liquidity, $minLiquidity, $maxLiquidity));
+                return false;
+            }
+
+            // --- Volume ---
+            if ($volumeH1 < $minVolumeH1) {
+                $this->logFalse(sprintf("❌ Volume H1: %.0f < %d", $volumeH1, $minVolumeH1));
+                return false;
+            }
+            $volLiqRatio = ($liquidity > 0) ? ($volumeH1 / $liquidity) : 0;
+            if ($volLiqRatio < $minVolLiqRatio) {
+                $this->logFalse(sprintf("❌ Vol/Liq ratio: %.2f < %.2f", $volLiqRatio, $minVolLiqRatio));
+                return false;
+            }
+
+            // --- Price change checks ---
+            if ($priceChangeM5 < $minM5Change || $priceChangeM5 > $maxM5Change) {
+                $this->logFalse(sprintf("❌ M5 change %.2f%% not in [%.2f%%, %.2f%%]", $priceChangeM5, $minM5Change, $maxM5Change));
+                return false;
+            }
+            if ($priceChangeH1 < $minH1Change || $priceChangeH1 > $maxH1Change) {
+                $this->logFalse(sprintf("❌ H1 change %.2f%% not in [%.2f%%, %.2f%%]", $priceChangeH1, $minH1Change, $maxH1Change));
+                return false;
+            }
+            if ($priceChangeH6 < $minH6Change || $priceChangeH6 > $maxH6Change) {
+                $this->logFalse(sprintf("❌ H6 change %.2f%% not in [%.2f%%, %.2f%%]", $priceChangeH6, $minH6Change, $maxH6Change));
+                return false;
+            }
+
+            // --- Trend consistency ---
+            if ($priceChangeM5 > 0 && $priceChangeH1 < 0) {
+                $this->logFalse(sprintf("❌ Trend inconsistency: M5 %.2f%% > 0 but H1 %.2f%% < 0", $priceChangeM5, $priceChangeH1));
+                return false;
+            }
+
+            // --- Top avoidance (prevent FOMO buying peaks) ---
+            $positiveThresholds = [
+                'M5'  => 6,
+                'H1'  => 10,
+                'H6'  => 15,
+                'H24' => 25,
+            ];
+            $allUp = 0;
+            if ($priceChangeM5  > $positiveThresholds['M5'])  $allUp++;
+            if ($priceChangeH1  > $positiveThresholds['H1'])  $allUp++;
+            if ($priceChangeH6  > $positiveThresholds['H6'])  $allUp++;
+            if ($priceChangeH24 > $positiveThresholds['H24']) $allUp++;
+            if ($allUp >= 3) {
+                $this->logFalse("❌ Top avoidance: {$allUp} timeframes overheated");
+                return false;
+            }
+
+            // --- Passed ✅ ---
+            $this->buyReason = sprintf(
+                "✅ BONK passed | LQ: %s | VolH1: %.0f | M5: %.2f%% | H1: %.2f%% | H6: %.2f%%",
+                human_readable_number($liquidity),
+                $volumeH1,
+                $priceChangeM5,
+                $priceChangeH1,
+                $priceChangeH6
+            );
+            Log::info($this->buyReason);
+
+            return true;
+
+        } catch (Throwable $e) {
+            Log::warning("⚠️ checkBonkMetrics exception for {$this->tokenAddress}: {$e->getMessage()}");
             return false;
         }
-
-        // --- Log success ---
-        $this->buyReason = sprintf(
-            "BONK check passed: Liquidity %.0f, VolH1 %.0f, M5 %.2f%%, H1 %.2f%%, H6 %.2f%%",
-            human_readable_number($liquidity), $volumeH1, $priceChangeM5, $priceChangeH1, $priceChangeH6
-        );
-        Log::info($this->buyReason);
-
-        return true;
     }
 
     /**
@@ -221,76 +244,78 @@ class SolanaContractScanner
                 return false;
             }
 
-            $liquidity       = $this->tokenData['liquidity']['usd'] ?? 0;
-            $marketCap       = $this->tokenData['marketCap'] ?? 0;
-            $volumeH1        = $this->tokenData['volume']['h1'] ?? 0;
-            $priceChangeM5   = $this->tokenData['priceChange']['m5'] ?? 0;
-            $priceChangeH1   = $this->tokenData['priceChange']['h1'] ?? 0;
-            $priceChangeH6   = $this->tokenData['priceChange']['h6'] ?? 0;
-            $priceChangeH24  = $this->tokenData['priceChange']['h24'] ?? 0;
+            // --- Extract token data safely ---
+            $liquidity      = $this->tokenData['liquidity']['usd'] ?? 0;
+            $marketCap      = $this->tokenData['marketCap'] ?? 0;
+            $volumeH1       = $this->tokenData['volume']['h1'] ?? 0;
+            $priceChangeM5  = $this->tokenData['priceChange']['m5'] ?? 0;
+            $priceChangeH1  = $this->tokenData['priceChange']['h1'] ?? 0;
+            $priceChangeH6  = $this->tokenData['priceChange']['h6'] ?? 0;
+            $priceChangeH24 = $this->tokenData['priceChange']['h24'] ?? 0;
 
-            // --- JLP-specific thresholds for mid/high-cap scalps ---
-            $minLiquidity    = 500_000;      // Lowered for smaller mid-caps
-            $maxLiquidity    = 30_000_000;   // Reduced to focus on volatile pools
-            $minMarketCap    = 3_000_000;    // Lowered for emerging mid-caps
-            $maxMarketCap    = 5_000_000_000;// Reduced to avoid slow blue-chips
-            $minVolumeH1     = 20_000;       // Lowered for more opportunities
-            $minVolLiqRatio  = 0.4;          // Ensure exit liquidity
-            $minM5Gain       = 0.2;          // Lowered to catch early moves
-            $maxM5Gain       = 7;            // Widened for bigger pumps
-            $minH1Gain       = 0.8;          // Lowered for slight dips
-            $maxH1Gain       = 18;           // Widened for breakout potential
-            $minH6Gain       = 1;            // Lowered to allow corrections
-            $rugThreshold    = -15;          // Tightened for safety
+            // --- Thresholds ---
+            $minLiquidity    = 500_000;
+            $maxLiquidity    = 30_000_000;
+            $minMarketCap    = 3_000_000;
+            $maxMarketCap    = 5_000_000_000;
+            $minVolumeH1     = 20_000;
+            $minVolLiqRatio  = 0.4;
 
-            // --- Rug filter ---
-            $allDrops = [$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24];
-            foreach ($allDrops as $drop) {
+            $minM5Change     = -0.2;   // allow small dips
+            $flatM5Threshold = 0.15;   // reject if too flat
+            $minH1Change     = -2.0;   // allow slight dips
+            $maxH1Change     = 18;
+            $minH6Change     = -5.0;   // allow corrections
+            $rugThreshold    = -15;
+
+            // --- Rug check (any timeframe hard dump) ---
+            foreach ([$priceChangeM5, $priceChangeH1, $priceChangeH6, $priceChangeH24] as $drop) {
                 if (!is_numeric($drop) || $drop <= $rugThreshold) {
-                    $this->logFalse(sprintf('Rug filter triggered: %.2f%% <= %.2f%%', $drop, $rugThreshold));
+                    $this->logFalse(sprintf("❌ Rug filter: %.2f%% <= %.2f%%", $drop, $rugThreshold));
                     return false;
                 }
             }
 
             // --- Liquidity check ---
-            if (!is_numeric($liquidity) || $liquidity < $minLiquidity || $liquidity > $maxLiquidity) {
-                $this->logFalse(sprintf('Liquidity check failed: %.0f not in [%d, %d]', $liquidity, $minLiquidity, $maxLiquidity));
+            if ($liquidity < $minLiquidity || $liquidity > $maxLiquidity) {
+                $this->logFalse(sprintf("❌ Liquidity: %.0f not in [%d, %d]", $liquidity, $minLiquidity, $maxLiquidity));
                 return false;
             }
 
             // --- Market cap check ---
-            if (!is_numeric($marketCap) || $marketCap < $minMarketCap || $marketCap > $maxMarketCap) {
-                $this->logFalse(sprintf('MarketCap check failed: %.0f not in [%d, %d]', $marketCap, $minMarketCap, $maxMarketCap));
+            if ($marketCap < $minMarketCap || $marketCap > $maxMarketCap) {
+                $this->logFalse(sprintf("❌ MarketCap: %.0f not in [%d, %d]", $marketCap, $minMarketCap, $maxMarketCap));
                 return false;
             }
 
-            // --- Volume checks ---
-            $m5Momentum = $this->tokenData['priceChange']['m5'] ?? 0;
-            if ($m5Momentum < $minM5Gain) {
-                $this->logFalse(sprintf('M5 momentum check failed: %.2f < %.2f', $m5Momentum, $minM5Gain));
-                return false;
-            }
-            if (!is_numeric($volumeH1) || $volumeH1 < $minVolumeH1) {
-                $this->logFalse(sprintf('Volume H1 check failed: %.0f < %d', $volumeH1, $minVolumeH1));
+            // --- Volume check ---
+            if ($volumeH1 < $minVolumeH1) {
+                $this->logFalse(sprintf("❌ Volume H1: %.0f < %d", $volumeH1, $minVolumeH1));
                 return false;
             }
             $volLiqRatio = ($liquidity > 0) ? ($volumeH1 / $liquidity) : 0;
             if ($volLiqRatio < $minVolLiqRatio) {
-                $this->logFalse(sprintf('Volume/Liquidity ratio check failed: %.2f < %.2f', $volLiqRatio, $minVolLiqRatio));
+                $this->logFalse(sprintf("❌ Vol/Liq ratio: %.2f < %.2f", $volLiqRatio, $minVolLiqRatio));
                 return false;
             }
 
-            // --- Price change checks ---
-            if (!is_numeric($priceChangeM5) || $priceChangeM5 < $minM5Gain || $priceChangeM5 > $maxM5Gain) {
-                $this->logFalse(sprintf('Price change M5 check failed: %.2f not in [%.2f, %.2f]', $priceChangeM5, $minM5Gain, $maxM5Gain));
+            // --- M5 momentum check ---
+            if ($priceChangeM5 < $minM5Change) {
+                $this->logFalse(sprintf("❌ M5 momentum too negative: %.2f%% < %.2f%%", $priceChangeM5, $minM5Change));
                 return false;
             }
-            if (!is_numeric($priceChangeH1) || $priceChangeH1 < $minH1Gain || $priceChangeH1 > $maxH1Gain) {
-                $this->logFalse(sprintf('Price change H1 check failed: %.2f not in [%.2f, %.2f]', $priceChangeH1, $minH1Gain, $maxH1Gain));
+            if (abs($priceChangeM5) < $flatM5Threshold) {
+                $this->logFalse(sprintf("❌ M5 momentum too flat: %.2f%%", $priceChangeM5));
                 return false;
             }
-            if (!is_numeric($priceChangeH6) || $priceChangeH6 < $minH6Gain) {
-                $this->logFalse(sprintf('Price change H6 check failed: %.2f < %.2f', $priceChangeH6, $minH6Gain));
+
+            // --- H1 / H6 trend checks ---
+            if ($priceChangeH1 < $minH1Change || $priceChangeH1 > $maxH1Change) {
+                $this->logFalse(sprintf("❌ H1 change %.2f%% not in [%.2f%%, %.2f%%]", $priceChangeH1, $minH1Change, $maxH1Change));
+                return false;
+            }
+            if ($priceChangeH6 < $minH6Change) {
+                $this->logFalse(sprintf("❌ H6 change %.2f%% < %.2f%%", $priceChangeH6, $minH6Change));
                 return false;
             }
 
@@ -302,19 +327,24 @@ class SolanaContractScanner
                 'H24' => 25,
             ];
             $allUp = 0;
-            if ($priceChangeM5 > $positiveThresholds['M5']) $allUp++;
-            if ($priceChangeH1 > $positiveThresholds['H1']) $allUp++;
-            if ($priceChangeH6 > $positiveThresholds['H6']) $allUp++;
+            if ($priceChangeM5  > $positiveThresholds['M5'])  $allUp++;
+            if ($priceChangeH1  > $positiveThresholds['H1'])  $allUp++;
+            if ($priceChangeH6  > $positiveThresholds['H6'])  $allUp++;
             if ($priceChangeH24 > $positiveThresholds['H24']) $allUp++;
-            if ($allUp >= 4) {
-                $this->logFalse(sprintf('Top avoidance triggered: %d timeframes above thresholds', $allUp));
+            if ($allUp >= 3) {
+                $this->logFalse("❌ Top avoidance: {$allUp} timeframes overheated");
                 return false;
             }
 
-            // --- Log success ---
+            // --- Passed ✅ ---
             $this->buyReason = sprintf(
-                "JLP check passed: MarketCap %.0f, Liquidity %.0f, VolH1 %.0f, M5 %.2f%%, H1 %.2f%%, H6 %.2f%%",
-                human_readable_number($marketCap), human_readable_number($liquidity), $volumeH1, $priceChangeM5, $priceChangeH1, $priceChangeH6
+                "✅ JLP passed | MC: %s | LQ: %s | VolH1: %.0f | M5: %.2f%% | H1: %.2f%% | H6: %.2f%%",
+                human_readable_number($marketCap),
+                human_readable_number($liquidity),
+                $volumeH1,
+                $priceChangeM5,
+                $priceChangeH1,
+                $priceChangeH6
             );
             Log::info($this->buyReason);
 
@@ -325,6 +355,7 @@ class SolanaContractScanner
             return false;
         }
     }
+
 
     protected function checkMarketMetrics(): bool
     {
