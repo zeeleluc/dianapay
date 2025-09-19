@@ -128,7 +128,7 @@ class SolanaContractScanner
             $priceChangeH6  = $this->tokenData['priceChange']['h6'] ?? 0;
 
             // --- Pump detection thresholds ---
-            $minM5Pump      = 0.05;   // at least +0.05% in 5m
+            $minM5Pump      = 0.1;   // at least +0.05% in 5m
             $maxM5Pump      = 2.5;    // not already overheated (>2.5% in 5m)
             $maxDownTrend   = -5;     // avoid if H1/H6 trend is nuking
 
