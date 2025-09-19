@@ -171,7 +171,7 @@ class SolanaCall extends Model
         $totalProfit = $totalSell - $totalBuy;
         $percentage = ($totalProfit / $totalBuy) * 100;
 
-        return number_format($percentage, 6, '.', '');
+        return number_format($percentage, 2, '.', '');
     }
 
     public function latestUnrealizedProfit()

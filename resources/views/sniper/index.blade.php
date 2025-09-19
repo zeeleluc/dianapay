@@ -193,7 +193,7 @@
                 $hasBuy = $call->orders->where('type', 'buy')->isNotEmpty();
                 $hasSell = $call->orders->where('type', 'sell')->isNotEmpty();
                 $failures = $call->orders->where('type', 'failed')->count();
-                $profitSol = $hasBuy && $hasSell ? number_format($call->profit(), 6) : '-';
+                $profitSol = $hasBuy && $hasSell ? number_format($call->profit(), 8) : '-';
                 $profitPct = $hasBuy && $hasSell ? $call->profitPercentage().'%' : '-';
                 $sellOrder = $call->orders->where('type', 'sell')->first();
             @endphp
