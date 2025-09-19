@@ -235,7 +235,7 @@ class SolanaContractScanner
             $minLiquidity    = 500_000;      // Lowered for smaller mid-caps
             $maxLiquidity    = 30_000_000;   // Reduced to focus on volatile pools
             $minMarketCap    = 3_000_000;    // Lowered for emerging mid-caps
-            $maxMarketCap    = 1_000_000_000;// Reduced to avoid slow blue-chips
+            $maxMarketCap    = 5_000_000_000;// Reduced to avoid slow blue-chips
             $minVolumeM5     = 5_000;        // New: Ensure M5 momentum
             $minVolumeH1     = 20_000;       // Lowered for more opportunities
             $minVolLiqRatio  = 0.4;          // Ensure exit liquidity
