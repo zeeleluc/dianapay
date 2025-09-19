@@ -236,7 +236,7 @@ class SolanaContractScanner
             $maxMarketCap    = 5_000_000_000;// Reduced to avoid slow blue-chips
             $minVolumeH1     = 20_000;       // Lowered for more opportunities
             $minVolLiqRatio  = 0.4;          // Ensure exit liquidity
-            $minM5Gain       = 0.3;          // Lowered to catch early moves
+            $minM5Gain       = 0.2;          // Lowered to catch early moves
             $maxM5Gain       = 7;            // Widened for bigger pumps
             $minH1Gain       = 0.8;          // Lowered for slight dips
             $maxH1Gain       = 18;           // Widened for breakout potential
