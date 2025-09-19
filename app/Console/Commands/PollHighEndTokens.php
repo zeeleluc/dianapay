@@ -26,7 +26,7 @@ class PollHighEndTokens extends Command
             'address' => '27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4',
             'checker' => 'canTradeWithJlpCheck',
             'strategy' => 'JLP-5M',
-            'amount' => 0.002,
+            'amount' => 0.1,
         ],
         // Add more high-end tokens here
     ];
