@@ -23,7 +23,7 @@
     <table class="min-w-full border-collapse border border-gray-700 text-white text-sm md:text-base" id="open-positions-table">
         <thead>
         <tr class="bg-gray-800">
-            <th class="border border-gray-700 px-2 py-1 text-right text-xs">Unrealized Profit</th>
+            <th class="border border-gray-700 px-2 py-1 text-right text-xs">Unrealized Profit (%)</th>
             <th class="border border-gray-700 px-2 py-1 text-center text-xs">Bought At</th>
             <th class="border border-gray-700 px-2 py-1 text-left text-xs">Name</th>
             <th class="border border-gray-700 px-2 py-1 text-left text-xs">Contract</th>
@@ -54,7 +54,6 @@
             <tr class="hover:bg-gray-800 cursor-pointer" data-id="{{ $call->id }}" role="button" aria-expanded="false" aria-controls="details-{{ $call->id }}">
                 <td class="border border-gray-700 px-2 py-1 text-right {{ $call->unrealized_profit_sol !== '-' && $call->unrealized_profit_sol < 0 ? 'text-red-400' : 'text-green-400' }} text-xs">
                     {{ $call->unrealized_profit_sol }}%
-                    ({{ human_readable_number($call->current_market_cap) }})
                 </td>
                 <td class="border border-gray-700 px-2 py-1 text-center text-xs">
                     @if($buyOrder)
@@ -69,7 +68,11 @@
                         {{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}
                     </a>
                 </td>
-                <td class="border border-gray-700 px-2 py-1 text-xs">{{ human_readable_number($call->market_cap) }}</td>
+                <td class="border border-gray-700 px-2 py-1 text-xs">
+                    {{ human_readable_number($call->market_cap) }}
+                    /
+                    {{ human_readable_number($call->current_market_cap) }}
+                </td>
                 <td class="border border-gray-700 px-2 py-1 text-xs">{{ $call->dev_sold ? 'Y' : 'N' }}</td>
                 <td class="border border-gray-700 px-2 py-1 text-xs">{{ $call->dex_paid ? 'Y' : 'N' }}</td>
                 <td class="border border-gray-700 px-2 py-1 text-xs">{{ $call->strategy ?: '-' }}</td>
