@@ -23,19 +23,16 @@
     <table class="min-w-full border-collapse border border-gray-700 text-white text-sm md:text-base" id="open-positions-table">
         <thead>
         <tr class="bg-gray-800">
-            <th class="border border-gray-700 px-2 py-1 text-left">Unrealized Profit</th>
+            <th class="border border-gray-700 px-2 py-1 text-right">Unrealized Profit</th>
+            <th class="border border-gray-700 px-2 py-1 text-center">Bought At</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Name</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Contract</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Market Cap</th>
             <th class="border border-gray-700 px-2 py-1 text-left">DS</th>
             <th class="border border-gray-700 px-2 py-1 text-left">DP</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Strategy</th>
-            <th class="border border-gray-700 px-2 py-1 text-left">Buy Reason</th>
-            <th class="border border-gray-700 px-2 py-1 text-left">Sell Reason</th>
-            <th class="border border-gray-700 px-2 py-1 text-center">Bought</th>
-            <th class="border border-gray-700 px-2 py-1 text-center">Sold</th>
+            <th class="border border-gray-700 px-2 py-1 text-left">Buy</th>
             <th class="border border-gray-700 px-2 py-1 text-center">Failures</th>
-            <th></th>
         </tr>
         </thead>
         <tbody>
@@ -58,6 +55,13 @@
                     {{ $call->unrealized_profit_sol }}%
                     ({{ human_readable_number($call->current_market_cap) }})
                 </td>
+                <td class="border border-gray-700 px-2 py-1 text-center">
+                    @if($buyOrder)
+                        {{ $buyOrder->created_at->diffForHumans() }}
+                    @else
+                        -
+                    @endif
+                </td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->token_name }}</td>
                 <td class="border border-gray-700 px-2 py-1">
                     <a target="_blank" class="underline" href="https://www.defined.fi/sol/{{ $call->token_address }}">
@@ -73,29 +77,11 @@
                         <button
                             onclick="openReasonModal('buy', '{{ $call->reason_buy }}')"
                             class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">
-                            View
+                            Reason
                         </button>
                     @else
                         -
                     @endif
-                </td>
-
-                <td class="border border-gray-700 px-2 py-1 text-center">
-                    @if($call->reason_sell)
-                        <button
-                            onclick="openReasonModal('sell', '{{ $call->reason_sell }}')"
-                            class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded">
-                            View
-                        </button>
-                    @else
-                        -
-                    @endif
-                </td>
-                <td class="border border-gray-700 px-2 py-1 text-center">
-                    <span class="text-green-500 font-semibold">✓</span>
-                </td>
-                <td class="border border-gray-700 px-2 py-1 text-center">
-                    <span class="text-red-500 font-semibold">✗</span>
                 </td>
                 <td class="border border-gray-700 px-2 py-1 text-center">{{ $failures }}</td>
                 <td class="border border-gray-700 px-2 py-1 text-center">
@@ -173,14 +159,16 @@
         <tr class="bg-gray-800">
             <th class="border border-gray-700 px-2 py-1 text-right">Realized Profit (SOL)</th>
             <th class="border border-gray-700 px-2 py-1 text-right">Realized Profit (%)</th>
+            <th class="border border-gray-700 px-2 py-1 text-center">Bought At</th>
+            <th class="border border-gray-700 px-2 py-1 text-center">Duration</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Name</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Contract</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Market Cap</th>
             <th class="border border-gray-700 px-2 py-1 text-left">DS</th>
             <th class="border border-gray-700 px-2 py-1 text-left">DP</th>
             <th class="border border-gray-700 px-2 py-1 text-left">Strategy</th>
-            <th class="border border-gray-700 px-2 py-1 text-left">Buy Reason</th>
-            <th class="border border-gray-700 px-2 py-1 text-left">Sell Reason</th>
+            <th class="border border-gray-700 px-2 py-1 text-center">Buy</th>
+            <th class="border border-gray-700 px-2 py-1 text-center">Sell</th>
             <th class="border border-gray-700 px-2 py-1 text-center">Failures</th>
         </tr>
         </thead>
@@ -196,6 +184,8 @@
         @endphp
         @foreach($closedCalls as $call)
             @php
+                $buyOrder = $call->orders->where('type', 'buy')->first();
+                $sellOrder = $call->orders->where('type', 'sell')->first();
                 $hasBuy = $call->orders->where('type', 'buy')->isNotEmpty();
                 $hasSell = $call->orders->where('type', 'sell')->isNotEmpty();
                 $failures = $call->orders->where('type', 'failed')->count();
@@ -210,6 +200,12 @@
                 </td>
                 <td class="border border-gray-700 px-2 py-1 text-right {{ $profitPct !== '-' && $call->profitPercentage() < 0 ? 'text-red-400' : 'text-green-400' }}">
                     {{ $profitPct }}
+                </td>
+                <td class="border border-gray-700 px-2 py-1 text-center">
+                    {{ $buyOrder ? $buyOrder->created_at->diffForHumans() : '-' }}
+                </td>
+                <td class="border border-gray-700 px-2 py-1 text-center">
+                    {{ $buyOrder && $sellOrder ? $buyOrder->created_at->diffForHumans($sellOrder->created_at, true) : '-' }}
                 </td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->token_name }}</td>
                 <td class="border border-gray-700 px-2 py-1">
@@ -226,7 +222,7 @@
                         <button
                             onclick="openReasonModal('buy', '{{ $call->reason_buy }}')"
                             class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">
-                            View
+                            Reason
                         </button>
                     @else
                         -
@@ -238,7 +234,7 @@
                         <button
                             onclick="openReasonModal('sell', '{{ $call->reason_sell }}')"
                             class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded">
-                            View
+                            Reason
                         </button>
                     @else
                         -
