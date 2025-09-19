@@ -14,7 +14,7 @@ class SolanaAutoSell extends Command
     protected $description = 'Automatically sell tokens based on trailing stop profit logic.';
 
     protected float $minLiquidity = 1000;      // Minimum liquidity to consider sell
-    protected float $trailingDropPercent = 1;  // Sell if profit drops by this % from peak
+    protected float $trailingDropPercent = -0.05;  // Sell if profit drops by this % from peak
 
     public function handle()
     {
