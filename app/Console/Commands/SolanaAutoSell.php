@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Helpers\SlackNotifier;
 use App\Helpers\SolanaTokenData;
-use App\Models\SolanaBlacklistContract;
 use App\Models\SolanaCall;
 use Illuminate\Console\Command;
 use Symfony\Component\Process\Process;
@@ -12,171 +11,72 @@ use Symfony\Component\Process\Process;
 class SolanaAutoSell extends Command
 {
     protected $signature = 'solana:auto-sell';
-    protected $description = 'Automatically sell tokens based on profit, 5-minute price drop, or time';
+    protected $description = 'Automatically sell tokens based on trailing stop profit logic.';
 
-    protected float $minLiquidity = 1000;  // Minimum liquidity for sell
-    protected float $m5Threshold = -5.0;   // Sell if 5-minute price change < -5%
-    protected int $maxHoldMinutes = 120;   // Sell after 120 minutes
-    protected float $profitThreshold = 4.0; // Sell if profit >= 100%
+    protected float $minLiquidity = 1000;      // Minimum liquidity to consider sell
+    protected float $trailingDropPercent = 1;  // Sell if profit drops by this % from peak
 
     public function handle()
     {
-        $calls = SolanaCall::with('orders')->get()->filter(function ($call) {
-            $hasBuy = $call->orders->where('type', 'buy')->count() > 0;
-            $hasSell = $call->orders->where('type', 'sell')->count() > 0;
-            return $hasBuy && !$hasSell;
-        });
+        $calls = SolanaCall::with('orders')->get()->filter(fn($call) =>
+            $call->orders->where('type', 'buy')->count() > 0 &&
+            $call->orders->where('type', 'sell')->count() === 0
+        );
 
         $this->info("Found {$calls->count()} calls eligible for potential sell.");
-
-        $totalBuyOrders = $calls->sum(function ($call) {
-            return $call->orders->where('type', 'buy')->count();
-        });
-        $this->info("Total buy orders across all calls: {$totalBuyOrders}");
 
         $tokenDataHelper = new SolanaTokenData();
 
         foreach ($calls as $call) {
             try {
-                // Check failures first
-                $failures = $call->orders->where('type', 'failed')->count();
-                if ($failures >= 10) {
-                    $this->warn("Deleting SolanaCall ID {$call->id}: {$failures} failed attempts.");
-                    $call->delete();
-                    continue;
-                }
-
-                // Verify exactly one buy order
-                $buyOrdersCount = $call->orders->where('type', 'buy')->count();
-                $this->info("SolanaCall ID {$call->id}: {$buyOrdersCount} buy orders found.");
-
-                if ($buyOrdersCount !== 1) {
-                    $this->warn("Skipping SolanaCall ID {$call->id}: Expected 1 buy order, found {$buyOrdersCount}.");
-                    continue;
-                }
-
                 $buyOrder = $call->orders->where('type', 'buy')->first();
                 $tokenAddress = $call->token_address;
 
                 if (!$buyOrder || !$buyOrder->amount_foreign) {
-                    $this->warn("Skipping SolanaCall ID {$call->id}: no buy order or amount_foreign");
+                    $this->warn("Skipping SolanaCall ID {$call->id}: no buy order or amount_foreign.");
                     continue;
                 }
 
-                // Validate arguments for solana-sell.js
+                // Validate arguments
                 if (!is_numeric($call->id) || empty($tokenAddress) || !is_numeric($buyOrder->amount_foreign)) {
-                    $this->error("Invalid arguments for SolanaCall ID {$call->id}: id={$call->id}, token={$tokenAddress}, amount={$buyOrder->amount_foreign}");
-                    SlackNotifier::error("Invalid arguments for SolanaCall #{$call->id} ({$tokenAddress}): id={$call->id}, amount={$buyOrder->amount_foreign}");
+                    SlackNotifier::error("Invalid arguments for SolanaCall #{$call->id} ({$tokenAddress})");
                     continue;
                 }
 
-                // Fetch latest data from QuickNode
+                // Fetch latest token data
                 $data = $tokenDataHelper->getTokenData($tokenAddress);
 
-                if ($data === null) {
-                    SlackNotifier::error("QuickNode API failed or token not indexed for {$tokenAddress}.");
-                    $this->warn("QuickNode API failed for {$tokenAddress}, forcing immediate sell to avoid blind holding.");
-
-                    $tokenAmount = $buyOrder->amount_foreign;
-
-                    $process = new Process([
-                        'node',
-                        base_path('scripts/solana-sell.js'),
-                        '--identifier=' . $call->id,
-                        '--token=' . $tokenAddress,
-                        '--amount=' . $tokenAmount,
-                    ]);
-
-                    $process->setTimeout(360);
-                    $process->run();
-                    $process->wait();
-
-                    if (!$process->isSuccessful()) {
-                        $this->error("Forced sell (API fail) failed for SolanaCall ID {$call->id}: " . $process->getErrorOutput());
-                    } else {
-                        $output = trim($process->getOutput());
-                        $this->info("Forced sell completed for SolanaCall ID {$call->id}: {$output}");
-                    }
-
+                if (!$data) {
+                    SlackNotifier::error("API failed for token {$tokenAddress}, forcing immediate sell.");
+                    $this->forceSell($call, $tokenAddress, $buyOrder->amount_foreign);
                     continue;
                 }
 
-                // Extract data from QuickNode response
                 $currentPrice = $data['price'] ?? 0;
                 $currentLiquidity = $data['liquidity']['usd'] ?? 0;
-                $priceChangeM5 = $data['priceChange']['m5'] ?? 0;
                 $currentMarketCap = $data['marketCap'] ?? 0;
 
-                if (!is_numeric($currentPrice) || $currentPrice <= 0) {
-                    $this->warn("Invalid price for token {$tokenAddress}");
+                if (!is_numeric($currentPrice) || $currentPrice <= 0 || $currentLiquidity < $this->minLiquidity) {
+                    $this->warn("Skipping {$tokenAddress}: invalid price or insufficient liquidity (\${$currentLiquidity}).");
                     continue;
                 }
 
-                if (!is_numeric($priceChangeM5)) {
-                    $this->warn("Invalid M5 price change for token {$tokenAddress}, assuming 0");
-                    $priceChangeM5 = 0;
-                }
-
-                if ($currentLiquidity < $this->minLiquidity) {
-                    $this->warn("Skipping sell for {$tokenAddress}: liquidity \${$currentLiquidity} < \${$this->minLiquidity}");
-                    continue;
-                }
-
-                // Check sell conditions
-                $tokenAmount = $buyOrder->amount_foreign;
-                $holdTime = max(0, now()->diffInMinutes($buyOrder->created_at));
-
+                // Calculate current profit %
                 $profitPercent = $this->getCurrentProfit($call->market_cap, $currentMarketCap);
 
-                // --- always store snapshot ---
+                // Store snapshot
                 $call->unrealizedProfits()->create([
                     'unrealized_profit' => $profitPercent,
                     'buy_market_cap' => $call->market_cap,
                     'current_market_cap' => $currentMarketCap,
                 ]);
 
-                $sellReason = null;
-                if ($call->strategy === 'BONK-5M') {
-                    if ($this->shouldSellBonk5M($call, $profitPercent)) {
-                        $sellReason = $call->reason_sell ?? "BONK-5M sell trigger";
-                    } elseif ($this->hasSignificantPriceDrop($call, $priceChangeM5, $tokenAddress)) {
-                        $sellReason = "negative M5 ({$priceChangeM5}% < {$this->m5Threshold}%)";
-                    }
+                // Determine if we should sell
+                if ($this->shouldSell($call, $profitPercent)) {
+                    $this->info("Selling token {$tokenAddress} (profit: {$profitPercent}%)");
+                    $this->executeSell($call, $tokenAddress, $buyOrder->amount_foreign);
                 } else {
-                    if ($this->hasSignificantPriceDrop($call, $priceChangeM5, $tokenAddress)) {
-                        $sellReason = "negative M5 ({$priceChangeM5}% < {$this->m5Threshold}%)";
-                    } elseif ($this->hasReachedProfitThreshold($call, $call->market_cap, $currentMarketCap, $profitPercent)) {
-                        $sellReason = "profit threshold reached (>= {$this->profitThreshold}%)";
-                    } elseif ($holdTime > $this->maxHoldMinutes) {
-                        $sellReason = "maximum hold time exceeded ({$holdTime} minutes)";
-                    }
-                }
-
-                if ($sellReason) {
-                    $this->info("Triggering sell for SolanaCall ID {$call->id} (M5: {$priceChangeM5}%, Reason: {$sellReason})");
-
-                    $process = new Process([
-                        'node',
-                        base_path('scripts/solana-sell.js'),
-                        "--identifier={$call->id}",
-                        "--token={$tokenAddress}",
-                        "--amount={$tokenAmount}",
-                    ]);
-
-                    $process->setTimeout(360);
-                    $process->run();
-                    $process->wait();
-
-                    if (!$process->isSuccessful()) {
-                        $this->error("Sell failed for SolanaCall ID {$call->id}: " . $process->getErrorOutput());
-                        SlackNotifier::error("Sell failed for SolanaCall #{$call->id} ({$tokenAddress}): " . $process->getErrorOutput());
-                    } else {
-                        $output = trim($process->getOutput());
-                        $this->info("Sell completed for SolanaCall ID {$call->id}: {$output}");
-                        SlackNotifier::success("Sell completed for SolanaCall #{$call->id} ({$tokenAddress}): {$output}");
-                    }
-                } else {
-                    $this->info("Holding token {$tokenAddress}: M5 ({$priceChangeM5}% >= {$this->m5Threshold}%)");
+                    $this->info("Holding token {$tokenAddress} (profit: {$profitPercent}%)");
                 }
 
             } catch (\Exception $e) {
@@ -188,114 +88,84 @@ class SolanaAutoSell extends Command
         $this->info('SolanaAutoSell run completed.');
     }
 
-    /**
-     * Check if the 5-minute price change is below the threshold.
-     *
-     * @param float $priceChangeM5
-     * @return bool
-     */
-    private function hasSignificantPriceDrop(SolanaCall $solanaCall, float $priceChangeM5, string $tokenAddress): bool
+    private function shouldSell(SolanaCall $call, float $profitPercent): bool
     {
-        if (is_numeric($priceChangeM5) && $priceChangeM5 < $this->m5Threshold) {
-            $drop = $priceChangeM5 < $this->m5Threshold;
-            $solanaCall->reason_sell = "Significant dip detected (drop of {$drop}%)";
-            $solanaCall->save();
-
-            return true;
-        }
-
-        if ($priceChangeM5 < -20) {
-            SolanaBlacklistContract::create(['contract' => $tokenAddress]);
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if the profit has reached or exceeded threshold, or other sell triggers.
-     */
-    private function hasReachedProfitThreshold(SolanaCall $solanaCall, ?float $buyMarketCap, ?float $currentMarketCap, ?float $profitPercent): bool
-    {
-        if (!is_numeric($buyMarketCap) || !is_numeric($currentMarketCap) || $currentMarketCap <= 0 || $buyMarketCap <= 0) {
+        // Initialize previous peak profit if not set
+        if ($call->previous_unrealized_profits === null) {
+            $call->previous_unrealized_profits = $profitPercent;
+            $call->save();
             return false;
         }
 
-        $minProfitToConsider = 3.0;   // Only track drops if previous profit was at least this
-        $dropThreshold = 1.5;         // Only sell if drop from previous peak >= this
-
-        // Initialize previous unrealized profits if not set
-        if (!$solanaCall->previous_unrealized_profits) {
-            $solanaCall->previous_unrealized_profits = $profitPercent;
-            $solanaCall->save();
+        // Update peak if current profit is higher
+        if ($profitPercent > $call->previous_unrealized_profits) {
+            $call->previous_unrealized_profits = $profitPercent;
+            $call->save();
+            return false; // profit rising → hold
         }
 
-        // Check if profit dropped significantly from previous peak
-        if ($solanaCall->previous_unrealized_profits >= $minProfitToConsider) {
-            $dropFromPrevious = $solanaCall->previous_unrealized_profits - $profitPercent;
-            if ($dropFromPrevious >= $dropThreshold) {
-                $solanaCall->reason_sell = "Significant dip detected (drop of {$dropFromPrevious}% from peak)";
-                $solanaCall->save();
-                return true;
-            }
-        }
-
-        // Update previous unrealized profits if current profit is higher
-        if ($profitPercent > $solanaCall->previous_unrealized_profits) {
-            $solanaCall->previous_unrealized_profits = $profitPercent;
-            $solanaCall->save();
-        }
-
-        // Sell if profit reached the configured threshold
-        if ($profitPercent >= $this->profitThreshold) {
-            $solanaCall->reason_sell = "Profit threshold reached ({$profitPercent}% >= {$this->profitThreshold}%)";
-            $solanaCall->save();
-            return true;
-        }
-
-        // --- NEW: Sell if stable for last 50 records ---
-        if ($solanaCall->hasStableUnrealizedProfits()) {
-            $solanaCall->reason_sell = "Unrealized profits stabilized around {$profitPercent}% over last 200 records";
-            $solanaCall->save();
+        // Check if profit dropped by trailing threshold
+        $drop = $call->previous_unrealized_profits - $profitPercent;
+        if ($drop >= $this->trailingDropPercent) {
+            $call->reason_sell = "Profit dropped {$drop}% from peak ({$profitPercent}%)";
+            $call->save();
             return true;
         }
 
         return false;
     }
 
-    private function shouldSellBonk5M(SolanaCall $solanaCall, ?float $profitPercent): bool
+    private function getCurrentProfit(?float $buyMarketCap, ?float $currentMarketCap): float
     {
-        // Always update the peak if profit is increasing
-        if (!$solanaCall->previous_unrealized_profits || $profitPercent > $solanaCall->previous_unrealized_profits) {
-            $solanaCall->previous_unrealized_profits = $profitPercent;
-            $solanaCall->save();
-            return false;
-        }
-
-        // If profit is positive but has dropped below previous peak → sell (with tolerance)
-        if ($profitPercent > 0 && $profitPercent < $solanaCall->previous_unrealized_profits) {
-            $drop = $solanaCall->previous_unrealized_profits - $profitPercent;
-
-            // Only sell if the drop is greater than 0.5%
-            if ($drop > 0.5) {
-                $solanaCall->reason_sell = "BONK-5M: profit slowed (drop of {$drop}% from peak, still positive at {$profitPercent}%)";
-                $solanaCall->save();
-                return true;
-            }
-        }
-
-        // --- NEW: Sell if stable for last 50 records ---
-        if ($solanaCall->hasStableUnrealizedProfits()) {
-            $solanaCall->reason_sell = "Unrealized profits stabilized around {$profitPercent}% over last 200 records";
-            $solanaCall->save();
-            return true;
-        }
-
-        return false;
-    }
-
-
-    private function getCurrentProfit(?float $buyMarketCap, ?float $currentMarketCap)
-    {
+        if (!$buyMarketCap || !$currentMarketCap) return 0;
         return (($currentMarketCap - $buyMarketCap) / $buyMarketCap) * 100;
+    }
+
+    private function forceSell(SolanaCall $call, string $tokenAddress, float $amount)
+    {
+        $process = new Process([
+            'node',
+            base_path('scripts/solana-sell.js'),
+            "--identifier={$call->id}",
+            "--token={$tokenAddress}",
+            "--amount={$amount}",
+        ]);
+
+        $process->setTimeout(360);
+        $process->run();
+        $process->wait();
+
+        if (!$process->isSuccessful()) {
+            $this->error("Forced sell failed for SolanaCall ID {$call->id}: " . $process->getErrorOutput());
+            SlackNotifier::error("Forced sell failed for SolanaCall #{$call->id} ({$tokenAddress})");
+        } else {
+            $output = trim($process->getOutput());
+            $this->info("Forced sell completed for SolanaCall ID {$call->id}: {$output}");
+            SlackNotifier::success("Forced sell completed for SolanaCall #{$call->id} ({$tokenAddress})");
+        }
+    }
+
+    private function executeSell(SolanaCall $call, string $tokenAddress, float $amount)
+    {
+        $process = new Process([
+            'node',
+            base_path('scripts/solana-sell.js'),
+            "--identifier={$call->id}",
+            "--token={$tokenAddress}",
+            "--amount={$amount}",
+        ]);
+
+        $process->setTimeout(360);
+        $process->run();
+        $process->wait();
+
+        if (!$process->isSuccessful()) {
+            $this->error("Sell failed for SolanaCall ID {$call->id}: " . $process->getErrorOutput());
+            SlackNotifier::error("Sell failed for SolanaCall #{$call->id} ({$tokenAddress})");
+        } else {
+            $output = trim($process->getOutput());
+            $this->info("Sell completed for SolanaCall ID {$call->id}: {$output}");
+            SlackNotifier::success("Sell completed for SolanaCall #{$call->id} ({$tokenAddress}): {$output}");
+        }
     }
 }

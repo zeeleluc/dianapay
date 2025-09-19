@@ -112,7 +112,7 @@ class SolanaContractScanner
         Log::info("Failed: $reason");
         $this->buyReason = $reason;
     }
-    
+
     public function canTradeWithJlpCheck(): bool
     {
         try {
