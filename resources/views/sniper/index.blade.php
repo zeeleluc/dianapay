@@ -52,43 +52,43 @@
             @endphp
 
             <tr class="hover:bg-gray-800 cursor-pointer" data-id="{{ $call->id }}" role="button" aria-expanded="false" aria-controls="details-{{ $call->id }}">
-                <td class="border border-gray-700 px-2 py-1 text-right {{ $call->unrealized_profit_sol !== '-' && $call->unrealized_profit_sol < 0 ? 'text-red-400' : 'text-green-400' }}">
+                <td class="border border-gray-700 px-2 py-1 text-right {{ $call->unrealized_profit_sol !== '-' && $call->unrealized_profit_sol < 0 ? 'text-red-400' : 'text-green-400' }} text-xs">
                     {{ $call->unrealized_profit_sol }}%
                     ({{ human_readable_number($call->current_market_cap) }})
                 </td>
-                <td class="border border-gray-700 px-2 py-1 text-center">
+                <td class="border border-gray-700 px-2 py-1 text-center text-xs">
                     @if($buyOrder)
                         {{ $buyOrder->created_at->diffForHumans() }}
                     @else
                         -
                     @endif
                 </td>
-                <td class="border border-gray-700 px-2 py-1">{{ $call->token_name }}</td>
-                <td class="border border-gray-700 px-2 py-1">
-                    <a target="_blank" class="underline" href="https://dexscreener.com/solana/{{ $call->token_address }}">
+                <td class="border border-gray-700 px-2 py-1 text-xs">{{ $call->token_name }}</td>
+                <td class="border border-gray-700 px-2 py-1 text-xs">
+                    <a target="_blank" class="underline" href="https://dexscreener.com/solana/{{ $call->token_address }} text-xs">
                         {{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}
                     </a>
                 </td>
-                <td class="border border-gray-700 px-2 py-1">{{ human_readable_number($call->market_cap) }}</td>
-                <td class="border border-gray-700 px-2 py-1">{{ $call->dev_sold ? 'Y' : 'N' }}</td>
-                <td class="border border-gray-700 px-2 py-1">{{ $call->dex_paid ? 'Y' : 'N' }}</td>
-                <td class="border border-gray-700 px-2 py-1">{{ $call->strategy ?: '-' }}</td>
-                <td class="border border-gray-700 px-2 py-1 text-center">
+                <td class="border border-gray-700 px-2 py-1 text-xs">{{ human_readable_number($call->market_cap) }}</td>
+                <td class="border border-gray-700 px-2 py-1 text-xs">{{ $call->dev_sold ? 'Y' : 'N' }}</td>
+                <td class="border border-gray-700 px-2 py-1 text-xs">{{ $call->dex_paid ? 'Y' : 'N' }}</td>
+                <td class="border border-gray-700 px-2 py-1 text-xs">{{ $call->strategy ?: '-' }}</td>
+                <td class="border border-gray-700 px-2 py-1 text-center text-xs">
                     @if($call->reason_buy)
                         <button
                             onclick="openReasonModal('buy', '{{ $call->reason_buy }}')"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs">
                             Reason
                         </button>
                     @else
                         -
                     @endif
                 </td>
-                <td class="border border-gray-700 px-2 py-1 text-center">{{ $failures }}</td>
-                <td class="border border-gray-700 px-2 py-1 text-center">
+                <td class="border border-gray-700 px-2 py-1 text-center text-xs">{{ $failures }}</td>
+                <td class="border border-gray-700 px-2 py-1 text-center text-xs">
                     <button
                         onclick="toggleDetails({{ $call->id }})"
-                        class="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded">
+                        class="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded text-xs">
                         Details
                     </button>
                 </td>
