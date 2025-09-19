@@ -185,8 +185,8 @@ class SolanaContractScanner
 
         // --- Log success ---
         $this->buyReason = sprintf(
-            "BONK check passed: Liquidity %.0f, VolM5 %.0f, VolH1 %.0f, M5 %.2f%%, H1 %.2f%%, H6 %.2f%%",
-            human_readable_number($liquidity), $volumeM5, $volumeH1, $priceChangeM5, $priceChangeH1, $priceChangeH6
+            "BONK check passed: Liquidity %.0f, VolH1 %.0f, M5 %.2f%%, H1 %.2f%%, H6 %.2f%%",
+            human_readable_number($liquidity), $volumeH1, $priceChangeM5, $priceChangeH1, $priceChangeH6
         );
         Log::info($this->buyReason);
 
@@ -313,8 +313,8 @@ class SolanaContractScanner
 
             // --- Log success ---
             $this->buyReason = sprintf(
-                "JLP check passed: MarketCap %.0f, Liquidity %.0f, VolM5 %.0f, VolH1 %.0f, M5 %.2f%%, H1 %.2f%%, H6 %.2f%%",
-                human_readable_number($marketCap), human_readable_number($liquidity), $volumeM5, $volumeH1, $priceChangeM5, $priceChangeH1, $priceChangeH6
+                "JLP check passed: MarketCap %.0f, Liquidity %.0f, VolH1 %.0f, M5 %.2f%%, H1 %.2f%%, H6 %.2f%%",
+                human_readable_number($marketCap), human_readable_number($liquidity), $volumeH1, $priceChangeM5, $priceChangeH1, $priceChangeH6
             );
             Log::info($this->buyReason);
 
