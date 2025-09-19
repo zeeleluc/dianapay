@@ -64,7 +64,7 @@
                 </td>
                 <td class="border border-gray-700 px-2 py-1 text-xs">{{ $call->token_name }}</td>
                 <td class="border border-gray-700 px-2 py-1 text-xs">
-                    <a target="_blank" class="underline" href="https://dexscreener.com/solana/{{ $call->token_address }} text-xs">
+                    <a target="_blank" class="underline" href="https://dexscreener.com/solana/{{ $call->token_address }}">
                         {{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}
                     </a>
                 </td>
@@ -213,7 +213,7 @@
                 </td>
                 <td class="border border-gray-700 px-2 py-1 text-xs">{{ $call->token_name }}</td>
                 <td class="border border-gray-700 px-2 py-1 text-xs">
-                    <a target="_blank" class="underline" href="https://dexscreener.com/solana/{{ $call->token_address }} text-xs">
+                    <a target="_blank" class="underline" href="https://dexscreener.com/solana/{{ $call->token_address }}">
                         {{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}
                     </a>
                 </td>
