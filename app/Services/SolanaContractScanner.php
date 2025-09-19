@@ -113,7 +113,6 @@ class SolanaContractScanner
         }
 
         $liquidity       = $this->tokenData['liquidity']['usd'] ?? 0;
-        $volumeM5        = $this->tokenData['volume']['m5'] ?? 0;
         $volumeH1        = $this->tokenData['volume']['h1'] ?? 0;
         $priceChangeM5   = $this->tokenData['priceChange']['m5'] ?? 0;
         $priceChangeH1   = $this->tokenData['priceChange']['h1'] ?? 0;
@@ -123,7 +122,6 @@ class SolanaContractScanner
         // --- Thresholds for memecoin scalps ---
         $minLiquidity    = 300_000;      // Lowered to catch new pools (e.g., Pump.fun launches)
         $maxLiquidity    = 50_000_000;   // Reduced to avoid slow movers
-        $minVolumeM5     = 2_000;        // New: Ensure M5 activity for momentum
         $minVolumeH1     = 5_000;        // Lowered for early-stage tokens
         $minVolLiqRatio  = 0.4;          // Volume/liquidity ratio for exit liquidity
         $minM5Gain       = 0.2;          // Lowered to catch early pumps
@@ -150,8 +148,9 @@ class SolanaContractScanner
         }
 
         // --- Volume checks ---
-        if (!is_numeric($volumeM5) || $volumeM5 < $minVolumeM5) {
-            $this->logFalse(sprintf('Volume M5 check failed: %.0f < %d', $volumeM5, $minVolumeM5));
+        $m5Momentum = $this->tokenData['priceChange']['m5'] ?? 0;
+        if ($m5Momentum < $minM5Gain) {
+            $this->logFalse(sprintf('M5 momentum check failed: %.2f < %.2f', $m5Momentum, $minM5Gain));
             return false;
         }
         if (!is_numeric($volumeH1) || $volumeH1 < $minVolumeH1) {
@@ -224,7 +223,6 @@ class SolanaContractScanner
 
             $liquidity       = $this->tokenData['liquidity']['usd'] ?? 0;
             $marketCap       = $this->tokenData['marketCap'] ?? 0;
-            $volumeM5        = $this->tokenData['volume']['m5'] ?? 0;
             $volumeH1        = $this->tokenData['volume']['h1'] ?? 0;
             $priceChangeM5   = $this->tokenData['priceChange']['m5'] ?? 0;
             $priceChangeH1   = $this->tokenData['priceChange']['h1'] ?? 0;
@@ -236,7 +234,6 @@ class SolanaContractScanner
             $maxLiquidity    = 30_000_000;   // Reduced to focus on volatile pools
             $minMarketCap    = 3_000_000;    // Lowered for emerging mid-caps
             $maxMarketCap    = 5_000_000_000;// Reduced to avoid slow blue-chips
-            $minVolumeM5     = 5_000;        // New: Ensure M5 momentum
             $minVolumeH1     = 20_000;       // Lowered for more opportunities
             $minVolLiqRatio  = 0.4;          // Ensure exit liquidity
             $minM5Gain       = 0.3;          // Lowered to catch early moves
@@ -268,8 +265,9 @@ class SolanaContractScanner
             }
 
             // --- Volume checks ---
-            if (!is_numeric($volumeM5) || $volumeM5 < $minVolumeM5) {
-                $this->logFalse(sprintf('Volume M5 check failed: %.0f < %d', $volumeM5, $minVolumeM5));
+            $m5Momentum = $this->tokenData['priceChange']['m5'] ?? 0;
+            if ($m5Momentum < $minM5Gain) {
+                $this->logFalse(sprintf('M5 momentum check failed: %.2f < %.2f', $m5Momentum, $minM5Gain));
                 return false;
             }
             if (!is_numeric($volumeH1) || $volumeH1 < $minVolumeH1) {
