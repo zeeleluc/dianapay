@@ -155,8 +155,10 @@ class SolanaContractScanner
                 return false;
             }
             $volLiqRatio = ($liquidity > 0) ? ($volumeH1 / $liquidity) : 0;
-            if ($volLiqRatio < $minVolLiqRatio) {
-                $this->logFalse(sprintf("❌ Vol/Liq ratio: %.2f < %.2f", $volLiqRatio, $minVolLiqRatio));
+            $dynamicThreshold = $this->getDynamicVolLiqThreshold($liquidity);
+
+            if ($volLiqRatio < $dynamicThreshold) {
+                $this->logFalse(sprintf("❌ Vol/Liq ratio: %.2f < %.2f (dynamic)", $volLiqRatio, $dynamicThreshold));
                 return false;
             }
 
@@ -294,8 +296,10 @@ class SolanaContractScanner
                 return false;
             }
             $volLiqRatio = ($liquidity > 0) ? ($volumeH1 / $liquidity) : 0;
-            if ($volLiqRatio < $minVolLiqRatio) {
-                $this->logFalse(sprintf("❌ Vol/Liq ratio: %.2f < %.2f", $volLiqRatio, $minVolLiqRatio));
+            $dynamicThreshold = $this->getDynamicVolLiqThreshold($liquidity);
+
+            if ($volLiqRatio < $dynamicThreshold) {
+                $this->logFalse(sprintf("❌ Vol/Liq ratio: %.2f < %.2f (dynamic)", $volLiqRatio, $dynamicThreshold));
                 return false;
             }
 
@@ -405,7 +409,12 @@ class SolanaContractScanner
 
         // --- Volume check ---
         $volLiqRatio = ($liquidity > 0) ? ($volumeH1 / $liquidity) : 0;
-        if (!is_numeric($volumeH1) || $volumeH1 < $minVolumeH1 || $volLiqRatio < $minVolLiqRatio) return false;
+        $dynamicThreshold = $this->getDynamicVolLiqThreshold($liquidity);
+
+        if ($volLiqRatio < $dynamicThreshold) {
+            $this->logFalse(sprintf("❌ Vol/Liq ratio: %.2f < %.2f (dynamic)", $volLiqRatio, $dynamicThreshold));
+            return false;
+        }
 
         // --- Price trend checks ---
         if (!is_numeric($priceChangeH1) || $priceChangeH1 < $minH1Gain || $priceChangeH1 > $maxH1Gain) return false;
@@ -476,4 +485,18 @@ class SolanaContractScanner
 
         return count($allSocials) >= 1;
     }
+
+    protected function getDynamicVolLiqThreshold(float $liquidity): float
+    {
+        if ($liquidity < 1_000_000) {
+            return 1.0;   // small pools → need very high turnover
+        } elseif ($liquidity < 5_000_000) {
+            return 0.6;   // mid-small pools
+        } elseif ($liquidity < 20_000_000) {
+            return 0.4;   // mid-large pools
+        } else {
+            return 0.2;   // very large pools → allow lower turnover
+        }
+    }
+
 }
