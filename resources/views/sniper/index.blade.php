@@ -64,7 +64,7 @@
                 </td>
                 <td class="border border-gray-700 px-2 py-1">{{ $call->token_name }}</td>
                 <td class="border border-gray-700 px-2 py-1">
-                    <a target="_blank" class="underline" href="https://www.defined.fi/sol/{{ $call->token_address }}">
+                    <a target="_blank" class="underline" href="https://dexscreener.com/solana/{{ $call->token_address }}">
                         {{ \Illuminate\Support\Str::limit($call->token_address, 10, '…') }}
                     </a>
                 </td>
