@@ -21,7 +21,6 @@ class SolanaCall extends Model
         'dev_sold',
         'dex_paid_status',
         'strategy',
-        'previous_unrealized_profits', // added
         'reason_buy',
         'reason_sell',
     ];
@@ -34,98 +33,91 @@ class SolanaCall extends Model
         'top_10_holders_percent' => 'decimal:2',
         'dev_sold' => 'boolean',
         'dex_paid_status' => 'boolean',
-        'previous_unrealized_profits' => 'decimal:8', // added
     ];
 
-    public static function createFromParsed(array $data): self
-    {
-        return self::create($data);  // Inserts nulls for missing fields
-    }
-
+    // -----------------------------
+    // Relationships
+    // -----------------------------
     public function orders()
     {
         return $this->hasMany(SolanaCallOrder::class);
     }
 
-    public function unrealizedProfits()
-    {
-        return $this->hasMany(SolanaCallUnrealizedProfit::class);
-    }
-
-    /**
-     * Calculate profit based on SOL.
-     *
-     * Profit = total SOL sold - total SOL bought
-     *
-     * @return float
-     */
+    // -----------------------------
+    // Profit calculations (SOL)
+    // -----------------------------
     public function profit(): string
     {
-        $profit = 0;
+        $profit = 0.0;
 
         foreach ($this->orders as $order) {
-            if (strtolower($order->type) === 'buy') {
-                $profit -= $order->amount_sol; // spent SOL
-            } elseif (strtolower($order->type) === 'sell') {
-                $profit += $order->amount_sol; // gained SOL
+            $type = strtolower($order->type);
+            if ($type === 'buy') {
+                $profit -= $order->amount_sol;
+            } elseif ($type === 'sell') {
+                $profit += $order->amount_sol;
             }
         }
 
-        // Format with 8 decimals, no scientific notation
         return number_format($profit, 8, '.', '');
     }
 
     public function profitPercentage(): string
     {
-        $totalBuy = $this->orders()
-            ->whereRaw('LOWER(type) = ?', ['buy'])
-            ->sum('amount_sol');
+        $totalBuy = $this->orders->where('type', 'buy')->sum('amount_sol');
+        $totalSell = $this->orders->where('type', 'sell')->sum('amount_sol');
 
-        $totalSell = $this->orders()
-            ->whereRaw('LOWER(type) = ?', ['sell'])
-            ->sum('amount_sol');
+        if ($totalBuy <= 0) return '0.00';
 
-        // If no buys, percentage can't be calculated
-        if ($totalBuy <= 0) {
-            return '0.00';
-        }
-
-        // Profit = sells - buys
         $profit = $totalSell - $totalBuy;
-
-        // Profit percentage relative to total buys
         $percentage = ($profit / $totalBuy) * 100;
 
         return number_format($percentage, 2, '.', '');
     }
 
+    // -----------------------------
+    // Profit calculations (USD)
+    // -----------------------------
+    public function profitUsd(): string
+    {
+        $buyOrder = $this->orders->where('type', 'buy')->first();
+        $sellOrder = $this->orders->where('type', 'sell')->first();
+
+        if (!$buyOrder || !$sellOrder || !$buyOrder->price_usd || !$sellOrder->price_usd) {
+            return '0.00';
+        }
+
+        $profit = ($sellOrder->price_usd * $sellOrder->amount_foreign) - ($buyOrder->price_usd * $buyOrder->amount_foreign);
+        return number_format($profit, 2, '.', '');
+    }
+
+    public function profitPercentageUsd(): string
+    {
+        $buyOrder = $this->orders->where('type', 'buy')->first();
+        $sellOrder = $this->orders->where('type', 'sell')->first();
+
+        if (!$buyOrder || !$sellOrder || !$buyOrder->price_usd || !$sellOrder->price_usd) {
+            return '0.00';
+        }
+
+        $percentage = (($sellOrder->price_usd - $buyOrder->price_usd) / $buyOrder->price_usd) * 100;
+        return number_format($percentage, 2, '.', '');
+    }
+
+    // -----------------------------
+    // Static helper methods
+    // -----------------------------
     /**
-     * Get total profit of all SolanaCalls in SOL,
-     * only including calls with both buy and sell orders.
-     *
-     * @return string
+     * Total realized profit for all calls in SOL (only calls with both buy & sell)
      */
     public static function totalProfitSol(): string
     {
         $totalProfit = 0.0;
-
         $calls = self::with('orders')->get();
 
         foreach ($calls as $call) {
-            $hasBuy = $call->orders->where('type', 'buy')->isNotEmpty();
-            $hasSell = $call->orders->where('type', 'sell')->isNotEmpty();
-
-            if (!($hasBuy && $hasSell)) {
-                continue; // skip calls without both buy and sell
-            }
-
-            foreach ($call->orders as $order) {
-                $type = strtolower($order->type);
-                if ($type === 'buy') {
-                    $totalProfit -= $order->amount_sol ?? 0.0;
-                } elseif ($type === 'sell') {
-                    $totalProfit += $order->amount_sol ?? 0.0;
-                }
+            if ($call->orders->where('type', 'buy')->isNotEmpty() && $call->orders->where('type', 'sell')->isNotEmpty()) {
+                $totalProfit += (float) $call->profit();
             }
         }
 
@@ -133,82 +125,35 @@ class SolanaCall extends Model
     }
 
     /**
-     * Get total profit percentage of all SolanaCalls,
-     * only including calls with both buy and sell orders.
-     *
-     * @return string
-     */
-    /**
-     * Get total profit percentage of all SolanaCalls,
-     * only including calls with both buy and sell orders.
-     *
-     * @return string
+     * Total realized profit percentage for all calls in SOL
      */
     public static function totalProfitPercentage(): string
     {
         $totalBuy = 0.0;
         $totalSell = 0.0;
-
         $calls = self::with('orders')->get();
 
         foreach ($calls as $call) {
             $buySum = $call->orders->where('type', 'buy')->sum('amount_sol');
             $sellSum = $call->orders->where('type', 'sell')->sum('amount_sol');
 
-            // Skip calls that don’t have both buy and sell
-            if ($buySum <= 0 || $sellSum <= 0) {
-                continue;
-            }
+            if ($buySum <= 0 || $sellSum <= 0) continue;
 
             $totalBuy += $buySum;
             $totalSell += $sellSum;
         }
 
-        if ($totalBuy <= 0) {
-            return '0.00';
-        }
+        if ($totalBuy <= 0) return '0.00';
 
-        $totalProfit = $totalSell - $totalBuy;
-        $percentage = ($totalProfit / $totalBuy) * 100;
-
+        $percentage = (($totalSell - $totalBuy) / $totalBuy) * 100;
         return number_format($percentage, 2, '.', '');
     }
 
-    public function latestUnrealizedProfit()
+    // -----------------------------
+    // Factory helper (optional)
+    // -----------------------------
+    public static function createFromParsed(array $data): self
     {
-        return $this->hasOne(SolanaCallUnrealizedProfit::class)
-            ->latest('created_at');
+        return self::create($data);
     }
-
-
-    /**
-     * Check if the last 50 unrealized profits are stable.
-     *
-     * @return bool
-     */
-    public function hasStableUnrealizedProfits(): bool
-    {
-        $records = $this->unrealizedProfits()
-            ->latest()
-            ->take(200)
-            ->pluck('unrealized_profit');
-
-        if ($records->count() < 200) {
-            return false; // Not enough data yet
-        }
-
-        $average = $records->avg();
-        $last = $records->first(); // most recent
-
-        // Require profit to be at least 3% to consider "stable"
-//        if ($average < 3.0) {
-//            return false;
-//        }
-
-        // If the difference between average and last is very small (stable trend)
-        $diff = abs($average - $last);
-
-        return $diff <= 0.5; // within ±0.5% considered stable
-    }
-
 }

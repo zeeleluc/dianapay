@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\SolanaCall;
-use App\Models\SolanaCallUnrealizedProfit;
 use App\Helpers\SolanaTokenData;
 
 class SniperController extends Controller
@@ -28,15 +27,22 @@ class SniperController extends Controller
                 $call->orders->where('type', 'sell')->isEmpty();
         });
 
-        // Fetch latest unrealized profits for each open call
+        // Calculate latest unrealized profits for each open call
         foreach ($openCalls as $call) {
-            $latestProfit = SolanaCallUnrealizedProfit::where('solana_call_id', $call->id)
-                ->latest('created_at')
-                ->first();
+            $buyOrder = $call->orders->where('type', 'buy')->first();
 
-            if ($latestProfit) {
-                $call->unrealized_profit_sol = $latestProfit->unrealized_profit;
-                $call->current_market_cap = $latestProfit->current_market_cap;
+            if ($buyOrder && $buyOrder->price_usd) {
+                $latestData = $this->tokenDataHelper->getTokenData($call->token_address);
+                $currentPrice = $latestData['price'] ?? null;
+                $currentMarketCap = $latestData['marketCap'] ?? null;
+
+                if ($currentPrice) {
+                    $call->unrealized_profit_sol = (($currentPrice - $buyOrder->price_usd) / $buyOrder->price_usd) * 100;
+                    $call->current_market_cap = $currentMarketCap;
+                } else {
+                    $call->unrealized_profit_sol = null;
+                    $call->current_market_cap = null;
+                }
             } else {
                 $call->unrealized_profit_sol = null;
                 $call->current_market_cap = null;
