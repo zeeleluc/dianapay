@@ -107,19 +107,32 @@ class SolanaContractScanner
     {
         try {
             $this->tokenData = $this->tokenDataHelper->getTokenData($this->tokenAddress);
+
             if ($this->tokenData === null) {
                 $this->logFalse('Token data is null');
                 return false;
             }
 
-            // Use 0 if Dexscreener doesn't provide interval changes
-            $priceChangeM5  = $this->tokenData['priceChange']['m5'] ?? 0;
-            $priceChangeH1  = $this->tokenData['priceChange']['h1'] ?? 0;
-            $priceChangeH6  = $this->tokenData['priceChange']['h6'] ?? 0;
+            // Check that all required priceChange keys exist
+            $requiredKeys = ['m5', 'h1', 'h6'];
+            foreach ($requiredKeys as $key) {
+                if (!isset($this->tokenData['priceChange'][$key])) {
+                    \App\Helpers\SlackNotifier::error(
+                        "Missing priceChange key '{$key}' for token {$this->tokenAddress}: " . json_encode($this->tokenData)
+                    );
+                    $this->logFalse("Missing priceChange key '{$key}'");
+                    return false;
+                }
+            }
 
-            $minM5Pump      = 0.05;
-            $maxM5Pump      = 2.5;
-            $maxDownTrend   = -5;
+            // Now safe to assign
+            $priceChangeM5 = $this->tokenData['priceChange']['m5'];
+            $priceChangeH1 = $this->tokenData['priceChange']['h1'];
+            $priceChangeH6 = $this->tokenData['priceChange']['h6'];
+
+            $minM5Pump = 0.05;
+            $maxM5Pump = 2.5;
+            $maxDownTrend = -5;
 
             if ($priceChangeM5 < $minM5Pump) {
                 $this->logFalse(sprintf("❌ Not enough 5m momentum: %.2f%% < %.2f%%", $priceChangeM5, $minM5Pump));
@@ -140,11 +153,14 @@ class SolanaContractScanner
                 "✅ JLP scalp setup | M5: %.2f%% | H1: %.2f%% | H6: %.2f%%",
                 $priceChangeM5, $priceChangeH1, $priceChangeH6
             );
-            Log::info($this->buyReason);
+            \Illuminate\Support\Facades\Log::info($this->buyReason);
 
             return true;
-        } catch (Throwable $e) {
-            Log::warning("⚠️ canTradeWithJlpCheck exception for {$this->tokenAddress}: {$e->getMessage()}");
+
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning(
+                "⚠️ canTradeWithJlpCheck exception for {$this->tokenAddress}: {$e->getMessage()}"
+            );
             return false;
         }
     }
