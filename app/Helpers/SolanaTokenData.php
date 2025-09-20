@@ -12,15 +12,15 @@ class SolanaTokenData
     protected int $retryDelaySeconds = 5;
 
     /**
-     * Fetch token data (price, liquidity, price changes) for a Solana token using Dexscreener.
+     * Fetch token data (price, liquidity, price changes, volume, market cap) for a Solana token using Dexscreener.
      *
      * @param string $tokenAddress Solana token contract address
-     * @param \DateTime|null $createdAt Optional token creation time to skip new tokens
-     * @return array|null Returns array with price, liquidity, priceChange, volume, marketCap or null on failure
+     * @param \DateTime|null $createdAt Optional token creation time to skip very new tokens
+     * @return array|null
      */
     public function getTokenData(string $tokenAddress, ?\DateTime $createdAt = null): ?array
     {
-        // Validate token address (base58)
+        // Validate Solana token address (base58)
         if (!preg_match('/^[1-9A-HJ-NP-Za-km-z]{44}$/', $tokenAddress)) {
             Log::warning("Invalid token address: {$tokenAddress}");
             return null;
@@ -33,6 +33,7 @@ class SolanaTokenData
         }
 
         $cacheKey = "token_data_{$tokenAddress}";
+
         return Cache::remember($cacheKey, 300, function () use ($tokenAddress) {
             $attempt = 0;
             $dexscreenerUrl = "https://api.dexscreener.com/latest/dex/tokens/{$tokenAddress}";
@@ -65,39 +66,48 @@ class SolanaTokenData
                         return null;
                     }
 
-                    // Pick the first pair for simplicity (could be improved to select highest liquidity)
+                    // Use the first pair
                     $pair = $data['pairs'][0];
 
+                    // Extract data safely
                     $currentPrice = $pair['priceUsd'] ?? 0;
-                    $currentLiquidity = $pair['liquidity'] ?? 0;
-                    $volumeH1 = $pair['volumeUsd'] ?? 0;
+                    $currentLiquidity = $pair['liquidity']['usd'] ?? 0;
 
-                    // Dexscreener doesn’t provide market cap; you must supply circulating supply
+                    $volume = [
+                        'm5'  => $pair['volume']['m5'] ?? 0,
+                        'h1'  => $pair['volume']['h1'] ?? 0,
+                        'h6'  => $pair['volume']['h6'] ?? 0,
+                        'h24' => $pair['volume']['h24'] ?? 0,
+                    ];
+
+                    $priceChange = [
+                        'm5'  => $pair['priceChange']['m5'] ?? 0,
+                        'h1'  => $pair['priceChange']['h1'] ?? 0,
+                        'h6'  => $pair['priceChange']['h6'] ?? 0,
+                        'h24' => $pair['priceChange']['h24'] ?? 0,
+                    ];
+
                     $marketCap = $currentPrice * ($pair['circulatingSupply'] ?? 0);
 
                     Log::info("Fetched Dexscreener token data for {$tokenAddress}", [
                         'price' => $currentPrice,
                         'liquidity' => $currentLiquidity,
-                        'volume_h1' => $volumeH1,
+                        'volume' => $volume,
+                        'priceChange' => $priceChange,
                         'marketCap' => $marketCap,
                     ]);
 
                     return [
-                        'price' => $currentPrice,
-                        'liquidity' => ['usd' => $currentLiquidity],
-                        'priceChange' => [
-                            'm5' => null, // Dexscreener does not provide granular intervals
-                            'h1' => null,
-                            'h6' => null,
-                            'h24' => null,
-                        ],
-                        'volume' => ['h1' => $volumeH1],
-                        'marketCap' => $marketCap,
+                        'price'       => $currentPrice,
+                        'liquidity'   => ['usd' => $currentLiquidity],
+                        'priceChange' => $priceChange,
+                        'volume'      => $volume,
+                        'marketCap'   => $marketCap,
                     ];
                 } catch (\Throwable $e) {
                     Log::error("Dexscreener API request exception for {$tokenAddress} (attempt " . ($attempt + 1) . ")", [
                         'message' => $e->getMessage(),
-                        'code' => $e->getCode(),
+                        'code'    => $e->getCode(),
                     ]);
                     $attempt++;
                     if ($attempt <= $this->maxRetries) {
