@@ -13,10 +13,10 @@ class SolanaAutoSell extends Command
     protected $signature = 'solana:auto-sell';
     protected $description = 'Automatically sell tokens based on trailing stop profit logic.';
 
-    protected float $minLiquidity = 1000;      // Minimum liquidity to consider sell
-    protected float $trailingDropPercent = 0.25;  // Sell if profit drops by this % from peak
+    protected float $minLiquidity = 4_000_000;       // Minimum liquidity to consider sell
+    protected float $trailingDropPercent = 0.25;     // Sell if profit drops by this % from peak
 
-    public function handle()
+    public function handle(): int
     {
         $calls = SolanaCall::with('orders')->get()->filter(fn($call) =>
             $call->orders->where('type', 'buy')->count() > 0 &&
@@ -32,14 +32,8 @@ class SolanaAutoSell extends Command
                 $buyOrder = $call->orders->where('type', 'buy')->first();
                 $tokenAddress = $call->token_address;
 
-                if (!$buyOrder || !$buyOrder->amount_foreign) {
-                    $this->warn("Skipping SolanaCall ID {$call->id}: no buy order or amount_foreign.");
-                    continue;
-                }
-
-                // Validate arguments
-                if (!is_numeric($call->id) || empty($tokenAddress) || !is_numeric($buyOrder->amount_foreign)) {
-                    SlackNotifier::error("Invalid arguments for SolanaCall #{$call->id} ({$tokenAddress})");
+                if (!$buyOrder || !$buyOrder->amount_foreign || !is_numeric($buyOrder->price_usd)) {
+                    $this->warn("Skipping SolanaCall ID {$call->id}: invalid buy order.");
                     continue;
                 }
 
@@ -48,28 +42,29 @@ class SolanaAutoSell extends Command
 
                 if (!$data) {
                     SlackNotifier::error("API failed for token {$tokenAddress}, forcing immediate sell.");
-                    $this->forceSell($call, $tokenAddress, $buyOrder->amount_foreign);
+                    $this->executeSell($call, $tokenAddress, $buyOrder->amount_foreign);
                     continue;
                 }
 
                 $currentPrice = $data['price'] ?? 0;
                 $currentLiquidity = $data['liquidity']['usd'] ?? 0;
-                $currentMarketCap = $data['marketCap'] ?? 0;
 
                 if (!is_numeric($currentPrice) || $currentPrice <= 0 || $currentLiquidity < $this->minLiquidity) {
-                    $this->warn("Skipping {$tokenAddress}: invalid price or insufficient liquidity (\${$currentLiquidity}).");
+                    $this->warn("Skipping {$tokenAddress}: invalid price ({$currentPrice}) or insufficient liquidity (\${$currentLiquidity}).");
                     continue;
                 }
 
                 // Calculate current profit %
-                $profitPercent = $this->getCurrentProfit($call->market_cap, $currentMarketCap);
+                $profitPercent = $this->getCurrentProfit($buyOrder->price_usd, $currentPrice);
 
                 // Store snapshot
-                $call->unrealizedProfits()->create([
-                    'unrealized_profit' => $profitPercent,
-                    'buy_market_cap' => $call->market_cap,
-                    'current_market_cap' => $currentMarketCap,
-                ]);
+                if (method_exists($call, 'unrealizedProfits')) {
+                    $call->unrealizedProfits()->create([
+                        'unrealized_profit' => $profitPercent,
+                        'buy_price'         => $buyOrder->price_usd,
+                        'current_price'     => $currentPrice,
+                    ]);
+                }
 
                 // Determine if we should sell
                 if ($this->shouldSell($call, $profitPercent)) {
@@ -79,19 +74,20 @@ class SolanaAutoSell extends Command
                     $this->info("Holding token {$tokenAddress} (profit: {$profitPercent}%)");
                 }
 
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $this->error("Error processing SolanaCall ID {$call->id}: {$e->getMessage()}");
                 SlackNotifier::error("Error processing SolanaCall #{$call->id} ({$tokenAddress}): {$e->getMessage()}");
             }
         }
 
         $this->info('SolanaAutoSell run completed.');
+        return self::SUCCESS;
     }
 
     private function shouldSell(SolanaCall $call, float $profitPercent): bool
     {
         // Initialize previous peak profit if not set
-        if ($call->previous_unrealized_profits === null) {
+        if (!is_numeric($call->previous_unrealized_profits)) {
             $call->previous_unrealized_profits = $profitPercent;
             $call->save();
             return false;
@@ -115,37 +111,12 @@ class SolanaAutoSell extends Command
         return false;
     }
 
-    private function getCurrentProfit(?float $buyMarketCap, ?float $currentMarketCap): float
+    private function getCurrentProfit(float $buyPrice, float $currentPrice): float
     {
-        if (!$buyMarketCap || !$currentMarketCap) return 0;
-        return (($currentMarketCap - $buyMarketCap) / $buyMarketCap) * 100;
+        return (($currentPrice - $buyPrice) / $buyPrice) * 100;
     }
 
-    private function forceSell(SolanaCall $call, string $tokenAddress, float $amount)
-    {
-        $process = new Process([
-            'node',
-            base_path('scripts/solana-sell.js'),
-            "--identifier={$call->id}",
-            "--token={$tokenAddress}",
-            "--amount={$amount}",
-        ]);
-
-        $process->setTimeout(360);
-        $process->run();
-        $process->wait();
-
-        if (!$process->isSuccessful()) {
-            $this->error("Forced sell failed for SolanaCall ID {$call->id}: " . $process->getErrorOutput());
-            SlackNotifier::error("Forced sell failed for SolanaCall #{$call->id} ({$tokenAddress})");
-        } else {
-            $output = trim($process->getOutput());
-            $this->info("Forced sell completed for SolanaCall ID {$call->id}: {$output}");
-            SlackNotifier::success("Forced sell completed for SolanaCall #{$call->id} ({$tokenAddress})");
-        }
-    }
-
-    private function executeSell(SolanaCall $call, string $tokenAddress, float $amount)
+    private function executeSell(SolanaCall $call, string $tokenAddress, float $amount): void
     {
         $process = new Process([
             'node',

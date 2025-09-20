@@ -51,13 +51,24 @@ class PollHighEndTokens extends Command
                 }
 
                 $data = $scanner->getTokenData();
+                if (empty($data)) {
+                    Log::warning("❌ {$name} token data missing, skipping");
+                    continue;
+                }
 
-                // Record trade call
+                $marketCap = $data['marketCap'] ?? 0;
+                $liquidity = $data['liquidity']['usd'] ?? 0;
+
+                if ($marketCap <= 0 || $liquidity <= 0) {
+                    Log::warning("❌ {$name} missing marketCap or liquidity, skipping");
+                    continue;
+                }
+
                 $call = SolanaCall::create([
                     'token_name'    => $name,
                     'token_address' => $tokenAddress,
-                    'market_cap'    => $data['marketCap'] ?? 0,
-                    'liquidity_pool'=> $data['liquidity']['usd'] ?? 0,
+                    'market_cap'    => $marketCap,
+                    'liquidity_pool'=> $liquidity,
                     'strategy'      => $config['strategy'],
                     'reason_buy'    => $scanner->getBuyReason(),
                 ]);
